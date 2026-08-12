@@ -1,0 +1,6 @@
+{
+  "name": "Inventory360",
+  "description": "A complete, local-first frontend inventory management ERP with sales, purchasing, reporting, and stock control.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

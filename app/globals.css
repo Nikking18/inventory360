@@ -1,0 +1,287 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --app-bg: #0A0A0A;
+    --sidebar-bg: #050505;
+    --card-bg: #141414;
+    --card-border: #262626;
+    --accent-olive: #FFFFFF;
+    --accent-olive-hover: #E5E5E5;
+    --accent-olive-bg: #1C1C1C;
+    --text-heading: #F5F5F5;
+    --text-body: #D4D4D4;
+    --text-muted: #888888;
+  }
+
+  .light-theme {
+    --app-bg: #F8FAFC;
+    --sidebar-bg: #FFFFFF;
+    --card-bg: #FFFFFF;
+    --card-border: #E2E8F0;
+    --accent-olive: #0F172A;
+    --accent-olive-hover: #1E293B;
+    --accent-olive-bg: #F1F5F9;
+    --text-heading: #0F172A;
+    --text-body: #334155;
+    --text-muted: #64748B;
+  }
+
+  body {
+    background-color: var(--app-bg);
+    color: var(--text-body);
+    font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, .font-heading {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Clear, High-Contrast Light Theme Rules */
+.light-theme {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+
+/* Header & Sidebar in Light Mode */
+.light-theme header,
+.light-theme aside {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+.light-theme aside .bg-neutral-950 {
+  background-color: #FFFFFF !important;
+}
+
+.light-theme aside .bg-neutral-900 {
+  background-color: #F1F5F9 !important;
+}
+
+.light-theme aside .text-white {
+  color: #0F172A !important;
+}
+
+.light-theme aside .text-neutral-400,
+.light-theme aside .text-neutral-500 {
+  color: #475569 !important;
+}
+
+/* Card & Content Surfaces */
+.light-theme .bg-neutral-950,
+.light-theme .bg-neutral-900 {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+.light-theme .bg-neutral-900\/40,
+.light-theme .bg-neutral-900\/60,
+.light-theme .bg-neutral-900\/80,
+.light-theme .bg-neutral-900\/90,
+.light-theme .bg-neutral-950\/60,
+.light-theme .bg-neutral-950\/80,
+.light-theme .bg-neutral-950\/90 {
+  background-color: #F8FAFC !important;
+}
+
+.light-theme .bg-neutral-800,
+.light-theme .bg-neutral-800\/60 {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+
+/* Borders */
+.light-theme .border-neutral-800,
+.light-theme .border-neutral-800\/60,
+.light-theme .border-neutral-800\/80,
+.light-theme .border-neutral-700 {
+  border-color: #E2E8F0 !important;
+}
+
+.light-theme .divide-neutral-800\/60 > :not([hidden]) ~ :not([hidden]),
+.light-theme .divide-neutral-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #E2E8F0 !important;
+}
+
+/* Text Colors in Light Mode */
+.light-theme .text-white,
+.light-theme .text-neutral-100,
+.light-theme .text-neutral-200,
+.light-theme .text-neutral-300 {
+  color: #0F172A !important;
+}
+
+.light-theme .text-neutral-400 {
+  color: #475569 !important;
+}
+
+.light-theme .text-neutral-500,
+.light-theme .text-neutral-600 {
+  color: #64748B !important;
+}
+
+/* High Contrast Accent Colors for Light Backgrounds */
+.light-theme .text-emerald-400,
+.light-theme .text-emerald-500 {
+  color: #15803D !important;
+}
+
+.light-theme .text-rose-400,
+.light-theme .text-rose-500 {
+  color: #BE123C !important;
+}
+
+.light-theme .text-amber-400,
+.light-theme .text-amber-500 {
+  color: #B45309 !important;
+}
+
+.light-theme .text-blue-400,
+.light-theme .text-blue-500 {
+  color: #1D4ED8 !important;
+}
+
+/* Badges and Soft Pills */
+.light-theme .bg-emerald-950\/40,
+.light-theme .bg-emerald-950\/60 {
+  background-color: #DCFCE7 !important;
+  color: #15803D !important;
+}
+
+.light-theme .bg-rose-950\/40,
+.light-theme .bg-rose-950\/60 {
+  background-color: #FFE4E6 !important;
+  color: #BE123C !important;
+}
+
+.light-theme .bg-amber-950\/40,
+.light-theme .bg-amber-950\/60 {
+  background-color: #FEF3C7 !important;
+  color: #B45309 !important;
+}
+
+.light-theme .bg-blue-950\/40,
+.light-theme .bg-blue-950\/60 {
+  background-color: #DBEAFE !important;
+  color: #1D4ED8 !important;
+}
+
+/* Headings */
+.light-theme h1,
+.light-theme h2,
+.light-theme h3,
+.light-theme h4,
+.light-theme .font-heading {
+  color: #0F172A !important;
+}
+
+/* Primary Dark Action Buttons in Light Mode */
+.light-theme button.bg-white,
+.light-theme .bg-white {
+  background-color: #0F172A !important;
+  color: #FFFFFF !important;
+  border-color: #0F172A !important;
+}
+
+.light-theme button.bg-white:hover,
+.light-theme .bg-white:hover {
+  background-color: #1E293B !important;
+  color: #FFFFFF !important;
+}
+
+.light-theme button.bg-white *,
+.light-theme .bg-white * {
+  color: #FFFFFF !important;
+}
+
+/* Inputs, Selects & Native Dropdown Options */
+.light-theme input,
+.light-theme select,
+.light-theme textarea {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+.light-theme select option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+.light-theme input::placeholder,
+.light-theme textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+/* Tables */
+.light-theme thead,
+.light-theme thead tr {
+  background-color: #F1F5F9 !important;
+}
+
+.light-theme th {
+  color: #334155 !important;
+  border-color: #E2E8F0 !important;
+}
+
+.light-theme tbody tr {
+  border-color: #E2E8F0 !important;
+}
+
+.light-theme tbody tr:hover {
+  background-color: #F8FAFC !important;
+}
+
+/* Modals & Dialog Overlays */
+.light-theme .fixed.inset-0.bg-black\/80,
+.light-theme .fixed.inset-0.bg-black\/70 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
+
+/* Custom Geometric Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--app-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 0px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
