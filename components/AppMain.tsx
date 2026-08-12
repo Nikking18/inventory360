@@ -600,9 +600,7 @@ export default function AppMain() {
 
   return (
     <I18nProvider language={(settings.language as SupportedLanguage) || 'en'}>
-      <div className={`min-h-screen flex antialiased font-sans transition-colors duration-200 ${
-        settings.theme === 'light' ? 'light-theme bg-slate-100 text-slate-900' : 'bg-neutral-950 text-neutral-200'
-      }`}>
+      <div className="min-h-screen flex antialiased font-sans bg-neutral-950 text-neutral-200">
       {/* 1. Desktop Permanent Sidebar */}
       <aside className="hidden md:block shrink-0 border-r border-neutral-800">
         <Sidebar

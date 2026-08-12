@@ -238,56 +238,6 @@ export const SetupView: React.FC<SetupViewProps> = ({
 
             {/* Global Preferences: Theme, Language, Currency */}
             <div className="pt-2 border-t border-neutral-800 space-y-4">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-neutral-300 flex items-center gap-2">
-                <Palette className="w-3.5 h-3.5 text-neutral-400" /> {t('theme', 'System Theme & Display Mode')}
-              </h4>
-
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    setTheme('dark');
-                    await onUpdateSettings({ ...settings, theme: 'dark' });
-                  }}
-                  className={`p-3 border text-left flex items-center justify-between transition-all ${
-                    theme === 'dark'
-                      ? 'bg-neutral-950 border-white text-white font-bold'
-                      : 'bg-neutral-950/60 border-neutral-800 text-neutral-400 hover:border-neutral-700'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Moon className="w-4 h-4 text-emerald-400" />
-                    <div>
-                      <p className="text-xs font-bold uppercase">{t('dark_mode', 'Dark Mode')}</p>
-                      <p className="text-[9px] text-neutral-500 font-mono">Sleek industrial canvas</p>
-                    </div>
-                  </div>
-                  {theme === 'dark' && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={async () => {
-                    setTheme('light');
-                    await onUpdateSettings({ ...settings, theme: 'light' });
-                  }}
-                  className={`p-3 border text-left flex items-center justify-between transition-all ${
-                    theme === 'light'
-                      ? 'bg-neutral-950 border-white text-white font-bold'
-                      : 'bg-neutral-950/60 border-neutral-800 text-neutral-400 hover:border-neutral-700'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Sun className="w-4 h-4 text-amber-400" />
-                    <div>
-                      <p className="text-xs font-bold uppercase">{t('light_mode', 'Light Mode')}</p>
-                      <p className="text-[9px] text-neutral-500 font-mono">Clean high-contrast theme</p>
-                    </div>
-                  </div>
-                  {theme === 'light' && <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />}
-                </button>
-              </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1 flex items-center gap-1.5">
