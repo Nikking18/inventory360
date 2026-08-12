@@ -2,8 +2,43 @@ import type {Metadata} from 'next';
 import './globals.css'; // Global styles
 
 export const metadata: Metadata = {
-  title: 'Inventory 360 - ERP & POS Platform',
-  description: 'Enterprise Inventory Management, Point of Sale, and Supply Chain Analytics',
+  metadataBase: new URL('https://inventory360-five.vercel.app'),
+  title: 'Inventory 360 | Local-First POS & Inventory Management System',
+  description: 'High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, purchase order workflows, and financial analytics powered by browser IndexedDB.',
+  keywords: ['Inventory 360', 'POS System', 'Point of Sale', 'Inventory Management', 'Local-First', 'IndexedDB', 'Multi-Outlet', 'Retail ERP'],
+  authors: [{ name: 'Inventory 360 Enterprise' }],
+  creator: 'Inventory 360',
+  publisher: 'Inventory 360',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    title: 'Inventory 360 | Local-First POS & Inventory Management System',
+    description: 'High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, purchase order workflows, and financial analytics powered by browser IndexedDB.',
+    url: 'https://inventory360-five.vercel.app',
+    siteName: 'Inventory 360',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Inventory 360 - Geometric Balance POS & Stock Management',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Inventory 360 | Local-First POS & Inventory Management System',
+    description: 'High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, purchase order workflows, and financial analytics powered by browser IndexedDB.',
+    images: ['/og-image.png'],
+  },
 };
 
 const windowFetchPolyfillScript = `
