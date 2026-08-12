@@ -208,7 +208,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       </div>
 
       {activeSubTab === 'products' && (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-none p-5 space-y-4">
+        <div id="tour-catalog-table" className="bg-neutral-900 border border-neutral-800 rounded-none p-5 space-y-4">
           {/* Filters Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="relative flex-1 max-w-sm">

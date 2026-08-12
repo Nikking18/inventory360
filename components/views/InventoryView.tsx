@@ -193,7 +193,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 text-neutral-200 font-mono">
+    <div id="tour-inventory-hub" className="space-y-6 text-neutral-200 font-mono">
       {/* View Header Subtabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-800 pb-4 gap-4">
         <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap pb-1">

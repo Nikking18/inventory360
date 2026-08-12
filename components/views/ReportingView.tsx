@@ -141,7 +141,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 text-neutral-200 font-mono">
+    <div id="tour-reporting-analytics" className="space-y-6 text-neutral-200 font-mono">
       {/* Report Header & Navigation */}
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">

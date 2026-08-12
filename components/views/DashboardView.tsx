@@ -143,7 +143,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* PRIMARY DASHBOARD CARD */}
-      <div className="bg-neutral-900 border border-neutral-800 p-6">
+      <div id="tour-dashboard-metrics" className="bg-neutral-900 border border-neutral-800 p-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           {/* Left Column: Primary Metric */}
           <div className="lg:col-span-3 space-y-2 border-b lg:border-b-0 lg:border-r border-neutral-800 pb-4 lg:pb-0 lg:pr-6">

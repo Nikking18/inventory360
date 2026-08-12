@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { driver, Driver } from 'driver.js';
+import 'driver.js/dist/driver.css';
 import { useTranslation } from '../../context/I18nContext';
 import { NavItemKey } from '../Sidebar';
 import {
@@ -18,11 +20,8 @@ import {
   BarChart3,
   Settings,
   CheckCircle2,
-  Play,
-  ArrowRight,
   BookOpen,
   MousePointerClick,
-  Compass,
 } from 'lucide-react';
 
 export interface TourStep {
@@ -33,6 +32,7 @@ export interface TourStep {
   subTabKey?: string;
   badge: string;
   icon: React.ElementType;
+  elementId: string;
   description: string;
   actionText: string;
   highlights: string[];
@@ -47,6 +47,7 @@ const TOUR_STEPS: TourStep[] = [
     tabKey: 'home',
     badge: 'Overview Hub',
     icon: LayoutDashboard,
+    elementId: '#tour-dashboard-metrics',
     description: 'Track gross revenue, net profit, stock warning badges, and transaction logs in real time.',
     actionText: 'Explore Dashboard Metrics',
     highlights: [
@@ -64,6 +65,7 @@ const TOUR_STEPS: TourStep[] = [
     subTabKey: 'quick-sale',
     badge: 'Sales POS',
     icon: ShoppingBag,
+    elementId: '#tour-pos-terminal',
     description: 'Process fast transactions with SKU search, category tabs, cart limits, and thermal receipt printing.',
     actionText: 'Test POS Checkout',
     highlights: [
@@ -81,6 +83,7 @@ const TOUR_STEPS: TourStep[] = [
     subTabKey: 'products',
     badge: 'Product Master',
     icon: Package,
+    elementId: '#tour-catalog-table',
     description: 'Manage master products with strict SKU/Barcode collision checks, profit margins, and supplier links.',
     actionText: 'Manage Product Master',
     highlights: [
@@ -98,6 +101,7 @@ const TOUR_STEPS: TourStep[] = [
     subTabKey: 'low-stock',
     badge: 'Inventory Hub',
     icon: Boxes,
+    elementId: '#tour-inventory-hub',
     description: 'Control multi-location stock levels, execute inter-outlet transfers, and customize purchase orders.',
     actionText: 'View Stock Alerts & POs',
     highlights: [
@@ -114,6 +118,7 @@ const TOUR_STEPS: TourStep[] = [
     tabKey: 'customers',
     badge: 'Customer CRM',
     icon: Users,
+    elementId: '#tour-customer-crm',
     description: 'Track customer lifetime purchase revenue, total orders, outstanding balances, and purchase history.',
     actionText: 'Open Customer Profiles',
     highlights: [
@@ -130,6 +135,7 @@ const TOUR_STEPS: TourStep[] = [
     tabKey: 'reporting',
     badge: 'Executive Reports',
     icon: BarChart3,
+    elementId: '#tour-reporting-analytics',
     description: 'Gain financial insights with date-range filters ("Today", "Week", "Month", "Year") and 1-click exports.',
     actionText: 'Run Financial Reports',
     highlights: [
@@ -147,6 +153,7 @@ const TOUR_STEPS: TourStep[] = [
     subTabKey: 'general',
     badge: 'System Settings',
     icon: Settings,
+    elementId: '#tour-setup-workspace',
     description: 'Customize business profile, toggle dark/light theme, select currency/language, and backup IndexedDB data.',
     actionText: 'Configure Workspace',
     highlights: [
@@ -171,37 +178,78 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
+  const driverRef = useRef<Driver | null>(null);
 
   const currentStep = TOUR_STEPS[currentStepIndex];
 
-  // Sync background application tab when step changes
+  // Initialize Driver.js spotlight tour
   useEffect(() => {
-    if (isOpen && currentStep) {
-      onNavigateTab(currentStep.tabKey, currentStep.subTabKey);
+    if (!isOpen) {
+      if (driverRef.current) {
+        driverRef.current.destroy();
+        driverRef.current = null;
+      }
+      return;
     }
-  }, [isOpen, currentStepIndex]);
 
-  // Keyboard navigation shortcuts
-  useEffect(() => {
-    if (!isOpen) return;
+    // Sync tab view for initial step
+    onNavigateTab(currentStep.tabKey, currentStep.subTabKey);
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') {
-        if (currentStepIndex < TOUR_STEPS.length - 1) {
-          setCurrentStepIndex((prev) => prev + 1);
+    const driverObj = driver({
+      showProgress: true,
+      animate: true,
+      allowClose: true,
+      overlayColor: 'rgba(0, 0, 0, 0.75)',
+      stagePadding: 8,
+      popoverClass: 'inventory360-driver-popover',
+      steps: TOUR_STEPS.map((step) => ({
+        element: step.elementId,
+        popover: {
+          title: `STEP ${step.stepNumber} OF 07: ${step.title.toUpperCase()}`,
+          description: step.description,
+          side: 'bottom',
+          align: 'center',
+        },
+      })),
+      onHighlightStarted: (element, step, opts) => {
+        const stepIdx = opts.driver.getActiveIndex();
+        if (stepIdx !== undefined && stepIdx >= 0 && stepIdx < TOUR_STEPS.length) {
+          const targetStep = TOUR_STEPS[stepIdx];
+          setCurrentStepIndex(stepIdx);
+          onNavigateTab(targetStep.tabKey, targetStep.subTabKey);
         }
-      } else if (e.key === 'ArrowLeft') {
-        if (currentStepIndex > 0) {
-          setCurrentStepIndex((prev) => prev - 1);
-        }
-      } else if (e.key === 'Escape') {
+      },
+      onDestroyStarted: () => {
         onClose();
+      },
+    });
+
+    driverRef.current = driverObj;
+
+    // Small delay to ensure view rendering before spotlight highlight
+    const timer = setTimeout(() => {
+      driverObj.drive(currentStepIndex);
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+      if (driverRef.current) {
+        driverRef.current.destroy();
       }
     };
+  }, [isOpen]);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, currentStepIndex, onClose]);
+  // Handle Driver.js step changes via state
+  const handleGoToStep = (index: number) => {
+    setCurrentStepIndex(index);
+    const targetStep = TOUR_STEPS[index];
+    onNavigateTab(targetStep.tabKey, targetStep.subTabKey);
+    if (driverRef.current) {
+      setTimeout(() => {
+        driverRef.current?.moveTo(index);
+      }, 100);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -210,7 +258,7 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 font-mono select-none max-w-2xl w-[calc(100vw-2rem)] transition-all duration-300">
-      {/* Sleek Centered Dock Banner Container */}
+      {/* Centered Dock Banner Container powered by Driver.js */}
       <div className="bg-neutral-950/95 border border-neutral-700/80 shadow-[0_25px_60px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition-all overflow-hidden">
         {/* Top Glowing Emerald Progress Line */}
         <div className="w-full bg-neutral-900 h-1 relative">
@@ -226,7 +274,7 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
             <div className="flex items-center gap-3">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
               <span className="font-bold text-white uppercase tracking-wider text-[11px] truncate">
-                Interactive Tour: Step {currentStep.stepNumber} of 07 - {currentStep.title}
+                Driver.js Tour: Step {currentStep.stepNumber} of 07 - {currentStep.title}
               </span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -248,25 +296,26 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
             </div>
           </div>
         ) : (
-          /* Full Centered Floating Spotlight Card */
+          /* Full Centered Floating Spotlight Control Dock */
           <div>
             {/* Header Controls Bar */}
             <div className="px-5 py-3 bg-neutral-900/90 border-b border-neutral-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="px-2.5 py-0.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold uppercase tracking-widest shrink-0">
-                  Step {currentStep.stepNumber} of 07
+                <div className="px-2.5 py-0.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold uppercase tracking-widest shrink-0 flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3" />
+                  <span>Driver.js Spotlight: {currentStep.stepNumber} / 07</span>
                 </div>
                 <span className="text-xs font-bold uppercase text-neutral-300 tracking-wider hidden sm:inline">
                   {currentStep.badge}
                 </span>
               </div>
 
-              {/* Interactive Step Progress Navigation Pills */}
+              {/* Step Navigation Dots */}
               <div className="flex items-center gap-1.5">
                 {TOUR_STEPS.map((step, idx) => (
                   <button
                     key={step.id}
-                    onClick={() => setCurrentStepIndex(idx)}
+                    onClick={() => handleGoToStep(idx)}
                     className={`h-2 transition-all ${
                       idx === currentStepIndex
                         ? 'w-6 bg-white'
@@ -318,7 +367,7 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
                 <div className="p-2.5 bg-amber-950/20 border border-amber-900/40 text-[10px] text-amber-300 flex items-start gap-2">
                   <BookOpen className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-amber-400 uppercase">Pro Tip: </span>
+                    <span className="font-bold text-amber-400 uppercase">Driver.js Tip: </span>
                     <span>{currentStep.proTip}</span>
                   </div>
                 </div>
@@ -329,7 +378,7 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
                 <div className="space-y-2">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5 border-b border-neutral-800 pb-1">
                     <Sparkles className="w-3 h-3 text-emerald-400" />
-                    <span>Feature Highlights</span>
+                    <span>Highlighted Features</span>
                   </div>
                   <div className="space-y-1.5">
                     {currentStep.highlights.map((h, i) => (
@@ -355,13 +404,13 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
             {/* Bottom Footer Navigation */}
             <div className="px-5 py-3 bg-neutral-900/90 border-t border-neutral-800 flex items-center justify-between">
               <span className="text-[10px] text-neutral-500 uppercase tracking-widest hidden sm:inline">
-                Use ← → keys to navigate
+                Driver.js Spotlight Engine Active
               </span>
 
               <div className="flex items-center gap-2 ml-auto">
                 {currentStepIndex > 0 && (
                   <button
-                    onClick={() => setCurrentStepIndex((prev) => prev - 1)}
+                    onClick={() => handleGoToStep(currentStepIndex - 1)}
                     className="px-3 py-1.5 bg-neutral-950 border border-neutral-800 hover:border-neutral-600 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1 transition-all"
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -371,10 +420,10 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
 
                 {currentStepIndex < TOUR_STEPS.length - 1 ? (
                   <button
-                    onClick={() => setCurrentStepIndex((prev) => prev + 1)}
+                    onClick={() => handleGoToStep(currentStepIndex + 1)}
                     className="px-4 py-1.5 bg-white text-black hover:bg-neutral-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1 transition-all"
                   >
-                    <span>Next Feature</span>
+                    <span>Next Spotlight</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 ) : (

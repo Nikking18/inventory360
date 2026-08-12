@@ -206,7 +206,7 @@ export const SellView: React.FC<SellViewProps> = ({
       </div>
 
       {activeSubTab === 'quick-sale' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 font-mono">
+        <div id="tour-pos-terminal" className="grid grid-cols-1 lg:grid-cols-12 gap-6 font-mono">
           {/* LEFT: Product Catalog Selection Grid */}
           <div className="lg:col-span-7 space-y-4">
             {/* Search input */}

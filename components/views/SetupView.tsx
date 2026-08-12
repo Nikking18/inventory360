@@ -149,7 +149,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 text-neutral-200 font-mono">
+    <div id="tour-setup-workspace" className="space-y-6 text-neutral-200 font-mono">
       {/* SubTab Navigation */}
       <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
         <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap pb-1">

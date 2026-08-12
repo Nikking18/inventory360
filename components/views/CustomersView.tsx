@@ -58,7 +58,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
     : [];
 
   return (
-    <div className="space-y-6 text-neutral-200 font-mono">
+    <div id="tour-customer-crm" className="space-y-6 text-neutral-200 font-mono">
       <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
         <div>
           <h2 className="font-bold text-lg text-white uppercase tracking-wider">
