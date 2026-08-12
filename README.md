@@ -2,7 +2,19 @@
 
 > **Local-First Point of Sale (POS) & Multi-Outlet Inventory Management System**
 
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-inventory360--five.vercel.app-10B981?style=for-the-badge&logo=vercel&logoColor=white)](https://inventory360-five.vercel.app/)
+[![Next.js 15](https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React 19](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
 Inventory 360 is a high-performance, local-first retail enterprise management web application designed for fast, offline-durable stock tracking, quick-sale POS terminal operations, purchase order workflows, and multi-outlet financial analytics. Powered by browser IndexedDB.
+
+---
+
+## 🌐 Live Application Link
+
+🚀 **Test the live production deployment on Vercel:**  
+👉 **[https://inventory360-five.vercel.app/](https://inventory360-five.vercel.app/)**
 
 ---
 
@@ -59,9 +71,10 @@ Inventory 360 is a high-performance, local-first retail enterprise management we
 
 ## 🛠️ Technology Stack
 
+- **Deployment**: [Vercel](https://vercel.com/)
 - **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
 - **UI Library**: [React 19](https://react.dev/) & [TypeScript](https://www.typescriptlang.org/)
-- **State & Database**: Browser [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) via `idb`
+- **Storage**: Browser [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) via `idb`
 - **Styling**: Vanilla CSS & [Tailwind CSS](https://tailwindcss.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Charts**: [Recharts](https://recharts.org/)
