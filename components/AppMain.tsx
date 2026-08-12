@@ -596,6 +596,8 @@ export default function AppMain() {
     });
   };
 
+
+
   return (
     <I18nProvider language={(settings.language as SupportedLanguage) || 'en'}>
       <div className={`min-h-screen flex antialiased font-sans transition-colors duration-200 ${
@@ -726,10 +728,12 @@ export default function AppMain() {
               </button>
 
               {showHeaderExportMenu && (
-                <div className="absolute right-0 mt-1.5 w-60 bg-neutral-900 border border-neutral-700 shadow-2xl z-30 divide-y divide-neutral-800 font-mono">
-                  <div className="px-3 py-2 bg-neutral-950 text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
-                    Executive System Reports
-                  </div>
+                <>
+                  <div className="fixed inset-0 z-20" onClick={() => setShowHeaderExportMenu(false)} />
+                  <div className="absolute right-0 mt-1.5 w-60 bg-neutral-900 border border-neutral-700 shadow-2xl z-30 divide-y divide-neutral-800 font-mono">
+                    <div className="px-3 py-2 bg-neutral-950 text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                      Executive System Reports
+                    </div>
                   <button
                     onClick={handleHeaderExportCSV}
                     className="w-full text-left px-3.5 py-2.5 text-xs text-neutral-200 hover:bg-neutral-800 hover:text-white flex items-center gap-2.5 transition-colors"
@@ -774,6 +778,7 @@ export default function AppMain() {
                     <div className="font-bold uppercase">Full Analytics View →</div>
                   </button>
                 </div>
+                </>
               )}
             </div>
           </div>
