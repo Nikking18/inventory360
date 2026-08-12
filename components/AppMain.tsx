@@ -65,13 +65,7 @@ export default function AppMain() {
   const [showDataPolicyNotice, setShowDataPolicyNotice] = useState<boolean>(false);
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
 
-  // Trigger 5-second popup notice for new visitors or page refresh
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowDataPolicyNotice(true);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
+  // Data Policy popup is controlled explicitly by user button clicks only
 
   // Core Data States
   const [settings, setSettings] = useState<BusinessSettings>(CLEAN_SETTINGS);
@@ -621,6 +615,7 @@ export default function AppMain() {
           ownerName={settings.ownerName}
           onOpenLanding={() => setShowLanding(true)}
           onOpenTour={() => setIsTourOpen(true)}
+          onOpenDataPolicy={() => setShowDataPolicyNotice(true)}
         />
       </aside>
 
@@ -665,6 +660,10 @@ export default function AppMain() {
                 }}
                 onOpenTour={() => {
                   setIsTourOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                onOpenDataPolicy={() => {
+                  setShowDataPolicyNotice(true);
                   setIsMobileMenuOpen(false);
                 }}
               />

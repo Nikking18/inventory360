@@ -12,6 +12,7 @@ import {
   Settings,
   Layers,
   Sparkles,
+  ShieldCheck,
   ArrowUpRight,
   ChevronRight,
 } from 'lucide-react';
@@ -28,6 +29,7 @@ interface SidebarProps {
   onOpenLanding?: () => void;
   onOpenDemoModal?: () => void;
   onOpenTour?: () => void;
+  onOpenDataPolicy?: () => void;
 }
 
 export const NAV_ITEMS: { key: NavItemKey; label: string; icon: React.ElementType; subTabs?: { id: string; label: string }[] }[] = [
@@ -76,6 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ownerName,
   onOpenLanding,
   onOpenTour,
+  onOpenDataPolicy,
 }) => {
   const { t } = useTranslation();
 
@@ -164,13 +167,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
-      {/* Quick Demo Mode & Product Tour Badge */}
+      {/* Data Policy Notice & Product Tour Actions */}
       <div className="p-3 mx-3 my-2 bg-neutral-900 border border-neutral-800 space-y-2 text-[10px] font-mono">
+        <button
+          onClick={onOpenDataPolicy}
+          className="w-full py-1.5 px-2 bg-neutral-950 border border-neutral-700 text-neutral-200 hover:text-white font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:border-white transition-colors"
+        >
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Data Policy & Backup</span>
+        </button>
+
         <button
           onClick={onOpenTour}
           className="w-full py-1.5 px-2 bg-white text-black font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:bg-neutral-200 transition-colors"
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <Sparkles className="w-3.5 h-3.5 text-black" />
           <span>Interactive Tour</span>
         </button>
         <div className="flex items-center justify-between pt-1 border-t border-neutral-800">
