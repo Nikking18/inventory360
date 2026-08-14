@@ -15,9 +15,18 @@ import {
   ShieldCheck,
   ArrowUpRight,
   ChevronRight,
+  Globe,
 } from 'lucide-react';
 
-export type NavItemKey = 'home' | 'sell' | 'reporting' | 'catalog' | 'inventory' | 'customers' | 'setup';
+export type NavItemKey =
+  | 'home'
+  | 'sell'
+  | 'fulfillment'
+  | 'reporting'
+  | 'catalog'
+  | 'inventory'
+  | 'customers'
+  | 'setup';
 
 interface SidebarProps {
   activeTab: NavItemKey;
@@ -32,41 +41,80 @@ interface SidebarProps {
   onOpenDataPolicy?: () => void;
 }
 
-export const NAV_ITEMS: { key: NavItemKey; label: string; icon: React.ElementType; subTabs?: { id: string; label: string }[] }[] = [
+export const NAV_ITEMS: {
+  key: NavItemKey;
+  label: string;
+  icon: React.ElementType;
+  subTabs?: { id: string; label: string }[];
+}[] = [
   { key: 'home', label: 'Home', icon: LayoutDashboard },
-  { key: 'sell', label: 'Sell', icon: ShoppingBag, subTabs: [
-    { id: 'quick-sale', label: 'Quick Sale POS' },
-    { id: 'sales-history', label: 'Sales History' },
-    { id: 'returns', label: 'Returns & Refunds' },
-  ]},
-  { key: 'reporting', label: 'Reporting', icon: BarChart3, subTabs: [
-    { id: 'retail-dashboard', label: 'Retail Dashboard' },
-    { id: 'sales-report', label: 'Sales Report' },
-    { id: 'inventory-report', label: 'Inventory Report' },
-    { id: 'purchase-report', label: 'Purchase Report' },
-    { id: 'profit-report', label: 'Profitability Report' },
-    { id: 'tax-report', label: 'Tax Report' },
-  ]},
-  { key: 'catalog', label: 'Catalog', icon: Package, subTabs: [
-    { id: 'products', label: 'All Products' },
-    { id: 'categories', label: 'Categories' },
-    { id: 'suppliers', label: 'Suppliers' },
-  ]},
-  { key: 'inventory', label: 'Inventory', icon: Boxes, subTabs: [
-    { id: 'stock-levels', label: 'Stock Levels' },
-    { id: 'low-stock', label: 'Low Stock Alerts' },
-    { id: 'dead-stock', label: 'Dead Stock' },
-    { id: 'movements', label: 'Stock Movements' },
-    { id: 'transfers', label: 'Stock Transfers' },
-    { id: 'purchases', label: 'Purchase Orders' },
-    { id: 'audits', label: 'Stock Audit / Count' },
-  ]},
+  {
+    key: 'sell',
+    label: 'Sell',
+    icon: ShoppingBag,
+    subTabs: [
+      { id: 'quick-sale', label: 'Quick Sale POS' },
+      { id: 'sales-history', label: 'Sales History' },
+      { id: 'returns', label: 'Returns & Refunds' },
+    ],
+  },
+  {
+    key: 'fulfillment',
+    label: 'Channels & Fulfillment',
+    icon: Globe,
+    subTabs: [
+      { id: 'all-orders', label: 'All Fulfillment Orders' },
+      { id: 'pending-dispatch', label: 'Pending Dispatch' },
+      { id: 'shipped-orders', label: 'Shipped & Tracking' },
+    ],
+  },
+  {
+    key: 'reporting',
+    label: 'Reporting',
+    icon: BarChart3,
+    subTabs: [
+      { id: 'retail-dashboard', label: 'Retail Dashboard' },
+      { id: 'sales-report', label: 'Sales Report' },
+      { id: 'inventory-report', label: 'Inventory Report' },
+      { id: 'purchase-report', label: 'Purchase Report' },
+      { id: 'profit-report', label: 'Profitability Report' },
+      { id: 'tax-report', label: 'Tax Report' },
+    ],
+  },
+  {
+    key: 'catalog',
+    label: 'Catalog',
+    icon: Package,
+    subTabs: [
+      { id: 'products', label: 'Master Catalog & Variants' },
+      { id: 'categories', label: 'Categories' },
+      { id: 'suppliers', label: 'Suppliers' },
+    ],
+  },
+  {
+    key: 'inventory',
+    label: 'Inventory',
+    icon: Boxes,
+    subTabs: [
+      { id: 'stock-levels', label: 'Stock Levels' },
+      { id: 'low-stock', label: 'Low Stock & Reorders' },
+      { id: 'lots-expiry', label: 'Lot & FIFO Expiry' },
+      { id: 'multi-location', label: 'Multi-Outlet Matrix' },
+      { id: 'movements', label: 'Stock Movements' },
+      { id: 'purchases', label: 'Purchase Orders' },
+    ],
+  },
   { key: 'customers', label: 'Customers', icon: Users },
-  { key: 'setup', label: 'Setup', icon: Settings, subTabs: [
-    { id: 'profile', label: 'Business Profile' },
-    { id: 'locations', label: 'Store Locations' },
-    { id: 'data', label: 'Data & Backup' },
-  ]},
+  {
+    key: 'setup',
+    label: 'Setup',
+    icon: Settings,
+    subTabs: [
+      { id: 'profile', label: 'Business Profile' },
+      { id: 'locations', label: 'Store Locations' },
+      { id: 'data', label: 'Data & Backup' },
+    ],
+  },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -135,9 +183,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   />
                   <span>{translatedLabel}</span>
                 </div>
-                {isActive && (
-                  <div className="w-1.5 h-1.5 bg-white" />
-                )}
+                {isActive && <div className="w-1.5 h-1.5 bg-white" />}
               </button>
 
               {/* Collapsible Sub-Items if Active */}
@@ -174,7 +220,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full py-1.5 px-2 bg-neutral-950 border border-neutral-700 text-neutral-200 hover:text-white font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:border-white transition-colors"
         >
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Data Policy & Backup</span>
+          <span>Data Policy &amp; Backup</span>
         </button>
 
         <button
@@ -207,7 +253,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div className="min-w-0">
             <p className="text-xs font-mono font-semibold text-white truncate leading-tight uppercase tracking-wide">
-              {businessName || 'ACME Electronics'}
+              {businessName || 'ACME Retail & Tech'}
             </p>
             <p className="text-[10px] text-neutral-500 font-mono truncate leading-tight mt-0.5 uppercase">
               {ownerName || 'Business Owner'}

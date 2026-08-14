@@ -1,5 +1,16 @@
 export type StockStatus = 'Healthy' | 'Low Stock' | 'Out of Stock' | 'Dead Stock';
 
+export interface ProductVariant {
+  id: string;
+  name: string; // e.g. "Size XL / Charcoal"
+  sku: string;
+  barcode: string;
+  costPrice: number;
+  retailPrice: number;
+  stockQuantity: number;
+  attributes: Record<string, string>; // e.g. { size: 'XL', color: 'Charcoal', material: 'Cotton' }
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -17,6 +28,14 @@ export interface Product {
   imageUrl?: string;
   status: StockStatus;
   locationQuantities: Record<string, number>; // locationId -> qty
+  locationReorderPoints?: Record<string, number>; // locationId -> reorder point
+  variants?: ProductVariant[];
+  customFields?: Record<string, string>; // Dynamic custom attributes (e.g. Material, Warranty, Weight)
+  lotNumber?: string;
+  batchNumber?: string;
+  serialNumber?: string;
+  expirationDate?: string;
+  documents?: string[]; // Attached specs / certificates
   lastSoldAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -62,7 +81,7 @@ export interface Location {
   isMain?: boolean;
 }
 
-export type MovementType = 'Sale' | 'Purchase' | 'Return' | 'Transfer' | 'Adjustment' | 'Damage';
+export type MovementType = 'Sale' | 'Purchase' | 'Return' | 'Transfer' | 'Adjustment' | 'Damage' | 'Fulfillment';
 
 export interface StockMovement {
   id: string;
@@ -75,13 +94,15 @@ export interface StockMovement {
   newStock: number;
   locationId: string;
   locationName: string;
-  referenceId?: string; // saleNumber, poNumber, etc.
+  referenceId?: string; // saleNumber, poNumber, orderNumber, etc.
+  lotNumber?: string;
   notes?: string;
   createdAt: string;
 }
 
 export interface SaleItem {
   productId: string;
+  variantId?: string;
   productName: string;
   sku: string;
   unitPrice: number;
@@ -106,6 +127,7 @@ export interface Sale {
   status: 'Completed' | 'Refunded';
   locationId: string;
   locationName: string;
+  channel?: string; // 'In-Store POS' | 'Shopify' | 'Amazon' | 'eBay'
   createdAt: string;
 }
 
@@ -137,6 +159,48 @@ export interface PurchaseOrder {
   locationName: string;
   notes?: string;
   createdAt: string;
+}
+
+export type SalesChannelType = 'Shopify' | 'Amazon' | 'eBay' | 'WooCommerce' | 'In-Store POS';
+
+export interface SalesChannel {
+  id: string;
+  name: SalesChannelType;
+  icon: string;
+  status: 'Connected' | 'Syncing' | 'Paused';
+  lastSyncedAt: string;
+  activeListingsCount: number;
+  pendingOrdersCount: number;
+  autoSyncInventory: boolean;
+}
+
+export type FulfillmentStatus = 'Pending' | 'Picking' | 'Packed' | 'Shipped' | 'Delivered' | 'Cancelled';
+
+export interface FulfillmentItem {
+  productId: string;
+  variantId?: string;
+  productName: string;
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface FulfillmentOrder {
+  id: string;
+  orderNumber: string;
+  channel: SalesChannelType;
+  customerName: string;
+  customerEmail: string;
+  shippingAddress: string;
+  items: FulfillmentItem[];
+  totalAmount: number;
+  status: FulfillmentStatus;
+  carrier?: 'FedEx' | 'UPS' | 'DHL' | 'USPS' | 'Local Courier';
+  trackingNumber?: string;
+  assignedLocationId: string;
+  assignedLocationName: string;
+  createdAt: string;
+  shippedAt?: string;
 }
 
 export interface Expense {

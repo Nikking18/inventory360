@@ -12,10 +12,12 @@ import {
   StockAudit,
   Expense,
   BusinessSettings,
+  FulfillmentOrder,
+  SalesChannel,
 } from './types';
 
 const DB_NAME = 'inventory360_db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
 
@@ -59,6 +61,12 @@ export function getDB() {
         }
         if (!db.objectStoreNames.contains('settings')) {
           db.createObjectStore('settings', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('fulfillmentOrders')) {
+          db.createObjectStore('fulfillmentOrders', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('salesChannels')) {
+          db.createObjectStore('salesChannels', { keyPath: 'id' });
         }
       },
     });
@@ -123,10 +131,14 @@ export async function clearAllStores(): Promise<void> {
     'stockAudits',
     'expenses',
     'settings',
+    'fulfillmentOrders',
+    'salesChannels',
   ];
   const tx = db.transaction(storeNames, 'readwrite');
   for (const store of storeNames) {
-    await tx.objectStore(store).clear();
+    if (db.objectStoreNames.contains(store)) {
+      await tx.objectStore(store).clear();
+    }
   }
   await tx.done;
 }

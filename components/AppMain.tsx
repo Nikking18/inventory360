@@ -13,6 +13,9 @@ import {
   Expense,
   BusinessSettings,
   StockTransfer,
+  SalesChannel,
+  FulfillmentOrder,
+  FulfillmentStatus,
 } from '../lib/types';
 import {
   getAllFromStore,
@@ -32,6 +35,8 @@ import {
   INITIAL_PURCHASE_ORDERS,
   INITIAL_STOCK_MOVEMENTS,
   INITIAL_EXPENSES,
+  INITIAL_SALES_CHANNELS,
+  INITIAL_FULFILLMENT_ORDERS,
   CLEAN_SETTINGS,
   CLEAN_LOCATIONS,
   CLEAN_CATEGORIES,
@@ -42,6 +47,7 @@ import { Sidebar, NavItemKey } from './Sidebar';
 import { LandingView } from './views/LandingView';
 import { DashboardView } from './views/DashboardView';
 import { SellView } from './views/SellView';
+import { FulfillmentView } from './views/FulfillmentView';
 import { CatalogView } from './views/CatalogView';
 import { InventoryView } from './views/InventoryView';
 import { CustomersView } from './views/CustomersView';
@@ -51,7 +57,22 @@ import { PrintReceipt } from './PrintReceipt';
 import { DataPolicyModal } from './common/DataPolicyModal';
 import { ProductTourModal } from './common/ProductTourModal';
 import { calculateStockStatus } from '../lib/utils';
-import { Layers, Sparkles, MapPin, Printer, Menu, X, Sun, Moon, Globe, DollarSign, Download, FileText, FileSpreadsheet, ChevronDown, BarChart3, HelpCircle } from 'lucide-react';
+import {
+  Layers,
+  Sparkles,
+  MapPin,
+  Printer,
+  Menu,
+  X,
+  Globe,
+  DollarSign,
+  Download,
+  FileText,
+  FileSpreadsheet,
+  ChevronDown,
+  BarChart3,
+  HelpCircle,
+} from 'lucide-react';
 import { exportToCSV, exportToExcel, exportToPDF } from '../lib/exportImport';
 import { LANGUAGES, SupportedLanguage } from '../lib/i18n';
 import { CURRENCIES } from '../lib/currencies';
@@ -65,8 +86,6 @@ export default function AppMain() {
   const [showDataPolicyNotice, setShowDataPolicyNotice] = useState<boolean>(false);
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
 
-  // Data Policy popup is controlled explicitly by user button clicks only
-
   // Core Data States
   const [settings, setSettings] = useState<BusinessSettings>(CLEAN_SETTINGS);
   const [locations, setLocations] = useState<Location[]>(CLEAN_LOCATIONS);
@@ -78,6 +97,8 @@ export default function AppMain() {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [salesChannels, setSalesChannels] = useState<SalesChannel[]>([]);
+  const [fulfillmentOrders, setFulfillmentOrders] = useState<FulfillmentOrder[]>([]);
 
   const [selectedLocation, setSelectedLocation] = useState<string>('all');
   const [printableSale, setPrintableSale] = useState<Sale | null>(null);
@@ -88,6 +109,7 @@ export default function AppMain() {
     await putManyToStore('locations', CLEAN_LOCATIONS);
     await putManyToStore('categories', CLEAN_CATEGORIES);
     await putManyToStore('suppliers', CLEAN_SUPPLIERS);
+    await putManyToStore('salesChannels', INITIAL_SALES_CHANNELS);
 
     setSettings(CLEAN_SETTINGS);
     setLocations(CLEAN_LOCATIONS);
@@ -99,6 +121,8 @@ export default function AppMain() {
     setPurchaseOrders([]);
     setMovements([]);
     setExpenses([]);
+    setSalesChannels(INITIAL_SALES_CHANNELS);
+    setFulfillmentOrders([]);
   };
 
   const seedDemoData = async () => {
@@ -113,6 +137,8 @@ export default function AppMain() {
     await putManyToStore('purchaseOrders', INITIAL_PURCHASE_ORDERS);
     await putManyToStore('stockMovements', INITIAL_STOCK_MOVEMENTS);
     await putManyToStore('expenses', INITIAL_EXPENSES);
+    await putManyToStore('salesChannels', INITIAL_SALES_CHANNELS);
+    await putManyToStore('fulfillmentOrders', INITIAL_FULFILLMENT_ORDERS);
 
     setSettings(INITIAL_SETTINGS);
     setLocations(INITIAL_LOCATIONS);
@@ -124,96 +150,41 @@ export default function AppMain() {
     setPurchaseOrders(INITIAL_PURCHASE_ORDERS);
     setMovements(INITIAL_STOCK_MOVEMENTS);
     setExpenses(INITIAL_EXPENSES);
+    setSalesChannels(INITIAL_SALES_CHANNELS);
+    setFulfillmentOrders(INITIAL_FULFILLMENT_ORDERS);
+    setShowLanding(false);
+  };
+
+  const handleClearAllData = async () => {
+    await initCleanData();
   };
 
   const loadAllData = async () => {
-    try {
-      let storedSettings = await getAllFromStore<BusinessSettings>('settings');
-      let storedLocations = await getAllFromStore<Location>('locations');
+    const s = await getAllFromStore<BusinessSettings>('settings');
+    const locs = await getAllFromStore<Location>('locations');
+    const cats = await getAllFromStore<Category>('categories');
+    const sups = await getAllFromStore<Supplier>('suppliers');
+    const prods = await getAllFromStore<Product>('products');
+    const custs = await getAllFromStore<Customer>('customers');
+    const sls = await getAllFromStore<Sale>('sales');
+    const pos = await getAllFromStore<PurchaseOrder>('purchaseOrders');
+    const movs = await getAllFromStore<StockMovement>('stockMovements');
+    const exps = await getAllFromStore<Expense>('expenses');
+    const chans = await getAllFromStore<SalesChannel>('salesChannels');
+    const fuls = await getAllFromStore<FulfillmentOrder>('fulfillmentOrders');
 
-      if (!storedSettings || storedSettings.length === 0 || !storedLocations || storedLocations.length === 0) {
-        await initCleanData();
-        return;
-      }
-
-      let storedProducts = await getAllFromStore<Product>('products');
-      let storedCategories = await getAllFromStore<Category>('categories');
-      let storedSuppliers = await getAllFromStore<Supplier>('suppliers');
-      let storedCustomers = await getAllFromStore<Customer>('customers');
-      let storedSales = await getAllFromStore<Sale>('sales');
-      let storedPOs = await getAllFromStore<PurchaseOrder>('purchaseOrders');
-      let storedMovements = await getAllFromStore<StockMovement>('stockMovements');
-      let storedExpenses = await getAllFromStore<Expense>('expenses');
-
-      if (storedSettings.length > 0) setSettings(storedSettings[0]);
-      setLocations(storedLocations.length > 0 ? storedLocations : CLEAN_LOCATIONS);
-      setCategories(storedCategories.length > 0 ? storedCategories : CLEAN_CATEGORIES);
-      setSuppliers(storedSuppliers.length > 0 ? storedSuppliers : CLEAN_SUPPLIERS);
-      setProducts(storedProducts);
-      setCustomers(storedCustomers);
-      setSales(storedSales);
-      setPurchaseOrders(storedPOs);
-      setMovements(storedMovements);
-      setExpenses(storedExpenses);
-    } catch (err) {
-      console.error('Error loading DB state:', err);
-    }
-  };
-
-  const toggleTheme = async () => {
-    const newTheme = settings.theme === 'light' ? 'dark' : 'light';
-    const updated: BusinessSettings = { ...settings, theme: newTheme };
-    setSettings(updated);
-    await putToStore('settings', updated);
-  };
-
-  const changeLanguage = async (newLang: SupportedLanguage) => {
-    const updated: BusinessSettings = { ...settings, language: newLang };
-    setSettings(updated);
-    await putToStore('settings', updated);
-  };
-
-  const changeCurrency = async (newCode: string) => {
-    const found = CURRENCIES.find((c) => c.code === newCode);
-    if (found) {
-      const updated: BusinessSettings = { ...settings, currencyCode: found.code, currencySymbol: found.symbol };
-      setSettings(updated);
-      await putToStore('settings', updated);
-    }
-  };
-
-  const [showHeaderExportMenu, setShowHeaderExportMenu] = useState<boolean>(false);
-
-  const getHeaderExportData = () => {
-    return products.map((p) => ({
-      'Product Name': p.name,
-      SKU: p.sku,
-      Category: categories.find((c) => c.id === p.categoryId)?.name || 'General',
-      'Stock Quantity': p.stockQuantity,
-      'Reorder Point': p.reorderPoint,
-      'Cost Price': `${settings.currencySymbol || '$'}${p.costPrice}`,
-      'Retail Price': `${settings.currencySymbol || '$'}${p.retailPrice}`,
-      Status: p.status,
-    }));
-  };
-
-  const handleHeaderExportCSV = () => {
-    exportToCSV(`Inventory_Report_${new Date().toISOString().split('T')[0]}`, getHeaderExportData());
-    setShowHeaderExportMenu(false);
-  };
-
-  const handleHeaderExportExcel = () => {
-    exportToExcel(`Inventory_Report_${new Date().toISOString().split('T')[0]}`, getHeaderExportData());
-    setShowHeaderExportMenu(false);
-  };
-
-  const handleHeaderExportPDF = () => {
-    exportToPDF(
-      `Inventory_Report_${new Date().toISOString().split('T')[0]}`,
-      `${settings.businessName || 'Inventory360'} - Executive Stock & Audit Report`,
-      getHeaderExportData()
-    );
-    setShowHeaderExportMenu(false);
+    if (s && s.length > 0) setSettings(s[0]);
+    if (locs) setLocations(locs);
+    if (cats) setCategories(cats);
+    if (sups) setSuppliers(sups);
+    if (prods) setProducts(prods);
+    if (custs) setCustomers(custs);
+    if (sls) setSales(sls);
+    if (pos) setPurchaseOrders(pos);
+    if (movs) setMovements(movs);
+    if (exps) setExpenses(exps);
+    setSalesChannels(chans && chans.length > 0 ? chans : INITIAL_SALES_CHANNELS);
+    setFulfillmentOrders(fuls && fuls.length > 0 ? fuls : INITIAL_FULFILLMENT_ORDERS);
   };
 
   // Dynamic Page Title Sync
@@ -244,21 +215,25 @@ export default function AppMain() {
         let storedPOs = await getAllFromStore<PurchaseOrder>('purchaseOrders');
         let storedMovements = await getAllFromStore<StockMovement>('stockMovements');
         let storedExpenses = await getAllFromStore<Expense>('expenses');
+        let storedChannels = await getAllFromStore<SalesChannel>('salesChannels');
+        let storedFuls = await getAllFromStore<FulfillmentOrder>('fulfillmentOrders');
 
         if (active) {
-          if (storedSettings.length > 0) setSettings(storedSettings[0]);
-          setLocations(storedLocations.length > 0 ? storedLocations : CLEAN_LOCATIONS);
-          setCategories(storedCategories.length > 0 ? storedCategories : CLEAN_CATEGORIES);
-          setSuppliers(storedSuppliers.length > 0 ? storedSuppliers : CLEAN_SUPPLIERS);
-          setProducts(storedProducts);
-          setCustomers(storedCustomers);
-          setSales(storedSales);
-          setPurchaseOrders(storedPOs);
-          setMovements(storedMovements);
-          setExpenses(storedExpenses);
+          setSettings(storedSettings[0]);
+          setLocations(storedLocations);
+          setCategories(storedCategories || []);
+          setSuppliers(storedSuppliers || []);
+          setProducts(storedProducts || []);
+          setCustomers(storedCustomers || []);
+          setSales(storedSales || []);
+          setPurchaseOrders(storedPOs || []);
+          setMovements(storedMovements || []);
+          setExpenses(storedExpenses || []);
+          setSalesChannels(storedChannels && storedChannels.length > 0 ? storedChannels : INITIAL_SALES_CHANNELS);
+          setFulfillmentOrders(storedFuls && storedFuls.length > 0 ? storedFuls : INITIAL_FULFILLMENT_ORDERS);
         }
       } catch (err) {
-        console.error('Error loading DB state:', err);
+        console.error('Failed to load local DB:', err);
       }
     };
     init();
@@ -267,57 +242,26 @@ export default function AppMain() {
     };
   }, []);
 
-  const handleClearAllData = async () => {
-    await clearAllStores();
-    const cleanSettings: BusinessSettings = {
-      id: 'settings',
-      businessName: 'My Store',
-      ownerName: 'Store Manager',
-      currencySymbol: '$',
-      taxRate: 8.5,
-      primaryLocationId: 'loc_1',
-      address: 'Main Store Address',
-      phone: '+1 555-0100',
-      email: 'store@example.com',
-      demoMode: false,
-    };
-    const cleanLoc: Location = { id: 'loc_1', name: 'Main Store', code: 'MS-01', address: 'Main Address', isMain: true };
-    await putToStore('settings', cleanSettings);
-    await putToStore('locations', cleanLoc);
-
-    setSettings(cleanSettings);
-    setLocations([cleanLoc]);
-    setCategories([]);
-    setSuppliers([]);
-    setProducts([]);
-    setCustomers([]);
-    setSales([]);
-    setPurchaseOrders([]);
-    setMovements([]);
-    setExpenses([]);
-  };
-
-  // HANDLERS FOR CATALOG
+  // HANDLERS FOR PRODUCTS
   const handleAddProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newProd: Product = {
+    const newProduct: Product = {
       ...productData,
       id: `prod_${Date.now()}`,
-      status: calculateStockStatus(productData),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    await putToStore('products', newProd);
-    setProducts((prev) => [newProd, ...prev]);
+    await putToStore('products', newProduct);
+    setProducts((prev) => [newProduct, ...prev]);
   };
 
-  const handleUpdateProduct = async (product: Product) => {
-    const updated = {
-      ...product,
-      status: calculateStockStatus(product),
+  const handleUpdateProduct = async (updatedProduct: Product) => {
+    const productWithTimestamp: Product = {
+      ...updatedProduct,
       updatedAt: new Date().toISOString(),
+      status: calculateStockStatus(updatedProduct),
     };
-    await putToStore('products', updated);
-    setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    await putToStore('products', productWithTimestamp);
+    setProducts((prev) => prev.map((p) => (p.id === updatedProduct.id ? productWithTimestamp : p)));
   };
 
   const handleDeleteProduct = async (id: string) => {
@@ -325,44 +269,60 @@ export default function AppMain() {
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // HANDLERS FOR SALES
-  const handleCompleteSale = async (
-    saleData: Omit<Sale, 'id' | 'saleNumber' | 'createdAt'>
-  ): Promise<Sale> => {
+  // HANDLERS FOR CUSTOMERS
+  const handleAddCustomer = async (custData: Omit<Customer, 'id' | 'totalOrders' | 'totalRevenue' | 'outstandingBalance' | 'createdAt'>) => {
+    const newCust: Customer = {
+      ...custData,
+      id: `cust_${Date.now()}`,
+      totalOrders: 0,
+      totalRevenue: 0,
+      outstandingBalance: 0,
+      createdAt: new Date().toISOString(),
+    };
+    await putToStore('customers', newCust);
+    setCustomers((prev) => [newCust, ...prev]);
+  };
+
+  // HANDLERS FOR SALES & POS
+  const handleCompleteSale = async (saleData: Omit<Sale, 'id' | 'saleNumber' | 'createdAt'>) => {
     const newSale: Sale = {
       ...saleData,
       id: `sale_${Date.now()}`,
       saleNumber: `SL-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      channel: 'In-Store POS',
       createdAt: new Date().toISOString(),
     };
 
     await putToStore('sales', newSale);
     setSales((prev) => [newSale, ...prev]);
 
-    // Update inventory & stock movements
+    // Update Product Stock Levels and Movements
     const updatedProds = [...products];
     const newMovements: StockMovement[] = [];
 
     for (const item of newSale.items) {
       const idx = updatedProds.findIndex((p) => p.id === item.productId);
       if (idx !== -1) {
-        const p = updatedProds[idx];
-        const prevStock = p.stockQuantity;
+        const prod = updatedProds[idx];
+        const prevStock = prod.stockQuantity;
         const newStock = Math.max(0, prevStock - item.quantity);
-        const updated = {
-          ...p,
+
+        const updatedProd: Product = {
+          ...prod,
           stockQuantity: newStock,
-          status: calculateStockStatus({ ...p, stockQuantity: newStock }),
-          lastSoldAt: new Date().toISOString(),
+          status: calculateStockStatus({ ...prod, stockQuantity: newStock }),
+          lastSoldAt: newSale.createdAt,
+          updatedAt: new Date().toISOString(),
         };
-        updatedProds[idx] = updated;
-        await putToStore('products', updated);
+
+        updatedProds[idx] = updatedProd;
+        await putToStore('products', updatedProd);
 
         const mov: StockMovement = {
           id: `sm_${Date.now()}_${Math.random()}`,
-          productId: p.id,
-          productName: p.name,
-          sku: p.sku,
+          productId: prod.id,
+          productName: prod.name,
+          sku: prod.sku,
           type: 'Sale',
           quantityChange: -item.quantity,
           previousStock: prevStock,
@@ -370,6 +330,7 @@ export default function AppMain() {
           locationId: newSale.locationId,
           locationName: newSale.locationName,
           referenceId: newSale.saleNumber,
+          notes: `POS Sale #${newSale.saleNumber}`,
           createdAt: new Date().toISOString(),
         };
         newMovements.push(mov);
@@ -380,19 +341,19 @@ export default function AppMain() {
     setProducts(updatedProds);
     setMovements((prev) => [...newMovements, ...prev]);
 
-    // Update Customer CRM statistics
+    // Update Customer profile stats if attached
     if (newSale.customerId) {
-      const custIdx = customers.findIndex((c) => c.id === newSale.customerId);
-      if (custIdx !== -1) {
-        const targetCust = customers[custIdx];
+      const cIdx = customers.findIndex((c) => c.id === newSale.customerId);
+      if (cIdx !== -1) {
+        const cust = customers[cIdx];
         const updatedCust: Customer = {
-          ...targetCust,
-          totalOrders: (targetCust.totalOrders || 0) + 1,
-          totalRevenue: (targetCust.totalRevenue || 0) + newSale.total,
-          lastPurchaseDate: new Date().toISOString(),
+          ...cust,
+          totalOrders: cust.totalOrders + 1,
+          totalRevenue: cust.totalRevenue + newSale.total,
+          lastPurchaseDate: newSale.createdAt,
         };
         await putToStore('customers', updatedCust);
-        setCustomers((prev) => prev.map((c) => (c.id === updatedCust.id ? updatedCust : c)));
+        setCustomers((prev) => prev.map((c) => (c.id === cust.id ? updatedCust : c)));
       }
     }
 
@@ -403,100 +364,20 @@ export default function AppMain() {
     const sale = sales.find((s) => s.id === saleId);
     if (!sale || sale.status === 'Refunded') return;
 
-    const updatedSale = { ...sale, status: 'Refunded' as const };
+    const updatedSale: Sale = { ...sale, status: 'Refunded' };
     await putToStore('sales', updatedSale);
     setSales((prev) => prev.map((s) => (s.id === saleId ? updatedSale : s)));
 
-    // Restock items
-    const updatedProds = [...products];
-    for (const item of sale.items) {
-      const idx = updatedProds.findIndex((p) => p.id === item.productId);
-      if (idx !== -1) {
-        const p = updatedProds[idx];
-        const prevStock = p.stockQuantity;
-        const newStock = prevStock + item.quantity;
-        const updated = {
-          ...p,
-          stockQuantity: newStock,
-          status: calculateStockStatus({ ...p, stockQuantity: newStock }),
-        };
-        updatedProds[idx] = updated;
-        await putToStore('products', updated);
-
-        const mov: StockMovement = {
-          id: `sm_${Date.now()}_${Math.random()}`,
-          productId: p.id,
-          productName: p.name,
-          sku: p.sku,
-          type: 'Return',
-          quantityChange: item.quantity,
-          previousStock: prevStock,
-          newStock: newStock,
-          locationId: sale.locationId,
-          locationName: sale.locationName,
-          referenceId: sale.saleNumber,
-          createdAt: new Date().toISOString(),
-        };
-        await putToStore('stockMovements', mov);
-        setMovements((prev) => [mov, ...prev]);
-      }
-    }
-    setProducts(updatedProds);
-
-    // Update Customer CRM revenue on refund
-    if (sale.customerId) {
-      const custIdx = customers.findIndex((c) => c.id === sale.customerId);
-      if (custIdx !== -1) {
-        const targetCust = customers[custIdx];
-        const updatedCust: Customer = {
-          ...targetCust,
-          totalRevenue: Math.max(0, (targetCust.totalRevenue || 0) - sale.total),
-        };
-        await putToStore('customers', updatedCust);
-        setCustomers((prev) => prev.map((c) => (c.id === updatedCust.id ? updatedCust : c)));
-      }
-    }
-  };
-
-  // HANDLER FOR PURCHASE ORDERS
-  const handleCreatePO = async (poData: Omit<PurchaseOrder, 'id' | 'poNumber' | 'createdAt'>) => {
-    const newPO: PurchaseOrder = {
-      ...poData,
-      id: `po_${Date.now()}`,
-      poNumber: `PO-2026-${Math.floor(100 + Math.random() * 900)}`,
-      createdAt: new Date().toISOString(),
-    };
-    await putToStore('purchaseOrders', newPO);
-    setPurchaseOrders((prev) => [newPO, ...prev]);
-  };
-
-  const handleReceivePO = async (poId: string) => {
-    const po = purchaseOrders.find((p) => p.id === poId);
-    if (!po || po.status === 'Received') return;
-
-    const updatedPO: PurchaseOrder = {
-      ...po,
-      status: 'Received',
-      receivedDate: new Date().toISOString(),
-      items: po.items.map((item) => ({
-        ...item,
-        receivedQuantity: item.orderedQuantity,
-      })),
-    };
-
-    await putToStore('purchaseOrders', updatedPO);
-    setPurchaseOrders((prev) => prev.map((p) => (p.id === poId ? updatedPO : p)));
-
-    // Increment product stock and record audit movements
+    // Restock returned items
     const updatedProds = [...products];
     const newMovements: StockMovement[] = [];
 
-    for (const item of po.items) {
-      const idx = updatedProds.findIndex((prod) => prod.id === item.productId);
+    for (const item of sale.items) {
+      const idx = updatedProds.findIndex((p) => p.id === item.productId);
       if (idx !== -1) {
         const prod = updatedProds[idx];
         const prevStock = prod.stockQuantity;
-        const newStock = prevStock + item.orderedQuantity;
+        const newStock = prevStock + item.quantity;
 
         const updatedProd: Product = {
           ...prod,
@@ -509,18 +390,18 @@ export default function AppMain() {
         await putToStore('products', updatedProd);
 
         const mov: StockMovement = {
-          id: `sm_${Date.now()}_po_${Math.random()}`,
+          id: `sm_${Date.now()}_ref_${Math.random()}`,
           productId: prod.id,
           productName: prod.name,
           sku: prod.sku,
-          type: 'Purchase',
-          quantityChange: item.orderedQuantity,
+          type: 'Return',
+          quantityChange: item.quantity,
           previousStock: prevStock,
           newStock: newStock,
-          locationId: po.locationId,
-          locationName: po.locationName,
-          referenceId: po.poNumber,
-          notes: `Received PO #${po.poNumber} from ${po.supplierName}`,
+          locationId: sale.locationId,
+          locationName: sale.locationName,
+          referenceId: sale.saleNumber,
+          notes: `Refund for sale #${sale.saleNumber}`,
           createdAt: new Date().toISOString(),
         };
         newMovements.push(mov);
@@ -530,6 +411,231 @@ export default function AppMain() {
 
     setProducts(updatedProds);
     setMovements((prev) => [...newMovements, ...prev]);
+  };
+
+  // HANDLER FOR PURCHASE ORDERS WITH PARTIAL RECEIVING
+  const handleCreatePO = async (poData: Omit<PurchaseOrder, 'id' | 'poNumber' | 'createdAt'>) => {
+    const newPO: PurchaseOrder = {
+      ...poData,
+      id: `po_${Date.now()}`,
+      poNumber: `PO-2026-${Math.floor(100 + Math.random() * 900)}`,
+      createdAt: new Date().toISOString(),
+    };
+    await putToStore('purchaseOrders', newPO);
+    setPurchaseOrders((prev) => [newPO, ...prev]);
+  };
+
+  const handleReceivePO = async (poId: string, receivedItemsMap?: Record<string, number>) => {
+    const po = purchaseOrders.find((p) => p.id === poId);
+    if (!po || po.status === 'Received') return;
+
+    let isAllReceived = true;
+    const updatedItems = po.items.map((item) => {
+      const addedQty = receivedItemsMap ? receivedItemsMap[item.productId] ?? (item.orderedQuantity - (item.receivedQuantity || 0)) : (item.orderedQuantity - (item.receivedQuantity || 0));
+      const totalRcvd = (item.receivedQuantity || 0) + addedQty;
+      if (totalRcvd < item.orderedQuantity) {
+        isAllReceived = false;
+      }
+      return {
+        ...item,
+        receivedQuantity: totalRcvd,
+      };
+    });
+
+    const updatedPO: PurchaseOrder = {
+      ...po,
+      status: isAllReceived ? 'Received' : 'Partial',
+      receivedDate: new Date().toISOString(),
+      items: updatedItems,
+    };
+
+    await putToStore('purchaseOrders', updatedPO);
+    setPurchaseOrders((prev) => prev.map((p) => (p.id === poId ? updatedPO : p)));
+
+    // Increment product stock and record audit movements
+    const updatedProds = [...products];
+    const newMovements: StockMovement[] = [];
+
+    for (const item of po.items) {
+      const addedQty = receivedItemsMap ? receivedItemsMap[item.productId] ?? (item.orderedQuantity - (item.receivedQuantity || 0)) : (item.orderedQuantity - (item.receivedQuantity || 0));
+      if (addedQty > 0) {
+        const idx = updatedProds.findIndex((prod) => prod.id === item.productId);
+        if (idx !== -1) {
+          const prod = updatedProds[idx];
+          const prevStock = prod.stockQuantity;
+          const newStock = prevStock + addedQty;
+
+          const updatedProd: Product = {
+            ...prod,
+            stockQuantity: newStock,
+            status: calculateStockStatus({ ...prod, stockQuantity: newStock }),
+            updatedAt: new Date().toISOString(),
+          };
+
+          updatedProds[idx] = updatedProd;
+          await putToStore('products', updatedProd);
+
+          const mov: StockMovement = {
+            id: `sm_${Date.now()}_po_${Math.random().toString(36).substr(2, 4)}`,
+            productId: prod.id,
+            productName: prod.name,
+            sku: prod.sku,
+            type: 'Purchase',
+            quantityChange: addedQty,
+            previousStock: prevStock,
+            newStock: newStock,
+            locationId: po.locationId,
+            locationName: po.locationName,
+            referenceId: po.poNumber,
+            lotNumber: prod.lotNumber,
+            notes: `Received PO #${po.poNumber} (${addedQty} qty) from ${po.supplierName}`,
+            createdAt: new Date().toISOString(),
+          };
+          newMovements.push(mov);
+          await putToStore('stockMovements', mov);
+        }
+      }
+    }
+
+    setProducts(updatedProds);
+    setMovements((prev) => [...newMovements, ...prev]);
+  };
+
+  // Bulk Auto-Generate POs for Low Stock
+  const handleBulkAutoGeneratePOs = async () => {
+    const lowStockItems = products.filter((p) => p.stockQuantity <= p.reorderPoint && p.status !== 'Dead Stock');
+    if (lowStockItems.length === 0) return;
+
+    // Group by supplier
+    const supplierGroups: Record<string, Product[]> = {};
+    lowStockItems.forEach((p) => {
+      if (!supplierGroups[p.supplierId]) {
+        supplierGroups[p.supplierId] = [];
+      }
+      supplierGroups[p.supplierId].push(p);
+    });
+
+    const newPOs: PurchaseOrder[] = [];
+    for (const [supId, prods] of Object.entries(supplierGroups)) {
+      const sup = suppliers.find((s) => s.id === supId) || {
+        id: supId,
+        name: prods[0]?.supplierName || 'Primary Supplier',
+      };
+      const items = prods.map((p) => {
+        const orderQty = Math.max(20, p.reorderPoint * 2 - p.stockQuantity);
+        return {
+          productId: p.id,
+          productName: p.name,
+          sku: p.sku,
+          unitCost: p.costPrice,
+          orderedQuantity: orderQty,
+          receivedQuantity: 0,
+          total: p.costPrice * orderQty,
+        };
+      });
+
+      const subtotal = items.reduce((acc, i) => acc + i.total, 0);
+      const po: PurchaseOrder = {
+        id: `po_auto_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        poNumber: `PO-2026-AUTO-${Math.floor(100 + Math.random() * 900)}`,
+        supplierId: sup.id,
+        supplierName: sup.name,
+        items,
+        subtotal,
+        tax: subtotal * 0.085,
+        total: subtotal * 1.085,
+        status: 'Sent',
+        expectedDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
+        locationId: locations[0]?.id || 'loc_downtown',
+        locationName: locations[0]?.name || 'Downtown Flagship',
+        notes: 'Automated reorder PO generated from low stock threshold alerts.',
+        createdAt: new Date().toISOString(),
+      };
+
+      newPOs.push(po);
+      await putToStore('purchaseOrders', po);
+    }
+
+    setPurchaseOrders((prev) => [...newPOs, ...prev]);
+  };
+
+  // MULTI-CHANNEL SALES SYNC & FULFILLMENT HANDLERS
+  const handleSyncAllChannels = async () => {
+    const updated = salesChannels.map((c) => ({
+      ...c,
+      status: 'Connected' as const,
+      lastSyncedAt: new Date().toISOString(),
+      activeListingsCount: products.filter((p) => p.status !== 'Out of Stock').length,
+    }));
+    await putManyToStore('salesChannels', updated);
+    setSalesChannels(updated);
+  };
+
+  const handleUpdateFulfillmentStatus = async (
+    orderId: string,
+    status: FulfillmentStatus,
+    carrier?: 'FedEx' | 'UPS' | 'DHL' | 'USPS' | 'Local Courier',
+    trackingNumber?: string
+  ) => {
+    const order = fulfillmentOrders.find((o) => o.id === orderId);
+    if (!order) return;
+
+    const updatedOrder: FulfillmentOrder = {
+      ...order,
+      status,
+      carrier: carrier || order.carrier,
+      trackingNumber: trackingNumber || order.trackingNumber,
+      shippedAt: status === 'Shipped' ? new Date().toISOString() : order.shippedAt,
+    };
+
+    await putToStore('fulfillmentOrders', updatedOrder);
+    setFulfillmentOrders((prev) => prev.map((o) => (o.id === orderId ? updatedOrder : o)));
+
+    // When order is dispatched, decrement inventory and log movements
+    if (status === 'Shipped' && order.status !== 'Shipped') {
+      const newMovements: StockMovement[] = [];
+      const updatedProds = [...products];
+
+      for (const item of order.items) {
+        const pIdx = updatedProds.findIndex((p) => p.id === item.productId);
+        if (pIdx !== -1) {
+          const prod = updatedProds[pIdx];
+          const prevStock = prod.stockQuantity;
+          const newStock = Math.max(0, prevStock - item.quantity);
+
+          const updatedProd: Product = {
+            ...prod,
+            stockQuantity: newStock,
+            status: calculateStockStatus({ ...prod, stockQuantity: newStock }),
+          };
+
+          updatedProds[pIdx] = updatedProd;
+          await putToStore('products', updatedProd);
+
+          const mov: StockMovement = {
+            id: `sm_${Date.now()}_ful_${Math.random().toString(36).substr(2, 4)}`,
+            productId: prod.id,
+            productName: prod.name,
+            sku: prod.sku,
+            type: 'Fulfillment',
+            quantityChange: -item.quantity,
+            previousStock: prevStock,
+            newStock: newStock,
+            locationId: order.assignedLocationId,
+            locationName: order.assignedLocationName,
+            referenceId: order.orderNumber,
+            notes: `Dispatched order #${order.orderNumber} via ${carrier || 'Courier'} (Tracking: ${trackingNumber || 'N/A'})`,
+            createdAt: new Date().toISOString(),
+          };
+
+          newMovements.push(mov);
+          await putToStore('stockMovements', mov);
+        }
+      }
+
+      setProducts(updatedProds);
+      setMovements((prev) => [...newMovements, ...prev]);
+    }
   };
 
   // HANDLER FOR STOCK ADJUSTMENT
@@ -578,69 +684,80 @@ export default function AppMain() {
     };
     await putToStore('stockTransfers', transfer);
 
-    // Record stock movements and adjust product location quantities
-    const updatedProds = [...products];
+    // Record stock movements for source and target
     const newMovements: StockMovement[] = [];
+    const updatedProds = [...products];
 
     for (const item of transfer.items) {
-      const idx = updatedProds.findIndex((prod) => prod.id === item.productId);
+      const idx = updatedProds.findIndex((p) => p.id === item.productId);
       if (idx !== -1) {
-        const p = updatedProds[idx];
-        const currentLocQty = { ...(p.locationQuantities || {}) };
-        const sourceQty = currentLocQty[transfer.sourceLocationId] ?? p.stockQuantity;
-        const targetQty = currentLocQty[transfer.targetLocationId] ?? 0;
+        const prod = updatedProds[idx];
+        const srcQty = prod.locationQuantities?.[transfer.sourceLocationId] || 0;
+        const dstQty = prod.locationQuantities?.[transfer.targetLocationId] || 0;
 
-        currentLocQty[transfer.sourceLocationId] = Math.max(0, sourceQty - item.quantity);
-        currentLocQty[transfer.targetLocationId] = targetQty + item.quantity;
+        const updatedLocationQuantities = {
+          ...(prod.locationQuantities || {}),
+          [transfer.sourceLocationId]: Math.max(0, srcQty - item.quantity),
+          [transfer.targetLocationId]: dstQty + item.quantity,
+        };
 
-        const updatedP: Product = {
-          ...p,
-          locationQuantities: currentLocQty,
+        const updatedProd: Product = {
+          ...prod,
+          locationQuantities: updatedLocationQuantities,
           updatedAt: new Date().toISOString(),
         };
-        updatedProds[idx] = updatedP;
-        await putToStore('products', updatedP);
 
-        const mov: StockMovement = {
-          id: `sm_${Date.now()}_tr_${Math.random()}`,
-          productId: p.id,
-          productName: p.name,
-          sku: p.sku,
+        updatedProds[idx] = updatedProd;
+        await putToStore('products', updatedProd);
+
+        const movOut: StockMovement = {
+          id: `sm_${Date.now()}_out_${Math.random()}`,
+          productId: prod.id,
+          productName: prod.name,
+          sku: prod.sku,
+          type: 'Transfer',
+          quantityChange: -item.quantity,
+          previousStock: srcQty,
+          newStock: Math.max(0, srcQty - item.quantity),
+          locationId: transfer.sourceLocationId,
+          locationName: transfer.sourceLocationName,
+          referenceId: transfer.transferNumber,
+          notes: `Transfer OUT to ${transfer.targetLocationName}`,
+          createdAt: new Date().toISOString(),
+        };
+
+        const movIn: StockMovement = {
+          id: `sm_${Date.now()}_in_${Math.random()}`,
+          productId: prod.id,
+          productName: prod.name,
+          sku: prod.sku,
           type: 'Transfer',
           quantityChange: item.quantity,
-          previousStock: p.stockQuantity,
-          newStock: p.stockQuantity,
+          previousStock: dstQty,
+          newStock: dstQty + item.quantity,
           locationId: transfer.targetLocationId,
           locationName: transfer.targetLocationName,
           referenceId: transfer.transferNumber,
-          notes: `Transferred ${item.quantity} units from ${transfer.sourceLocationName} to ${transfer.targetLocationName}`,
+          notes: `Transfer IN from ${transfer.sourceLocationName}`,
           createdAt: new Date().toISOString(),
         };
-        newMovements.push(mov);
-        await putToStore('stockMovements', mov);
+
+        newMovements.push(movOut, movIn);
+        await putToStore('stockMovements', movOut);
+        await putToStore('stockMovements', movIn);
       }
     }
+
     setProducts(updatedProds);
     setMovements((prev) => [...newMovements, ...prev]);
   };
 
-  // HANDLER FOR CUSTOMERS
-  const handleAddCustomer = async (
-    customerData: Omit<Customer, 'id' | 'totalOrders' | 'totalRevenue' | 'outstandingBalance' | 'createdAt'>
-  ) => {
-    const newCust: Customer = {
-      ...customerData,
-      id: `cust_${Date.now()}`,
-      totalOrders: 0,
-      totalRevenue: 0,
-      outstandingBalance: 0,
-      createdAt: new Date().toISOString(),
-    };
-    await putToStore('customers', newCust);
-    setCustomers((prev) => [newCust, ...prev]);
+  // HANDLERS FOR SETTINGS & LOCATIONS
+  const handleUpdateSettings = async (newSettings: BusinessSettings) => {
+    await putToStore('settings', newSettings);
+    setSettings(newSettings);
   };
 
-  // HANDLER FOR LOCATIONS & SETTINGS
   const handleAddLocation = async (locData: Omit<Location, 'id'>) => {
     const newLoc: Location = {
       ...locData,
@@ -650,308 +767,317 @@ export default function AppMain() {
     setLocations((prev) => [...prev, newLoc]);
   };
 
-  const handleUpdateSettings = async (newSettings: BusinessSettings) => {
-    const updated = { id: 'settings', ...newSettings };
-    await putToStore('settings', updated);
-    setSettings(updated);
-  };
-
   const handlePrintReceipt = (sale: Sale) => {
     setPrintableSale(sale);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        window.print();
-      });
-    });
+    setTimeout(() => {
+      window.print();
+    }, 150);
   };
-
-
 
   return (
     <I18nProvider language={(settings.language as SupportedLanguage) || 'en'}>
-      <div className="min-h-screen flex antialiased font-sans bg-neutral-950 text-neutral-200">
-      {/* 1. Desktop Permanent Sidebar */}
-      <aside className="hidden md:block shrink-0 border-r border-neutral-800">
-        <Sidebar
-          activeTab={activeTab}
-          onTabChange={(tab) => {
-            setActiveTab(tab);
-            setShowLanding(false);
-          }}
-          activeSubTab={activeSubTab}
-          onSubTabChange={(sub) => setActiveSubTab(sub)}
-          businessName={settings.businessName}
-          ownerName={settings.ownerName}
-          onOpenLanding={() => setShowLanding(true)}
-          onOpenTour={() => setIsTourOpen(true)}
-          onOpenDataPolicy={() => setShowDataPolicyNotice(true)}
-        />
-      </aside>
-
-      {/* Mobile Drawer Navigation Overlay */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
-          <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={() => setIsMobileMenuOpen(false)}
+      <div className="flex h-screen bg-neutral-950 text-neutral-200 antialiased overflow-hidden font-mono">
+        {/* 1. Left Fixed Navigation Rail */}
+        <aside className="hidden md:block shrink-0">
+          <Sidebar
+            activeTab={activeTab}
+            onTabChange={(tab) => {
+              setActiveTab(tab);
+              setShowLanding(false);
+            }}
+            activeSubTab={activeSubTab}
+            onSubTabChange={setActiveSubTab}
+            businessName={settings.businessName}
+            ownerName={settings.ownerName}
+            onOpenLanding={() => setShowLanding(true)}
+            onOpenTour={() => setIsTourOpen(true)}
+            onOpenDataPolicy={() => setShowDataPolicyNotice(true)}
           />
-          <div className="relative z-10 w-72 max-w-[85vw] h-full bg-neutral-950 border-r border-neutral-800 flex flex-col">
-            <div className="p-4 border-b border-neutral-800 flex items-center justify-between font-mono">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
-                System Menu
-              </span>
-              <button
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-1 text-neutral-400 hover:text-white"
-                aria-label="Close menu"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <Sidebar
-                activeTab={activeTab}
-                onTabChange={(tab) => {
-                  setActiveTab(tab);
-                  setShowLanding(false);
-                  setIsMobileMenuOpen(false);
-                }}
-                activeSubTab={activeSubTab}
-                onSubTabChange={(sub) => {
-                  setActiveSubTab(sub);
-                  setIsMobileMenuOpen(false);
-                }}
-                businessName={settings.businessName}
-                ownerName={settings.ownerName}
-                onOpenLanding={() => {
-                  setShowLanding(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                onOpenTour={() => {
-                  setIsTourOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                onOpenDataPolicy={() => {
-                  setShowDataPolicyNotice(true);
-                  setIsMobileMenuOpen(false);
-                }}
-              />
+        </aside>
+
+        {/* Mobile Drawer Navigation Overlay */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-50 flex md:hidden">
+            <div
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <div className="relative z-10 w-72 max-w-[85vw] h-full bg-neutral-950 border-r border-neutral-800 flex flex-col">
+              <div className="p-4 border-b border-neutral-800 flex items-center justify-between font-mono">
+                <span className="text-xs font-bold text-white uppercase tracking-wider">
+                  System Menu
+                </span>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-1 text-neutral-400 hover:text-white"
+                  aria-label="Close menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <Sidebar
+                  activeTab={activeTab}
+                  onTabChange={(tab) => {
+                    setActiveTab(tab);
+                    setShowLanding(false);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  activeSubTab={activeSubTab}
+                  onSubTabChange={(sub) => {
+                    setActiveSubTab(sub);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  businessName={settings.businessName}
+                  ownerName={settings.ownerName}
+                  onOpenLanding={() => {
+                    setShowLanding(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  onOpenTour={() => {
+                    setIsTourOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  onOpenDataPolicy={() => {
+                    setShowDataPolicyNotice(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* 2. Main Application Frame */}
-      <main className="flex-1 min-w-0 flex flex-col min-h-screen overflow-y-auto">
-        {/* Top Header Bar */}
-        <header className="h-16 px-3 sm:px-6 lg:px-8 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur-md sticky top-0 z-20 flex items-center justify-between no-print gap-1.5 sm:gap-4 overflow-hidden">
-          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-1.5 text-neutral-300 hover:text-white bg-neutral-900 border border-neutral-800 shrink-0"
-              aria-label="Toggle Navigation"
-            >
-              <Menu className="w-4 h-4" />
-            </button>
-            {/* Clickable Breadcrumbs Navigation */}
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono">
+        {/* 2. Main Application Frame */}
+        <main className="flex-1 min-w-0 flex flex-col min-h-screen overflow-y-auto">
+          {/* Top Header Bar */}
+          <header className="h-16 px-3 sm:px-6 lg:px-8 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur-md sticky top-0 z-20 flex items-center justify-between no-print gap-1.5 sm:gap-4 overflow-hidden">
+            <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
               <button
-                onClick={() => {
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-1.5 text-neutral-300 hover:text-white bg-neutral-900 border border-neutral-800 shrink-0"
+                aria-label="Toggle Navigation"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+
+              {/* Clickable Breadcrumbs Navigation */}
+              <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono">
+                <button
+                  onClick={() => {
+                    setShowLanding(false);
+                    setActiveTab('home');
+                    setActiveSubTab('retail-dashboard');
+                  }}
+                  className="text-neutral-400 hover:text-white uppercase font-bold transition-colors flex items-center gap-1"
+                  title="Return to Main Dashboard"
+                >
+                  <div className="w-1.5 h-1.5 bg-emerald-400 rotate-45 hidden sm:block shrink-0" />
+                  <span>Inventory 360</span>
+                </button>
+                <span className="text-neutral-600 shrink-0">/</span>
+                <button
+                  onClick={() => setShowLanding(false)}
+                  className="text-neutral-400 hover:text-white uppercase tracking-wider truncate"
+                >
+                  {showLanding ? 'Overview' : activeTab}
+                </button>
+                <span className="text-neutral-600 shrink-0">/</span>
+                <span className="text-white font-bold uppercase tracking-wider truncate max-w-[80px] sm:max-w-none bg-neutral-900 px-1.5 py-0.5 border border-neutral-800">
+                  {showLanding ? 'Welcome Hub' : activeSubTab.replace('-', ' ')}
+                </span>
+              </nav>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {/* Business Badge */}
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 bg-neutral-900 border border-neutral-800 text-neutral-300 rounded-none text-[10px] sm:text-[11px] font-mono shrink-0">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shrink-0" />
+                <span className="truncate max-w-[120px] uppercase font-bold text-white">
+                  {settings.businessName}
+                </span>
+              </div>
+
+              {/* Interactive Product Tour Button */}
+              <button
+                onClick={() => setIsTourOpen(true)}
+                className="px-2.5 sm:px-3 py-1.5 bg-white text-black font-bold uppercase tracking-wider text-[10px] sm:text-xs hover:bg-neutral-200 transition-colors flex items-center gap-1.5 shrink-0"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Product Tour</span>
+              </button>
+
+              {/* Demo Mode Badge */}
+              <button
+                onClick={seedDemoData}
+                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white text-[10px] font-mono uppercase tracking-wider transition-colors"
+                title="Reload Demo Store Datasets"
+              >
+                <Layers className="w-3 h-3 text-emerald-400" />
+                <span>Reset Demo</span>
+              </button>
+            </div>
+          </header>
+
+          {/* View Container */}
+          <div className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+            {showLanding ? (
+              <LandingView
+                onStartDemo={seedDemoData}
+                onStartFresh={() => {
+                  initCleanData();
                   setShowLanding(false);
                   setActiveTab('home');
-                  setActiveSubTab('retail-dashboard');
                 }}
-                className="text-neutral-400 hover:text-white uppercase font-bold transition-colors flex items-center gap-1"
-                title="Return to Main Dashboard"
-              >
-                <div className="w-1.5 h-1.5 bg-emerald-400 rotate-45 hidden sm:block shrink-0" />
-                <span>Inventory 360</span>
-              </button>
-              <span className="text-neutral-600 shrink-0">/</span>
-              <button
-                onClick={() => setShowLanding(false)}
-                className="text-neutral-400 hover:text-white uppercase tracking-wider truncate"
-              >
-                {showLanding ? 'Overview' : activeTab}
-              </button>
-              <span className="text-neutral-600 shrink-0">/</span>
-              <span className="text-white font-bold uppercase tracking-wider truncate max-w-[80px] sm:max-w-none bg-neutral-900 px-1.5 py-0.5 border border-neutral-800">
-                {showLanding ? 'Welcome Hub' : activeSubTab.replace('-', ' ')}
-              </span>
-            </nav>
+                onOpenTour={() => setIsTourOpen(true)}
+              />
+            ) : (
+              <>
+                {activeTab === 'home' && (
+                  <DashboardView
+                    products={products}
+                    sales={sales}
+                    purchaseOrders={purchaseOrders}
+                    locations={locations}
+                    selectedLocation={selectedLocation}
+                    onLocationChange={setSelectedLocation}
+                    onNavigate={(tab, subTab) => {
+                      setActiveTab(tab);
+                      if (subTab) setActiveSubTab(subTab);
+                    }}
+                    currencySymbol={settings.currencySymbol}
+                  />
+                )}
+
+                {activeTab === 'sell' && (
+                  <SellView
+                    products={products}
+                    customers={customers}
+                    locations={locations}
+                    selectedLocation={selectedLocation}
+                    sales={sales}
+                    onCompleteSale={handleCompleteSale}
+                    onRefundSale={handleRefundSale}
+                    currencySymbol={settings.currencySymbol}
+                    taxRate={settings.taxRate}
+                    onPrintReceipt={handlePrintReceipt}
+                    activeSubTab={activeSubTab}
+                    onSubTabChange={setActiveSubTab}
+                  />
+                )}
+
+                {activeTab === 'fulfillment' && (
+                  <FulfillmentView
+                    channels={salesChannels}
+                    orders={fulfillmentOrders}
+                    products={products}
+                    locations={locations}
+                    onSyncAllChannels={handleSyncAllChannels}
+                    onUpdateOrderStatus={handleUpdateFulfillmentStatus}
+                    currencySymbol={settings.currencySymbol}
+                  />
+                )}
+
+                {activeTab === 'catalog' && (
+                  <CatalogView
+                    products={products}
+                    categories={categories}
+                    suppliers={suppliers}
+                    locations={locations}
+                    onAddProduct={handleAddProduct}
+                    onUpdateProduct={handleUpdateProduct}
+                    onDeleteProduct={handleDeleteProduct}
+                    currencySymbol={settings.currencySymbol}
+                    activeSubTab={activeSubTab}
+                    onSubTabChange={setActiveSubTab}
+                  />
+                )}
+
+                {activeTab === 'inventory' && (
+                  <InventoryView
+                    products={products}
+                    movements={movements}
+                    locations={locations}
+                    suppliers={suppliers}
+                    purchaseOrders={purchaseOrders}
+                    selectedLocation={selectedLocation}
+                    onCreatePO={handleCreatePO}
+                    onReceivePO={handleReceivePO}
+                    onStockAdjustment={handleStockAdjustment}
+                    onStockTransfer={handleStockTransfer}
+                    onBulkAutoGeneratePOs={handleBulkAutoGeneratePOs}
+                    currencySymbol={settings.currencySymbol}
+                    activeSubTab={activeSubTab}
+                    onSubTabChange={setActiveSubTab}
+                  />
+                )}
+
+                {activeTab === 'customers' && (
+                  <CustomersView
+                    customers={customers}
+                    sales={sales}
+                    onAddCustomer={handleAddCustomer}
+                    currencySymbol={settings.currencySymbol}
+                  />
+                )}
+
+                {activeTab === 'reporting' && (
+                  <ReportingView
+                    products={products}
+                    sales={sales}
+                    purchaseOrders={purchaseOrders}
+                    locations={locations}
+                    currencySymbol={settings.currencySymbol}
+                  />
+                )}
+
+                {activeTab === 'setup' && (
+                  <SetupView
+                    settings={settings}
+                    onUpdateSettings={handleUpdateSettings}
+                    locations={locations}
+                    onAddLocation={handleAddLocation}
+                    onResetDemoData={seedDemoData}
+                    onClearAllData={handleClearAllData}
+                    onReloadAllData={loadAllData}
+                    products={products}
+                    sales={sales}
+                    inventory={products}
+                    activeSubTab={activeSubTab}
+                    onSubTabChange={setActiveSubTab}
+                  />
+                )}
+              </>
+            )}
           </div>
+        </main>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Business Badge */}
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 bg-neutral-900 border border-neutral-800 text-neutral-300 rounded-none text-[10px] sm:text-[11px] font-mono shrink-0">
-              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shrink-0" />
-              <span className="truncate max-w-[120px] uppercase font-bold text-white">
-                {settings.businessName}
-              </span>
-            </div>
+        {/* Printable Receipt Hidden Render Target */}
+        <PrintReceipt sale={printableSale} settings={settings} />
 
-            {/* Interactive Product Tour Button */}
-            <button
-              onClick={() => setIsTourOpen(true)}
-              className="px-3 py-1.5 bg-neutral-900 border border-neutral-700 hover:border-white text-white text-xs font-bold rounded-none transition-colors flex items-center gap-1.5 uppercase tracking-wider shrink-0"
-              title="Interactive Product Tour"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span className="font-bold">Product Tour</span>
-            </button>
-          </div>
-        </header>
+        {/* Data Policy & Backup Notice Modal */}
+        <DataPolicyModal
+          isOpen={showDataPolicyNotice}
+          onClose={() => setShowDataPolicyNotice(false)}
+          onGoToBackup={() => {
+            setShowDataPolicyNotice(false);
+            setShowLanding(false);
+            setActiveTab('setup');
+            setActiveSubTab('data');
+          }}
+        />
 
-        {/* Outer Padding Container (responsive padding, max-width ~1440px) */}
-        <div className="p-3.5 sm:p-6 lg:p-8 max-w-[1440px] w-full mx-auto flex-1">
-          {showLanding ? (
-            <LandingView
-              onStartDemo={() => {
-                seedDemoData();
-                setShowLanding(false);
-                setActiveTab('home');
-              }}
-              onStartFresh={() => {
-                handleClearAllData();
-                setShowLanding(false);
-                setActiveTab('catalog');
-              }}
-              onOpenTour={() => setIsTourOpen(true)}
-            />
-          ) : (
-            <>
-              {activeTab === 'home' && (
-                <DashboardView
-                  products={products}
-                  sales={sales}
-                  purchaseOrders={purchaseOrders}
-                  locations={locations}
-                  selectedLocation={selectedLocation}
-                  onLocationChange={setSelectedLocation}
-                  onNavigate={(tab, subTab) => {
-                    setActiveTab(tab);
-                    if (subTab) setActiveSubTab(subTab);
-                  }}
-                  currencySymbol={settings.currencySymbol}
-                />
-              )}
-
-              {activeTab === 'sell' && (
-                <SellView
-                  products={products}
-                  customers={customers}
-                  locations={locations}
-                  selectedLocation={selectedLocation}
-                  sales={sales}
-                  onCompleteSale={handleCompleteSale}
-                  onRefundSale={handleRefundSale}
-                  currencySymbol={settings.currencySymbol}
-                  taxRate={settings.taxRate}
-                  onPrintReceipt={handlePrintReceipt}
-                  activeSubTab={activeSubTab}
-                  onSubTabChange={setActiveSubTab}
-                />
-              )}
-
-              {activeTab === 'catalog' && (
-                <CatalogView
-                  products={products}
-                  categories={categories}
-                  suppliers={suppliers}
-                  locations={locations}
-                  onAddProduct={handleAddProduct}
-                  onUpdateProduct={handleUpdateProduct}
-                  onDeleteProduct={handleDeleteProduct}
-                  currencySymbol={settings.currencySymbol}
-                  activeSubTab={activeSubTab}
-                  onSubTabChange={setActiveSubTab}
-                />
-              )}
-
-              {activeTab === 'inventory' && (
-                <InventoryView
-                  products={products}
-                  movements={movements}
-                  locations={locations}
-                  suppliers={suppliers}
-                  purchaseOrders={purchaseOrders}
-                  selectedLocation={selectedLocation}
-                  onCreatePO={handleCreatePO}
-                  onReceivePO={handleReceivePO}
-                  onStockAdjustment={handleStockAdjustment}
-                  onStockTransfer={handleStockTransfer}
-                  currencySymbol={settings.currencySymbol}
-                  activeSubTab={activeSubTab}
-                  onSubTabChange={setActiveSubTab}
-                />
-              )}
-
-              {activeTab === 'customers' && (
-                <CustomersView
-                  customers={customers}
-                  sales={sales}
-                  onAddCustomer={handleAddCustomer}
-                  currencySymbol={settings.currencySymbol}
-                />
-              )}
-
-              {activeTab === 'reporting' && (
-                <ReportingView
-                  products={products}
-                  sales={sales}
-                  purchaseOrders={purchaseOrders}
-                  locations={locations}
-                  currencySymbol={settings.currencySymbol}
-                />
-              )}
-
-              {activeTab === 'setup' && (
-                <SetupView
-                  settings={settings}
-                  onUpdateSettings={handleUpdateSettings}
-                  locations={locations}
-                  onAddLocation={handleAddLocation}
-                  onResetDemoData={seedDemoData}
-                  onClearAllData={handleClearAllData}
-                  onReloadAllData={loadAllData}
-                  products={products}
-                  sales={sales}
-                  inventory={products}
-                  activeSubTab={activeSubTab}
-                  onSubTabChange={setActiveSubTab}
-                />
-              )}
-            </>
-          )}
-        </div>
-      </main>
-
-      {/* Printable Receipt Hidden Render Target */}
-      <PrintReceipt sale={printableSale} settings={settings} />
-
-      {/* Data Policy & Backup Notice Modal */}
-      <DataPolicyModal
-        isOpen={showDataPolicyNotice}
-        onClose={() => setShowDataPolicyNotice(false)}
-        onGoToBackup={() => {
-          setShowDataPolicyNotice(false);
-          setShowLanding(false);
-          setActiveTab('setup');
-          setActiveSubTab('data');
-        }}
-      />
-
-      {/* Interactive Product Walkthrough Tour */}
-      <ProductTourModal
-        isOpen={isTourOpen}
-        onClose={() => setIsTourOpen(false)}
-        onNavigateTab={(tab, subTab) => {
-          setActiveTab(tab);
-          if (subTab) setActiveSubTab(subTab);
-          setShowLanding(false);
-        }}
-      />
-    </div>
+        {/* Interactive Product Walkthrough Tour */}
+        <ProductTourModal
+          isOpen={isTourOpen}
+          onClose={() => setIsTourOpen(false)}
+          onNavigateTab={(tab, subTab) => {
+            setShowLanding(false);
+            setActiveTab(tab as NavItemKey);
+            if (subTab) setActiveSubTab(subTab);
+          }}
+        />
+      </div>
     </I18nProvider>
   );
 }
