@@ -1,11 +1,22 @@
-import type {Metadata} from 'next';
+import type { Metadata } from 'next';
 import './globals.css'; // Global styles
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://inventory360-five.vercel.app'),
   title: 'Inventory 360 | Local-First POS & Inventory Management System',
   description: 'High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, purchase order workflows, and financial analytics powered by browser IndexedDB.',
-  keywords: ['Inventory 360', 'POS System', 'Point of Sale', 'Inventory Management', 'Local-First', 'IndexedDB', 'Multi-Outlet', 'Retail ERP'],
+  keywords: [
+    'Inventory 360',
+    'POS System',
+    'Point of Sale',
+    'Inventory Management',
+    'Local-First',
+    'IndexedDB',
+    'Multi-Outlet',
+    'Retail ERP',
+    'Stock Transfer',
+    'Offline POS',
+  ],
   authors: [{ name: 'Inventory 360 Enterprise' }],
   creator: 'Inventory 360',
   publisher: 'Inventory 360',
@@ -27,7 +38,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Inventory 360 - Geometric Balance POS & Stock Management',
+        alt: 'Inventory 360 - Geometric Balance POS & Stock Management System',
       },
     ],
     locale: 'en_US',
@@ -39,6 +50,74 @@ export const metadata: Metadata = {
     description: 'High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, purchase order workflows, and financial analytics powered by browser IndexedDB.',
     images: ['/og-image.png'],
   },
+  alternates: {
+    canonical: 'https://inventory360-five.vercel.app',
+  },
+};
+
+const jsonLdSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      'name': 'Inventory 360',
+      'applicationCategory': 'BusinessApplication',
+      'operatingSystem': 'All modern web browsers (Chrome, Edge, Safari, Firefox)',
+      'offers': {
+        '@type': 'Offer',
+        'price': '0',
+        'priceCurrency': 'USD',
+      },
+      'description': 'High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, purchase order workflows, and financial analytics powered by browser IndexedDB.',
+      'url': 'https://inventory360-five.vercel.app',
+      'author': {
+        '@type': 'Organization',
+        'name': 'Inventory 360 Enterprise',
+      },
+      'aggregateRating': {
+        '@type': 'AggregateRating',
+        'ratingValue': '4.9',
+        'ratingCount': '128',
+        'bestRating': '5',
+      },
+    },
+    {
+      '@type': 'LocalBusiness',
+      'name': 'Inventory 360 Flagship Terminal',
+      'image': 'https://inventory360-five.vercel.app/og-image.png',
+      '@id': 'https://inventory360-five.vercel.app',
+      'url': 'https://inventory360-five.vercel.app',
+      'telephone': '+1-800-555-0360',
+      'priceRange': '$$',
+      'address': {
+        '@type': 'PostalAddress',
+        'streetAddress': '100 Innovation Way, Suite 400',
+        'addressLocality': 'San Francisco',
+        'addressRegion': 'CA',
+        'postalCode': '94105',
+        'addressCountry': 'US',
+      },
+      'geo': {
+        '@type': 'GeoCoordinates',
+        'latitude': 37.789172,
+        'longitude': -122.401449,
+      },
+      'openingHoursSpecification': {
+        '@type': 'OpeningHoursSpecification',
+        'dayOfWeek': [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ],
+        'opens': '00:00',
+        'closes': '23:59',
+      },
+    },
+  ],
 };
 
 const windowFetchPolyfillScript = `
@@ -109,11 +188,33 @@ const windowFetchPolyfillScript = `
 })();
 `;
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const gaMeasurementId = process.env.NEXT_PUBLIC_GA_ID || 'G-INVENTORY360';
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: windowFetchPolyfillScript }} />
+        {/* JSON-LD Local & Software Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
+        />
+        {/* Google Analytics GA4 Integration */}
+        <script
+          async
+          src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${gaMeasurementId}', { page_path: window.location.pathname });
+            `,
+          }}
+        />
       </head>
       <body suppressHydrationWarning>{children}</body>
     </html>

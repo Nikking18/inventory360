@@ -216,6 +216,13 @@ export default function AppMain() {
     setShowHeaderExportMenu(false);
   };
 
+  // Dynamic Page Title Sync
+  useEffect(() => {
+    const tabName = showLanding ? 'Welcome' : activeTab.toUpperCase();
+    const subTabName = showLanding ? 'Overview' : activeSubTab.replace('-', ' ').toUpperCase();
+    document.title = `${tabName} • ${subTabName} | ${settings.businessName || 'Inventory 360'}`;
+  }, [activeTab, activeSubTab, showLanding, settings.businessName]);
+
   // Initialize DB & Load State
   useEffect(() => {
     let active = true;
@@ -746,14 +753,32 @@ export default function AppMain() {
             >
               <Menu className="w-4 h-4" />
             </button>
-            <div className="w-2 h-2 bg-white rotate-45 hidden sm:block shrink-0" />
-            <span className="text-[10px] sm:text-xs font-bold text-neutral-400 font-mono uppercase tracking-wider truncate">
-              {showLanding ? 'Overview' : activeTab}
-            </span>
-            <span className="text-neutral-700 shrink-0 text-xs">/</span>
-            <span className="text-[10px] sm:text-xs font-mono text-neutral-300 uppercase tracking-wider truncate max-w-[70px] sm:max-w-none">
-              {showLanding ? 'Welcome' : activeSubTab.replace('-', ' ')}
-            </span>
+            {/* Clickable Breadcrumbs Navigation */}
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono">
+              <button
+                onClick={() => {
+                  setShowLanding(false);
+                  setActiveTab('home');
+                  setActiveSubTab('retail-dashboard');
+                }}
+                className="text-neutral-400 hover:text-white uppercase font-bold transition-colors flex items-center gap-1"
+                title="Return to Main Dashboard"
+              >
+                <div className="w-1.5 h-1.5 bg-emerald-400 rotate-45 hidden sm:block shrink-0" />
+                <span>Inventory 360</span>
+              </button>
+              <span className="text-neutral-600 shrink-0">/</span>
+              <button
+                onClick={() => setShowLanding(false)}
+                className="text-neutral-400 hover:text-white uppercase tracking-wider truncate"
+              >
+                {showLanding ? 'Overview' : activeTab}
+              </button>
+              <span className="text-neutral-600 shrink-0">/</span>
+              <span className="text-white font-bold uppercase tracking-wider truncate max-w-[80px] sm:max-w-none bg-neutral-900 px-1.5 py-0.5 border border-neutral-800">
+                {showLanding ? 'Welcome Hub' : activeSubTab.replace('-', ' ')}
+              </span>
+            </nav>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
