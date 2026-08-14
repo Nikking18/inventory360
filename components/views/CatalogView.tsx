@@ -114,23 +114,28 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     const catObj = categories.find((c) => c.id === categoryId);
     const supObj = suppliers.find((s) => s.id === supplierId);
 
+    const cleanCost = Math.max(0, Number(costPrice) || 0);
+    const cleanRetail = Math.max(0, Number(retailPrice) || 0);
+    const cleanStock = Math.max(0, Math.floor(Number(stockQuantity) || 0));
+    const cleanReorder = Math.max(0, Math.floor(Number(reorderPoint) || 0));
+
     const payload = {
-      name,
-      sku,
-      barcode,
-      description,
+      name: name.trim(),
+      sku: sku.trim(),
+      barcode: barcode.trim(),
+      description: description.trim(),
       categoryId,
       categoryName: catObj?.name || 'General',
-      costPrice: Number(costPrice),
-      retailPrice: Number(retailPrice),
-      stockQuantity: Number(stockQuantity),
-      reorderPoint: Number(reorderPoint),
+      costPrice: cleanCost,
+      retailPrice: cleanRetail,
+      stockQuantity: cleanStock,
+      reorderPoint: cleanReorder,
       supplierId,
       supplierName: supObj?.name || 'Primary Supplier',
       imageUrl,
       locationQuantities: editingProduct?.locationQuantities || {},
       lastSoldAt: editingProduct?.lastSoldAt,
-      status: Number(stockQuantity) === 0 ? ('Out of Stock' as const) : Number(stockQuantity) <= Number(reorderPoint) ? ('Low Stock' as const) : ('Healthy' as const),
+      status: cleanStock === 0 ? ('Out of Stock' as const) : cleanStock <= cleanReorder ? ('Low Stock' as const) : ('Healthy' as const),
     };
 
     if (editingProduct) {

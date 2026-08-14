@@ -108,7 +108,8 @@ export const SellView: React.FC<SellViewProps> = ({
   };
 
   const subtotal = cart.reduce((acc, i) => acc + i.total, 0);
-  const afterDiscount = Math.max(0, subtotal - discountAmount);
+  const validDiscount = Math.min(Math.max(0, discountAmount || 0), subtotal);
+  const afterDiscount = Math.max(0, subtotal - validDiscount);
   const calculatedTax = (afterDiscount * taxRate) / 100;
   const grandTotal = afterDiscount + calculatedTax;
 
@@ -122,11 +123,11 @@ export const SellView: React.FC<SellViewProps> = ({
     const salePayload = {
       items: cart,
       subtotal,
-      discount: discountAmount,
+      discount: validDiscount,
       tax: calculatedTax,
       total: grandTotal,
       costOfGoodsSold: cogs,
-      grossProfit: grandTotal - cogs,
+      grossProfit: afterDiscount - cogs, // Net Sales (Subtotal - Discount) minus COGS
       paymentMethod,
       status: 'Completed' as const,
       customerId: selectedCustomer || undefined,
@@ -375,8 +376,9 @@ export const SellView: React.FC<SellViewProps> = ({
                   <input
                     type="number"
                     min="0"
+                    max={subtotal}
                     value={discountAmount || ''}
-                    onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                    onChange={(e) => setDiscountAmount(Math.max(0, Math.min(subtotal, Number(e.target.value))))}
                     className="w-20 text-right bg-neutral-950 border border-neutral-800 px-2 py-0.5 text-xs text-white focus:outline-none focus:border-white"
                   />
                 </div>

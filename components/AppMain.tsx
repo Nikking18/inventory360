@@ -463,6 +463,68 @@ export default function AppMain() {
     setPurchaseOrders((prev) => [newPO, ...prev]);
   };
 
+  const handleReceivePO = async (poId: string) => {
+    const po = purchaseOrders.find((p) => p.id === poId);
+    if (!po || po.status === 'Received') return;
+
+    const updatedPO: PurchaseOrder = {
+      ...po,
+      status: 'Received',
+      receivedDate: new Date().toISOString(),
+      items: po.items.map((item) => ({
+        ...item,
+        receivedQuantity: item.orderedQuantity,
+      })),
+    };
+
+    await putToStore('purchaseOrders', updatedPO);
+    setPurchaseOrders((prev) => prev.map((p) => (p.id === poId ? updatedPO : p)));
+
+    // Increment product stock and record audit movements
+    const updatedProds = [...products];
+    const newMovements: StockMovement[] = [];
+
+    for (const item of po.items) {
+      const idx = updatedProds.findIndex((prod) => prod.id === item.productId);
+      if (idx !== -1) {
+        const prod = updatedProds[idx];
+        const prevStock = prod.stockQuantity;
+        const newStock = prevStock + item.orderedQuantity;
+
+        const updatedProd: Product = {
+          ...prod,
+          stockQuantity: newStock,
+          status: calculateStockStatus({ ...prod, stockQuantity: newStock }),
+          updatedAt: new Date().toISOString(),
+        };
+
+        updatedProds[idx] = updatedProd;
+        await putToStore('products', updatedProd);
+
+        const mov: StockMovement = {
+          id: `sm_${Date.now()}_po_${Math.random()}`,
+          productId: prod.id,
+          productName: prod.name,
+          sku: prod.sku,
+          type: 'Purchase',
+          quantityChange: item.orderedQuantity,
+          previousStock: prevStock,
+          newStock: newStock,
+          locationId: po.locationId,
+          locationName: po.locationName,
+          referenceId: po.poNumber,
+          notes: `Received PO #${po.poNumber} from ${po.supplierName}`,
+          createdAt: new Date().toISOString(),
+        };
+        newMovements.push(mov);
+        await putToStore('stockMovements', mov);
+      }
+    }
+
+    setProducts(updatedProds);
+    setMovements((prev) => [...newMovements, ...prev]);
+  };
+
   // HANDLER FOR STOCK ADJUSTMENT
   const handleStockAdjustment = async (productId: string, qtyChange: number, reason: string) => {
     const p = products.find((prod) => prod.id === productId);
@@ -790,6 +852,7 @@ export default function AppMain() {
                   purchaseOrders={purchaseOrders}
                   selectedLocation={selectedLocation}
                   onCreatePO={handleCreatePO}
+                  onReceivePO={handleReceivePO}
                   onStockAdjustment={handleStockAdjustment}
                   onStockTransfer={handleStockTransfer}
                   currencySymbol={settings.currencySymbol}

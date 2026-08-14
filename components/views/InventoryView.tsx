@@ -37,6 +37,7 @@ interface InventoryViewProps {
   purchaseOrders: PurchaseOrder[];
   selectedLocation: string;
   onCreatePO: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'createdAt'>) => Promise<void>;
+  onReceivePO?: (poId: string) => Promise<void>;
   onStockAdjustment: (productId: string, qtyChange: number, reason: string) => Promise<void>;
   onStockTransfer: (transfer: Omit<StockTransfer, 'id' | 'transferNumber' | 'createdAt'>) => Promise<void>;
   currencySymbol: string;
@@ -52,6 +53,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   purchaseOrders,
   selectedLocation,
   onCreatePO,
+  onReceivePO,
   onStockAdjustment,
   onStockTransfer,
   currencySymbol,
@@ -449,20 +451,46 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             {t('purchases', 'Purchase Orders Register')}
           </h3>
           <div className="space-y-3">
-            {purchaseOrders.map((po) => (
-              <div key={po.id} className="p-4 bg-neutral-950 border border-neutral-800 flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-white">{po.poNumber}</p>
-                  <p className="text-[11px] text-neutral-400">{po.supplierName} • {formatDateTime(po.createdAt)}</p>
+            {purchaseOrders.length === 0 ? (
+              <p className="text-xs text-neutral-500 italic py-4">No purchase orders created yet. Use Low Stock alerts to create a PO.</p>
+            ) : (
+              purchaseOrders.map((po) => (
+                <div key={po.id} className="p-4 bg-neutral-950 border border-neutral-800 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-white">{po.poNumber}</p>
+                    <p className="text-[11px] text-neutral-400">
+                      {po.supplierName} • {formatDateTime(po.createdAt)} • {po.items?.length || 1} line item(s)
+                    </p>
+                    {po.items && po.items.length > 0 && (
+                      <p className="text-[10px] text-neutral-500 mt-0.5">
+                        Items: {po.items.map((i) => `${i.productName} (${i.orderedQuantity} qty)`).join(', ')}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="font-bold text-white">{formatCurrency(po.total, currencySymbol)}</p>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 border uppercase ${
+                        po.status === 'Received'
+                          ? 'border-emerald-800 text-emerald-400 bg-emerald-950/60'
+                          : 'border-amber-900/60 text-amber-400 bg-amber-950/60'
+                      }`}>
+                        {po.status}
+                      </span>
+                    </div>
+
+                    {po.status !== 'Received' && onReceivePO && (
+                      <button
+                        onClick={() => onReceivePO(po.id)}
+                        className="px-3 py-1.5 bg-white text-black font-bold uppercase text-[10px] hover:bg-neutral-200 transition-colors"
+                      >
+                        Receive Stock
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-white">{formatCurrency(po.total, currencySymbol)}</p>
-                  <span className="text-[9px] font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 border border-amber-900/60 uppercase">
-                    {po.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}

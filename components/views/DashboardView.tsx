@@ -53,17 +53,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const { t } = useTranslation();
 
   // Filter sales & products by location
-  const filteredSales = selectedLocation === 'all'
+  const activeLocationSales = (selectedLocation === 'all'
     ? sales
-    : sales.filter((s) => s.locationId === selectedLocation);
+    : sales.filter((s) => s.locationId === selectedLocation)
+  ).filter((s) => s.status !== 'Refunded');
 
   const filteredProducts = selectedLocation === 'all'
     ? products
     : products.filter((p) => (p.locationQuantities?.[selectedLocation] ?? 0) > 0 || p.stockQuantity > 0);
 
+  // Timeframe-specific sales filtering
+  const now = new Date();
+  const timeframeSales = activeLocationSales.filter((s) => {
+    const saleDate = new Date(s.createdAt);
+    if (isNaN(saleDate.getTime())) return true;
+    if (timeframe === 'today') {
+      return saleDate.toDateString() === now.toDateString();
+    } else if (timeframe === 'week') {
+      return saleDate >= new Date(now.getTime() - 7 * 86400000);
+    } else if (timeframe === 'month') {
+      return saleDate >= new Date(now.getTime() - 30 * 86400000);
+    }
+    return true;
+  });
+
   // High-level Calculations
-  const totalRevenue = filteredSales.reduce((acc, s) => acc + s.total, 0);
-  const totalOrders = filteredSales.length;
+  const totalRevenue = timeframeSales.reduce((acc, s) => acc + s.total, 0);
+  const totalOrders = timeframeSales.length;
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
   const totalInventoryValue = filteredProducts.reduce((acc, p) => acc + p.stockQuantity * p.costPrice, 0);
@@ -77,10 +93,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   const pendingPOs = purchaseOrders.filter((po) => po.status === 'Sent' || po.status === 'Partial');
 
-  // Generate dynamic chart data based on actual sales
+  // Generate dynamic chart data based on active sales
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const chartData = days.map((dayLabel, index) => {
-    const salesForDay = filteredSales.filter((s) => {
+    const salesForDay = activeLocationSales.filter((s) => {
       const d = new Date(s.createdAt).getDay();
       const dayIndex = index === 6 ? 0 : index + 1; // Sunday is 0
       return d === dayIndex;

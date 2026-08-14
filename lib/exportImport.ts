@@ -2,9 +2,27 @@ import {
   getAllFromStore,
   putManyToStore,
   clearAllStores,
-  putToStore,
 } from './db';
-import { Product, Supplier, Customer, Sale, PurchaseOrder, BusinessSettings } from './types';
+
+function escapeHtml(str: any): string {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function sanitizeCSVValue(val: any): string {
+  if (val === null || val === undefined) return '""';
+  let str = typeof val === 'object' ? JSON.stringify(val) : String(val);
+  // CSV Formula Injection Prevention: If cell starts with =, +, -, @, \t, \r, prefix with a single quote
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  return `"${str.replace(/"/g, '""')}"`;
+}
 
 export async function exportWorkspaceJSON(): Promise<string> {
   const products = await getAllFromStore('products');
@@ -82,16 +100,9 @@ export async function importWorkspaceJSON(jsonString: string): Promise<boolean> 
 export function exportToCSV<T extends Record<string, any>>(filename: string, rows: T[]): void {
   if (!rows || !rows.length) return;
   const keys = Object.keys(rows[0]);
-  const header = keys.join(',');
+  const header = keys.map((k) => `"${k.replace(/"/g, '""')}"`).join(',');
   const csvLines = rows.map((row) =>
-    keys
-      .map((k) => {
-        let val = row[k];
-        if (typeof val === 'object') val = JSON.stringify(val);
-        const str = String(val ?? '').replace(/"/g, '""');
-        return `"${str}"`;
-      })
-      .join(',')
+    keys.map((k) => sanitizeCSVValue(row[k])).join(',')
   );
 
   const csvContent = [header, ...csvLines].join('\n');
@@ -103,6 +114,7 @@ export function exportToCSV<T extends Record<string, any>>(filename: string, row
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 export function exportToExcel<T extends Record<string, any>>(filename: string, rows: T[]): void {
@@ -114,7 +126,7 @@ export function exportToExcel<T extends Record<string, any>>(filename: string, r
   tableHTML += `<table border="1"><thead><tr style="background-color: #0f172a; color: #ffffff; font-weight: bold;">`;
 
   keys.forEach((k) => {
-    tableHTML += `<th style="padding: 8px;">${k}</th>`;
+    tableHTML += `<th style="padding: 8px;">${escapeHtml(k)}</th>`;
   });
   tableHTML += `</tr></thead><tbody>`;
 
@@ -123,7 +135,7 @@ export function exportToExcel<T extends Record<string, any>>(filename: string, r
     keys.forEach((k) => {
       let val = row[k];
       if (typeof val === 'object') val = JSON.stringify(val);
-      tableHTML += `<td style="padding: 6px;">${val ?? ''}</td>`;
+      tableHTML += `<td style="padding: 6px;">${escapeHtml(val)}</td>`;
     });
     tableHTML += `</tr>`;
   });
@@ -138,6 +150,7 @@ export function exportToExcel<T extends Record<string, any>>(filename: string, r
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 export function exportToPDF<T extends Record<string, any>>(filename: string, title: string, rows: T[]): void {
@@ -147,11 +160,14 @@ export function exportToPDF<T extends Record<string, any>>(filename: string, tit
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
 
+  const escapedTitle = escapeHtml(title);
+
   const html = `
     <!DOCTYPE html>
     <html>
       <head>
-        <title>${title}</title>
+        <meta charset="utf-8">
+        <title>${escapedTitle}</title>
         <style>
           body { font-family: monospace, sans-serif; padding: 24px; color: #0f172a; background: #ffffff; }
           .header { border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
@@ -171,15 +187,15 @@ export function exportToPDF<T extends Record<string, any>>(filename: string, tit
       <body>
         <div class="header">
           <div>
-            <h1 class="title">${title}</h1>
+            <h1 class="title">${escapedTitle}</h1>
             <div class="subtitle">Official Inventory System Document Record</div>
           </div>
-          <div class="timestamp">Generated: ${new Date().toLocaleString()}<br/>Total Records: ${rows.length}</div>
+          <div class="timestamp">Generated: ${escapeHtml(new Date().toLocaleString())}<br/>Total Records: ${rows.length}</div>
         </div>
         <table>
           <thead>
             <tr>
-              ${keys.map((k) => `<th>${k}</th>`).join('')}
+              ${keys.map((k) => `<th>${escapeHtml(k)}</th>`).join('')}
             </tr>
           </thead>
           <tbody>
@@ -191,7 +207,7 @@ export function exportToPDF<T extends Record<string, any>>(filename: string, tit
                   .map((k) => {
                     let val = row[k];
                     if (typeof val === 'object') val = JSON.stringify(val);
-                    return `<td>${val ?? ''}</td>`;
+                    return `<td>${escapeHtml(val)}</td>`;
                   })
                   .join('')}
               </tr>
@@ -219,15 +235,41 @@ export function parseCSV(csvText: string): Record<string, string>[] {
   const lines = csvText.split(/\r\n|\n/).filter((l) => l.trim().length > 0);
   if (lines.length < 2) return [];
 
-  const headers = lines[0].split(',').map((h) => h.replace(/^"|"$/g, '').trim());
+  // Helper to parse a single CSV row following RFC 4180
+  const parseRow = (line: string): string[] => {
+    const fields: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++; // skip escaped quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        fields.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    fields.push(current.trim());
+    return fields;
+  };
+
+  const headers = parseRow(lines[0]).map((h) => h.replace(/^"|"$/g, '').trim());
   const results: Record<string, string>[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const currentline = lines[i].split(',').map((cell) => cell.replace(/^"|"$/g, '').trim());
-    if (currentline.length === headers.length) {
+    const values = parseRow(lines[i]).map((cell) => cell.replace(/^"|"$/g, '').trim());
+    if (values.length === headers.length) {
       const obj: Record<string, string> = {};
       for (let j = 0; j < headers.length; j++) {
-        obj[headers[j]] = currentline[j];
+        obj[headers[j]] = values[j];
       }
       results.push(obj);
     }

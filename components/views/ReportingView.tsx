@@ -55,9 +55,10 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
     { id: 'tax-report', label: t('tax_report', 'Tax Report') },
   ];
 
-  // Filtering sales based on location and date range
+  // Filtering sales based on location, date range, and excluding refunds
   const now = new Date();
   const filteredSales = sales.filter((s) => {
+    if (s.status === 'Refunded') return false;
     const matchesLocation = selectedLocation === 'all' || s.locationId === selectedLocation;
     if (!matchesLocation) return false;
 
@@ -117,7 +118,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
       'Total Revenue ($)': item.revenue,
       'Total COGS ($)': item.cogs,
       'Gross Profit ($)': item.profit,
-      'Margin (%)': item.revenue > 0 ? (((item.profit) / item.revenue) * 100).toFixed(2) : 0,
+      'Margin (%)': item.revenue > 0 ? (((item.profit) / item.revenue) * 100).toFixed(2) : '0.00',
     }));
   };
 
