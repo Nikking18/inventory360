@@ -15,6 +15,14 @@ import {
   Printer,
   ChevronRight,
   ChevronDown,
+  FolderPlus,
+  Building2,
+  Mail,
+  Phone,
+  Clock,
+  MapPin,
+  Tag,
+  Boxes,
 } from 'lucide-react';
 
 interface CatalogViewProps {
@@ -25,6 +33,12 @@ interface CatalogViewProps {
   onAddProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   onUpdateProduct: (product: Product) => Promise<void>;
   onDeleteProduct: (id: string) => Promise<void>;
+  onAddCategory?: (category: Omit<Category, 'id'>) => Promise<void>;
+  onUpdateCategory?: (category: Category) => Promise<void>;
+  onDeleteCategory?: (id: string) => Promise<void>;
+  onAddSupplier?: (supplier: Omit<Supplier, 'id'>) => Promise<void>;
+  onUpdateSupplier?: (supplier: Supplier) => Promise<void>;
+  onDeleteSupplier?: (id: string) => Promise<void>;
   currencySymbol: string;
   activeSubTab?: string;
   onSubTabChange?: (sub: string) => void;
@@ -32,12 +46,18 @@ interface CatalogViewProps {
 
 export const CatalogView: React.FC<CatalogViewProps> = ({
   products,
-  categories,
-  suppliers,
-  locations,
+  categories = [],
+  suppliers = [],
+  locations = [],
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,
+  onAddCategory,
+  onUpdateCategory,
+  onDeleteCategory,
+  onAddSupplier,
+  onUpdateSupplier,
+  onDeleteSupplier,
   currencySymbol,
   activeSubTab = 'products',
   onSubTabChange,
@@ -45,8 +65,28 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Product Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Category Modal State
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [categoryName, setCategoryName] = useState('');
+  const [categoryDescription, setCategoryDescription] = useState('');
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+
+  // Supplier Modal State
+  const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [supName, setSupName] = useState('');
+  const [supContact, setSupContact] = useState('');
+  const [supEmail, setSupEmail] = useState('');
+  const [supPhone, setSupPhone] = useState('');
+  const [supAddress, setSupAddress] = useState('');
+  const [supLeadTime, setSupLeadTime] = useState<number>(5);
+  const [supplierError, setSupplierError] = useState<string | null>(null);
 
   // Print Label Modal State
   const [labelModalProduct, setLabelModalProduct] = useState<Product | null>(null);
@@ -58,7 +98,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   // Active Tab in Product Form Modal
   const [modalFormTab, setModalFormTab] = useState<'basic' | 'variants' | 'custom-fields' | 'lots'>('basic');
 
-  // Form states
+  // Product Form states
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
   const [barcode, setBarcode] = useState('');
@@ -89,6 +129,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     setExpandedProductIds((prev) => ({ ...prev, [productId]: !prev[productId] }));
   };
 
+  // Product Modals
   const openNewProduct = () => {
     setEditingProduct(null);
     setName('');
@@ -108,8 +149,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     setBatchNumber('');
     setSerialNumber('');
     setExpirationDate('');
-    setModalFormTab('basic');
     setFormError(null);
+    setModalFormTab('basic');
     setIsModalOpen(true);
   };
 
@@ -132,46 +173,106 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     setBatchNumber(p.batchNumber || '');
     setSerialNumber(p.serialNumber || '');
     setExpirationDate(p.expirationDate || '');
-    setModalFormTab('basic');
     setFormError(null);
+    setModalFormTab('basic');
     setIsModalOpen(true);
   };
 
+  // Category Modals
+  const openNewCategory = () => {
+    setEditingCategory(null);
+    setCategoryName('');
+    setCategoryDescription('');
+    setCategoryError(null);
+    setIsCategoryModalOpen(true);
+  };
+
+  const openEditCategory = (cat: Category) => {
+    setEditingCategory(cat);
+    setCategoryName(cat.name);
+    setCategoryDescription(cat.description || '');
+    setCategoryError(null);
+    setIsCategoryModalOpen(true);
+  };
+
+  // Supplier Modals
+  const openNewSupplier = () => {
+    setEditingSupplier(null);
+    setSupName('');
+    setSupContact('');
+    setSupEmail('');
+    setSupPhone('');
+    setSupAddress('');
+    setSupLeadTime(5);
+    setSupplierError(null);
+    setIsSupplierModalOpen(true);
+  };
+
+  const openEditSupplier = (sup: Supplier) => {
+    setEditingSupplier(sup);
+    setSupName(sup.name);
+    setSupContact(sup.contactPerson || '');
+    setSupEmail(sup.email || '');
+    setSupPhone(sup.phone || '');
+    setSupAddress(sup.address || '');
+    setSupLeadTime(sup.leadTimeDays || 5);
+    setSupplierError(null);
+    setIsSupplierModalOpen(true);
+  };
+
+  // Dynamic top button action and label
+  const handleTopActionClick = () => {
+    if (activeSubTab === 'categories') {
+      openNewCategory();
+    } else if (activeSubTab === 'suppliers') {
+      openNewSupplier();
+    } else {
+      openNewProduct();
+    }
+  };
+
+  const getTopActionLabel = () => {
+    if (activeSubTab === 'categories') return 'Add Category';
+    if (activeSubTab === 'suppliers') return 'Add Supplier';
+    return 'Add Product';
+  };
+
   const handleAddVariant = () => {
+    const varCount = variants.length + 1;
     const newVariant: ProductVariant = {
-      id: `var_${Date.now()}`,
-      name: 'Size / Color Variant',
-      sku: `${sku || 'SKU'}-VAR${variants.length + 1}`,
-      barcode: `${barcode ? barcode + '-' + (variants.length + 1) : ''}`,
-      costPrice: Number(costPrice) || 0,
-      retailPrice: Number(retailPrice) || 0,
+      id: `var_${Date.now()}_${varCount}`,
+      name: `Variant ${varCount}`,
+      sku: sku ? `${sku}-V${varCount}` : `VAR-${varCount}`,
+      barcode: '',
+      costPrice: costPrice || 0,
+      retailPrice: retailPrice || 0,
       stockQuantity: 0,
-      attributes: { Option: 'Default' },
+      attributes: {},
     };
     setVariants([...variants, newVariant]);
   };
 
-  const handleRemoveVariant = (idx: number) => {
-    setVariants(variants.filter((_, i) => i !== idx));
-  };
-
-  const handleUpdateVariant = (idx: number, field: keyof ProductVariant, value: any) => {
+  const handleUpdateVariant = (index: number, field: keyof ProductVariant, val: any) => {
     const updated = [...variants];
-    updated[idx] = { ...updated[idx], [field]: value };
+    updated[index] = { ...updated[index], [field]: val };
     setVariants(updated);
   };
 
+  const handleRemoveVariant = (index: number) => {
+    setVariants(variants.filter((_, i) => i !== index));
+  };
+
   const handleAddCustomField = () => {
-    if (!newFieldKey.trim()) return;
+    if (!newFieldKey.trim() || !newFieldValue.trim()) return;
     setCustomFields({ ...customFields, [newFieldKey.trim()]: newFieldValue.trim() });
     setNewFieldKey('');
     setNewFieldValue('');
   };
 
   const handleRemoveCustomField = (key: string) => {
-    const next = { ...customFields };
-    delete next[key];
-    setCustomFields(next);
+    const copy = { ...customFields };
+    delete copy[key];
+    setCustomFields(copy);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -304,7 +405,70 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     setIsModalOpen(false);
   };
 
-  const filtered = products.filter((p) => {
+  // Category Submit Handler
+  const handleCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCategoryError(null);
+    const trimmed = categoryName.trim();
+    if (!trimmed || trimmed.length < 2) {
+      setCategoryError('Category Name is mandatory (minimum 2 characters).');
+      return;
+    }
+
+    if (editingCategory) {
+      if (onUpdateCategory) {
+        await onUpdateCategory({
+          ...editingCategory,
+          name: trimmed,
+          description: categoryDescription.trim() || undefined,
+        });
+      }
+    } else {
+      if (onAddCategory) {
+        await onAddCategory({
+          name: trimmed,
+          description: categoryDescription.trim() || undefined,
+        });
+      }
+    }
+    setIsCategoryModalOpen(false);
+  };
+
+  // Supplier Submit Handler
+  const handleSupplierSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSupplierError(null);
+    const trimmed = supName.trim();
+    if (!trimmed || trimmed.length < 2) {
+      setSupplierError('Supplier / Vendor Name is mandatory (minimum 2 characters).');
+      return;
+    }
+
+    const payload = {
+      name: trimmed,
+      contactPerson: supContact.trim() || 'Primary Representative',
+      email: supEmail.trim() || '',
+      phone: supPhone.trim() || '',
+      address: supAddress.trim() || '',
+      leadTimeDays: Number(supLeadTime) >= 0 ? Number(supLeadTime) : 5,
+    };
+
+    if (editingSupplier) {
+      if (onUpdateSupplier) {
+        await onUpdateSupplier({
+          ...editingSupplier,
+          ...payload,
+        });
+      }
+    } else {
+      if (onAddSupplier) {
+        await onAddSupplier(payload);
+      }
+    }
+    setIsSupplierModalOpen(false);
+  };
+
+  const filteredProducts = products.filter((p) => {
     const searchLower = search.trim().toLowerCase();
     const matchesSearch =
       !searchLower ||
@@ -321,6 +485,22 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     return matchesSearch && matchesCategory;
   });
 
+  const filteredCategories = categories.filter((c) => {
+    const s = search.trim().toLowerCase();
+    return !s || c.name.toLowerCase().includes(s) || (c.description || '').toLowerCase().includes(s);
+  });
+
+  const filteredSuppliers = suppliers.filter((sup) => {
+    const s = search.trim().toLowerCase();
+    return (
+      !s ||
+      sup.name.toLowerCase().includes(s) ||
+      (sup.contactPerson || '').toLowerCase().includes(s) ||
+      (sup.email || '').toLowerCase().includes(s) ||
+      (sup.phone || '').toLowerCase().includes(s)
+    );
+  });
+
   return (
     <div id="tour-catalog-table" className="space-y-6 text-slate-900 font-mono">
       {/* Top Header & Subtabs */}
@@ -330,7 +510,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             {t('catalog', 'Master Product Catalog')}
           </h1>
           <p className="text-xs text-slate-600">
-            Enterprise multi-variant registry, supplier associations, custom attributes, and barcode labels.
+            Enterprise multi-variant registry, category taxonomies, approved vendor contracts, and barcode labels.
           </p>
         </div>
 
@@ -349,16 +529,20 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             </button>
           ))}
 
+          {/* DYNAMIC TOP ACTION BUTTON */}
           <button
-            onClick={openNewProduct}
+            onClick={handleTopActionClick}
             className="px-4 py-2 bg-slate-900 text-white hover:bg-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs shrink-0"
           >
             <Plus className="w-4 h-4 text-emerald-400" />
-            <span>{t('add_product', 'New Product')}</span>
+            <span>{getTopActionLabel()}</span>
           </button>
         </div>
       </div>
 
+      {/* ========================================================================= */}
+      {/* 1. PRODUCTS & VARIANTS SUB-TAB                                             */}
+      {/* ========================================================================= */}
       {activeSubTab === 'products' && (
         <div className="bg-white border border-slate-200 p-5 space-y-4 shadow-sm">
           {/* Filter Bar */}
@@ -406,14 +590,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filtered.length === 0 ? (
+                {filteredProducts.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="p-8 text-center text-slate-500 text-xs">
                       No products found matching active filters.
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((p) => {
+                  filteredProducts.map((p) => {
                     const hasVariants = p.variants && p.variants.length > 0;
                     const isExpanded = expandedProductIds[p.id];
                     return (
@@ -543,44 +727,198 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         </div>
       )}
 
-      {/* CATEGORIES SUB-TAB */}
+      {/* ========================================================================= */}
+      {/* 2. PRODUCT CATEGORIES SUB-TAB (FULL CRUD & SEARCH)                        */}
+      {/* ========================================================================= */}
       {activeSubTab === 'categories' && (
-        <div className="bg-white border border-slate-200 p-6 space-y-4 shadow-sm">
-          <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider border-b border-slate-200 pb-3">
-            Product Categories ({categories.length})
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {categories.map((c) => (
-              <div key={c.id} className="p-3.5 bg-slate-50 border border-slate-200 space-y-1">
-                <p className="font-bold text-slate-900 text-xs uppercase">{c.name}</p>
-                <p className="text-[10px] text-slate-500 font-mono">
-                  {products.filter((p) => p.categoryId === c.id).length} Active Products
-                </p>
+        <div className="bg-white border border-slate-200 p-6 space-y-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+            <div>
+              <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                Product Categories ({categories.length})
+              </h3>
+              <p className="text-[11px] text-slate-500">Organize and group catalog items for fast POS filtering and reporting.</p>
+            </div>
+
+            <div className="relative w-full sm:w-64">
+              <input
+                type="text"
+                placeholder="Search categories..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full text-xs bg-white border border-slate-300 text-slate-900 pl-8 pr-3 py-1.5 focus:outline-none focus:border-slate-900 font-mono shadow-2xs"
+              />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredCategories.length === 0 ? (
+              <div className="col-span-full p-8 text-center bg-slate-50 border border-slate-200 text-slate-500 text-xs">
+                No product categories found. Click &quot;Add Category&quot; to create one.
               </div>
-            ))}
+            ) : (
+              filteredCategories.map((c) => {
+                const productCount = products.filter((p) => p.categoryId === c.id).length;
+
+                return (
+                  <div
+                    key={c.id}
+                    className="p-4 bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors flex flex-col justify-between space-y-3"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <h4 className="font-bold text-slate-900 text-xs uppercase">{c.name}</h4>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-white border border-slate-200 text-slate-700">
+                          {productCount} SKUs
+                        </span>
+                      </div>
+                      {c.description && (
+                        <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">{c.description}</p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60">
+                      <button
+                        onClick={() => openEditCategory(c)}
+                        className="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-[10px] font-bold uppercase flex items-center gap-1"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                        <span>Edit</span>
+                      </button>
+                      {onDeleteCategory && (
+                        <button
+                          onClick={() => onDeleteCategory(c.id)}
+                          className="px-2.5 py-1 bg-white border border-slate-300 hover:bg-rose-50 text-rose-700 text-[10px] font-bold uppercase flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Delete</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}
 
-      {/* SUPPLIERS SUB-TAB */}
+      {/* ========================================================================= */}
+      {/* 3. VENDORS & SUPPLIERS SUB-TAB (FULL CRUD & SEARCH)                       */}
+      {/* ========================================================================= */}
       {activeSubTab === 'suppliers' && (
-        <div className="bg-white border border-slate-200 p-6 space-y-4 shadow-sm">
-          <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider border-b border-slate-200 pb-3">
-            Approved Vendors &amp; Suppliers ({suppliers.length})
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {suppliers.map((s) => (
-              <div key={s.id} className="p-4 bg-slate-50 border border-slate-200 space-y-1.5 text-xs font-mono">
-                <p className="font-bold text-slate-900 text-sm">{s.name}</p>
-                <p className="text-slate-600">{s.email || 'No email registered'} | {s.phone || 'No phone'}</p>
-                <p className="text-[10px] text-slate-500">Lead Time: {s.leadTimeDays || 5} days avg</p>
+        <div className="bg-white border border-slate-200 p-6 space-y-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+            <div>
+              <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                Approved Vendors &amp; Suppliers ({suppliers.length})
+              </h3>
+              <p className="text-[11px] text-slate-500">Manage procurement partner profiles, lead times, and contact points.</p>
+            </div>
+
+            <div className="relative w-full sm:w-64">
+              <input
+                type="text"
+                placeholder="Search vendors & suppliers..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full text-xs bg-white border border-slate-300 text-slate-900 pl-8 pr-3 py-1.5 focus:outline-none focus:border-slate-900 font-mono shadow-2xs"
+              />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {filteredSuppliers.length === 0 ? (
+              <div className="col-span-full p-8 text-center bg-slate-50 border border-slate-200 text-slate-500 text-xs">
+                No vendors or suppliers found. Click &quot;Add Supplier&quot; to register one.
               </div>
-            ))}
+            ) : (
+              filteredSuppliers.map((s) => {
+                const suppliedProductsCount = products.filter((p) => p.supplierId === s.id).length;
+
+                return (
+                  <div
+                    key={s.id}
+                    className="p-4 bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors flex flex-col justify-between space-y-3 text-xs font-mono"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-sky-600 shrink-0" />
+                          <h4 className="font-bold text-slate-900 text-sm">{s.name}</h4>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-white border border-slate-200 text-slate-700">
+                          {suppliedProductsCount} Catalog Items
+                        </span>
+                      </div>
+
+                      <div className="space-y-1 text-slate-600 text-[11px]">
+                        {s.contactPerson && (
+                          <p>
+                            <strong>Rep:</strong> {s.contactPerson}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap items-center gap-3">
+                          {s.email && (
+                            <span className="flex items-center gap-1 text-slate-700">
+                              <Mail className="w-3 h-3 text-slate-400" />
+                              {s.email}
+                            </span>
+                          )}
+                          {s.phone && (
+                            <span className="flex items-center gap-1 text-slate-700">
+                              <Phone className="w-3 h-3 text-slate-400" />
+                              {s.phone}
+                            </span>
+                          )}
+                        </div>
+                        {s.address && (
+                          <p className="flex items-center gap-1 text-slate-500 truncate">
+                            <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                            {s.address}
+                          </p>
+                        )}
+                        <p className="flex items-center gap-1 text-slate-500">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          Avg Lead Time: <strong>{s.leadTimeDays || 5} days</strong>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60">
+                      <button
+                        onClick={() => openEditSupplier(s)}
+                        className="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-[10px] font-bold uppercase flex items-center gap-1"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                        <span>Edit</span>
+                      </button>
+                      {onDeleteSupplier && (
+                        <button
+                          onClick={() => onDeleteSupplier(s.id)}
+                          className="px-2.5 py-1 bg-white border border-slate-300 hover:bg-rose-50 text-rose-700 text-[10px] font-bold uppercase flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Delete</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}
 
-      {/* Add / Edit Product Modal */}
+      {/* ========================================================================= */}
+      {/* ADD / EDIT PRODUCT MODAL                                                  */}
+      {/* ========================================================================= */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -889,6 +1227,183 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               className="px-6 py-2 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black"
             >
               {editingProduct ? 'Save Changes' : 'Create Product'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* ADD / EDIT CATEGORY MODAL                                                 */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        title={editingCategory ? 'EDIT CATEGORY' : 'NEW PRODUCT CATEGORY'}
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleCategorySubmit} className="space-y-4 font-mono text-xs">
+          {categoryError && (
+            <div className="p-3 bg-rose-50 border border-rose-300 text-rose-800 text-xs font-bold">
+              {categoryError}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+              Category Name *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Footwear, Electronics, Beverages"
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+              Description (Optional)
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Brief description of this product classification..."
+              value={categoryDescription}
+              onChange={(e) => setCategoryDescription(e.target.value)}
+              className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono resize-none"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsCategoryModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs uppercase hover:bg-slate-200 border border-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black"
+            >
+              {editingCategory ? 'Save Changes' : 'Create Category'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* ADD / EDIT SUPPLIER MODAL                                                 */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={isSupplierModalOpen}
+        onClose={() => setIsSupplierModalOpen(false)}
+        title={editingSupplier ? 'EDIT VENDOR / SUPPLIER' : 'REGISTER VENDOR / SUPPLIER'}
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleSupplierSubmit} className="space-y-4 font-mono text-xs">
+          {supplierError && (
+            <div className="p-3 bg-rose-50 border border-rose-300 text-rose-800 text-xs font-bold">
+              {supplierError}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Company / Vendor Name *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Anker Direct Logistics"
+                value={supName}
+                onChange={(e) => setSupName(e.target.value)}
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Contact Person
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Account Manager"
+                value={supContact}
+                onChange={(e) => setSupContact(e.target.value)}
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="orders@vendor.com"
+                value={supEmail}
+                onChange={(e) => setSupEmail(e.target.value)}
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                placeholder="+1 800-555-0199"
+                value={supPhone}
+                onChange={(e) => setSupPhone(e.target.value)}
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-2">
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Warehouse / Office Address
+              </label>
+              <input
+                type="text"
+                placeholder="100 Logistics Blvd, Dock 4"
+                value={supAddress}
+                onChange={(e) => setSupAddress(e.target.value)}
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Lead Time (Days)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={supLeadTime}
+                onChange={(e) => setSupLeadTime(Number(e.target.value))}
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono text-right"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsSupplierModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs uppercase hover:bg-slate-200 border border-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black"
+            >
+              {editingSupplier ? 'Save Changes' : 'Register Supplier'}
             </button>
           </div>
         </form>

@@ -371,6 +371,46 @@ export default function AppMain() {
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
+  // HANDLERS FOR CATEGORIES
+  const handleAddCategory = async (catData: Omit<Category, 'id'>) => {
+    const newCat: Category = {
+      ...catData,
+      id: `cat_${Date.now()}`,
+    };
+    await putToStore('categories', newCat);
+    setCategories((prev) => [...prev, newCat]);
+  };
+
+  const handleUpdateCategory = async (updatedCat: Category) => {
+    await putToStore('categories', updatedCat);
+    setCategories((prev) => prev.map((c) => (c.id === updatedCat.id ? updatedCat : c)));
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    await deleteFromStore('categories', id);
+    setCategories((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  // HANDLERS FOR SUPPLIERS
+  const handleAddSupplier = async (supData: Omit<Supplier, 'id'>) => {
+    const newSup: Supplier = {
+      ...supData,
+      id: `sup_${Date.now()}`,
+    };
+    await putToStore('suppliers', newSup);
+    setSuppliers((prev) => [...prev, newSup]);
+  };
+
+  const handleUpdateSupplier = async (updatedSup: Supplier) => {
+    await putToStore('suppliers', updatedSup);
+    setSuppliers((prev) => prev.map((s) => (s.id === updatedSup.id ? updatedSup : s)));
+  };
+
+  const handleDeleteSupplier = async (id: string) => {
+    await deleteFromStore('suppliers', id);
+    setSuppliers((prev) => prev.filter((s) => s.id !== id));
+  };
+
   // HANDLERS FOR CUSTOMERS
   const handleAddCustomer = async (custData: Omit<Customer, 'id' | 'totalOrders' | 'totalRevenue' | 'outstandingBalance' | 'createdAt'>) => {
     const newCust: Customer = {
@@ -1100,6 +1140,12 @@ export default function AppMain() {
                   onAddProduct={handleAddProduct}
                   onUpdateProduct={handleUpdateProduct}
                   onDeleteProduct={handleDeleteProduct}
+                  onAddCategory={handleAddCategory}
+                  onUpdateCategory={handleUpdateCategory}
+                  onDeleteCategory={handleDeleteCategory}
+                  onAddSupplier={handleAddSupplier}
+                  onUpdateSupplier={handleUpdateSupplier}
+                  onDeleteSupplier={handleDeleteSupplier}
                   currencySymbol={settings.currencySymbol}
                   activeSubTab={activeSubTab}
                   onSubTabChange={setActiveSubTab}
