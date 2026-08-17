@@ -598,7 +598,7 @@ export default function AppMain() {
   const handleSyncAllChannels = async () => {
     const updated = salesChannels.map((c) => ({
       ...c,
-      status: 'Connected' as const,
+      status: 'Tracked' as const,
       lastSyncedAt: new Date().toISOString(),
       activeListingsCount: products.filter((p) => p.status !== 'Out of Stock').length,
     }));

@@ -161,13 +161,15 @@ export interface PurchaseOrder {
   createdAt: string;
 }
 
-export type SalesChannelType = 'Shopify' | 'Amazon' | 'eBay' | 'WooCommerce' | 'In-Store POS';
+export type SalesChannelType = 'In-Store POS' | 'Online' | 'Shopify' | 'Amazon' | 'eBay' | 'WooCommerce';
 
 export interface SalesChannel {
   id: string;
   name: SalesChannelType;
+  category?: 'In-Store POS' | 'Online';
+  platform?: 'Shopify' | 'Amazon' | 'eBay' | 'WooCommerce' | 'In-Store POS';
   icon: string;
-  status: 'Connected' | 'Syncing' | 'Paused';
+  status: 'Tracked' | 'Active' | 'Paused';
   lastSyncedAt: string;
   activeListingsCount: number;
   pendingOrdersCount: number;

@@ -474,11 +474,11 @@ export const INITIAL_CUSTOMERS: Customer[] = [
 ];
 
 export const INITIAL_SALES_CHANNELS: SalesChannel[] = [
-  { id: 'chan_pos', name: 'In-Store POS', icon: 'Store', status: 'Connected', lastSyncedAt: daysAgo(0), activeListingsCount: 12, pendingOrdersCount: 0, autoSyncInventory: true },
-  { id: 'chan_shopify', name: 'Shopify', icon: 'ShoppingBag', status: 'Connected', lastSyncedAt: daysAgo(0), activeListingsCount: 12, pendingOrdersCount: 3, autoSyncInventory: true },
-  { id: 'chan_amazon', name: 'Amazon', icon: 'Globe', status: 'Connected', lastSyncedAt: daysAgo(0), activeListingsCount: 10, pendingOrdersCount: 2, autoSyncInventory: true },
-  { id: 'chan_ebay', name: 'eBay', icon: 'Tag', status: 'Connected', lastSyncedAt: daysAgo(1), activeListingsCount: 8, pendingOrdersCount: 1, autoSyncInventory: true },
-  { id: 'chan_woo', name: 'WooCommerce', icon: 'ShoppingCart', status: 'Connected', lastSyncedAt: daysAgo(1), activeListingsCount: 12, pendingOrdersCount: 1, autoSyncInventory: false },
+  { id: 'chan_pos', name: 'In-Store POS', category: 'In-Store POS', platform: 'In-Store POS', icon: 'Store', status: 'Tracked', lastSyncedAt: daysAgo(0), activeListingsCount: 12, pendingOrdersCount: 0, autoSyncInventory: true },
+  { id: 'chan_shopify', name: 'Shopify', category: 'Online', platform: 'Shopify', icon: 'ShoppingBag', status: 'Tracked', lastSyncedAt: daysAgo(0), activeListingsCount: 12, pendingOrdersCount: 3, autoSyncInventory: true },
+  { id: 'chan_amazon', name: 'Amazon', category: 'Online', platform: 'Amazon', icon: 'Globe', status: 'Tracked', lastSyncedAt: daysAgo(0), activeListingsCount: 10, pendingOrdersCount: 2, autoSyncInventory: true },
+  { id: 'chan_ebay', name: 'eBay', category: 'Online', platform: 'eBay', icon: 'Tag', status: 'Tracked', lastSyncedAt: daysAgo(1), activeListingsCount: 8, pendingOrdersCount: 1, autoSyncInventory: true },
+  { id: 'chan_woo', name: 'WooCommerce', category: 'Online', platform: 'WooCommerce', icon: 'ShoppingCart', status: 'Tracked', lastSyncedAt: daysAgo(1), activeListingsCount: 12, pendingOrdersCount: 1, autoSyncInventory: false },
 ];
 
 export const INITIAL_FULFILLMENT_ORDERS: FulfillmentOrder[] = [
