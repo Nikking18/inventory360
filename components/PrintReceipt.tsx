@@ -18,45 +18,69 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
   if (!sale && !purchaseOrder) return null;
 
   return (
-    <div className="hidden print-only print-container font-sans text-black">
-      {/* Sales Receipt */}
+    <div className="hidden print-only print-container font-mono text-black">
+      {/* 1. SALES POS THERMAL RECEIPT & TAX INVOICE */}
       {sale && (
-        <div className="max-w-md mx-auto p-4 border border-black rounded text-xs space-y-3">
-          <div className="text-center border-b border-black pb-3">
-            <h2 className="font-extrabold text-base tracking-tight uppercase">
-              {settings.businessName}
-            </h2>
-            <p>{settings.address}</p>
-            <p>Tel: {settings.phone} | {settings.email}</p>
-            <p className="font-mono mt-1 font-bold">RECEIPT #: {sale.saleNumber}</p>
-            <p className="text-[10px] text-gray-600">{formatDateTime(sale.createdAt)}</p>
+        <div className="max-w-[340px] mx-auto p-4 border border-dashed border-black text-xs space-y-3">
+          {/* Header */}
+          <div className="text-center border-b border-black pb-3 space-y-1">
+            <h1 className="font-extrabold text-base tracking-tight uppercase">
+              {settings.businessName || 'INVENTORY 360'}
+            </h1>
+            {settings.address && <p className="text-[11px]">{settings.address}</p>}
+            <p className="text-[10px]">
+              {settings.phone && `Tel: ${settings.phone}`} {settings.email && `| ${settings.email}`}
+            </p>
+            <div className="pt-1 border-t border-dotted border-gray-400 mt-1">
+              <p className="font-bold text-xs uppercase">
+                OFFICIAL TAX INVOICE / RECEIPT
+              </p>
+              <p className="font-bold text-[11px]">REC #: {sale.saleNumber}</p>
+              <p className="text-[10px] text-gray-700">Date: {formatDateTime(sale.createdAt)}</p>
+              {sale.locationName && (
+                <p className="text-[10px] text-gray-700">Outlet: {sale.locationName}</p>
+              )}
+              {sale.customerName && (
+                <p className="text-[10px] font-bold text-gray-900">
+                  Customer: {sale.customerName}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <div className="flex justify-between font-bold border-b border-gray-300 pb-1">
-              <span>ITEM</span>
-              <span>QTY × PRICE</span>
-              <span>TOTAL</span>
+          {/* Line Items */}
+          <div className="space-y-1.5 pt-1">
+            <div className="flex justify-between font-bold border-b border-black pb-1 text-[11px]">
+              <span className="w-1/2">DESCRIPTION</span>
+              <span className="w-1/4 text-right">QTY x PRICE</span>
+              <span className="w-1/4 text-right">TOTAL</span>
             </div>
             {sale.items.map((item, idx) => (
-              <div key={idx} className="flex justify-between py-1 border-b border-gray-100">
-                <div className="max-w-[180px]">
-                  <p className="font-semibold">{item.productName}</p>
-                  <p className="text-[10px] font-mono text-gray-500">{item.sku}</p>
+              <div key={idx} className="py-1 border-b border-dotted border-gray-300 text-[11px]">
+                <div className="flex justify-between items-start">
+                  <div className="w-1/2 pr-1">
+                    <p className="font-bold leading-tight">{item.productName}</p>
+                    <p className="text-[9px] text-gray-600">SKU: {item.sku}</p>
+                  </div>
+                  <div className="w-1/4 text-right text-[10px]">
+                    {item.quantity} × {formatCurrency(item.unitPrice, settings.currencySymbol)}
+                  </div>
+                  <div className="w-1/4 text-right font-bold">
+                    {formatCurrency(item.total, settings.currencySymbol)}
+                  </div>
                 </div>
-                <span>{item.quantity} × {formatCurrency(item.unitPrice, settings.currencySymbol)}</span>
-                <span className="font-semibold">{formatCurrency(item.total, settings.currencySymbol)}</span>
               </div>
             ))}
           </div>
 
-          <div className="border-t border-black pt-2 space-y-1 font-mono text-right">
+          {/* Financial Summary */}
+          <div className="border-t border-black pt-2 space-y-1 text-right text-[11px]">
             <div className="flex justify-between">
               <span>SUBTOTAL:</span>
-              <span>{formatCurrency(sale.subtotal, settings.currencySymbol)}</span>
+              <span className="font-semibold">{formatCurrency(sale.subtotal, settings.currencySymbol)}</span>
             </div>
             {sale.discount > 0 && (
-              <div className="flex justify-between text-red-600">
+              <div className="flex justify-between text-black">
                 <span>DISCOUNT:</span>
                 <span>-{formatCurrency(sale.discount, settings.currencySymbol)}</span>
               </div>
@@ -65,25 +89,38 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
               <span>TAX ({settings.taxRate}%):</span>
               <span>{formatCurrency(sale.tax, settings.currencySymbol)}</span>
             </div>
-            <div className="flex justify-between font-extrabold text-sm border-t border-black pt-1">
+            <div className="flex justify-between font-extrabold text-sm border-t border-b border-black py-1 my-1">
               <span>TOTAL PAID:</span>
               <span>{formatCurrency(sale.total, settings.currencySymbol)}</span>
             </div>
-            <div className="flex justify-between text-[11px] text-gray-600">
-              <span>Payment Method:</span>
-              <span>{sale.paymentMethod}</span>
+            <div className="flex justify-between text-[10px] pt-0.5">
+              <span>PAYMENT METHOD:</span>
+              <span className="font-bold uppercase">{sale.paymentMethod}</span>
+            </div>
+            <div className="flex justify-between text-[10px]">
+              <span>STATUS:</span>
+              <span className="font-bold uppercase">{sale.status}</span>
             </div>
           </div>
 
-          <div className="text-center pt-3 border-t border-gray-300 text-[10px] text-gray-500 uppercase">
-            Thank you for shopping at {settings.businessName}!
+          {/* Barcode & Footer Note */}
+          <div className="text-center pt-3 border-t border-dotted border-black space-y-1">
+            <div className="text-center font-mono text-[10px] tracking-[0.25em] bg-gray-100 py-1 font-bold">
+              *{sale.saleNumber}*
+            </div>
+            <p className="text-[9px] uppercase">
+              Thank you for your business!
+            </p>
+            <p className="text-[8px] text-gray-600">
+              Goods once sold can be returned within 14 days with original receipt.
+            </p>
           </div>
         </div>
       )}
 
-      {/* Purchase Order */}
+      {/* 2. PURCHASE ORDER */}
       {purchaseOrder && (
-        <div className="max-w-2xl mx-auto p-6 border border-black rounded text-xs space-y-4">
+        <div className="max-w-2xl mx-auto p-6 border border-black text-xs space-y-4">
           <div className="flex justify-between border-b border-black pb-4">
             <div>
               <h1 className="font-extrabold text-lg uppercase">{settings.businessName}</h1>
@@ -92,7 +129,7 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
             </div>
             <div className="text-right">
               <h2 className="font-extrabold text-xl">PURCHASE ORDER</h2>
-              <p className="font-mono font-bold">{purchaseOrder.poNumber}</p>
+              <p className="font-bold text-sm">{purchaseOrder.poNumber}</p>
               <p>Date: {formatDateTime(purchaseOrder.createdAt)}</p>
               <p>Status: {purchaseOrder.status.toUpperCase()}</p>
             </div>

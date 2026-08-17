@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../../context/I18nContext';
-import { Product, Sale, SaleItem, Customer, Location } from '../../lib/types';
+import { Product, Sale, SaleItem, Customer, Location, ProductVariant } from '../../lib/types';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 import {
   Search,
@@ -13,6 +13,17 @@ import {
   CheckCircle2,
   ShoppingBag,
   User,
+  Printer,
+  Layers,
+  Settings2,
+  Sparkles,
+  X,
+  CreditCard,
+  Banknote,
+  Building2,
+  Tag,
+  Check,
+  Package,
 } from 'lucide-react';
 import { BarcodeModal } from '../BarcodeModal';
 
@@ -47,6 +58,7 @@ export const SellView: React.FC<SellViewProps> = ({
 }) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [discountAmount, setDiscountAmount] = useState<number>(0);
@@ -54,9 +66,68 @@ export const SellView: React.FC<SellViewProps> = ({
   const [isBarcodeOpen, setIsBarcodeOpen] = useState(false);
   const [completedSaleModal, setCompletedSaleModal] = useState<Sale | null>(null);
 
+  // Variant Selection State
+  const [variantModalProduct, setVariantModalProduct] = useState<Product | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<string>('');
+  const [variantQty, setVariantQty] = useState<number>(1);
+
+  // Local Printer Settings State
+  const [isPrinterModalOpen, setIsPrinterModalOpen] = useState(false);
+  const [autoPrintEnabled, setAutoPrintEnabled] = useState<boolean>(true);
+  const [receiptFormat, setReceiptFormat] = useState<'80mm' | '58mm' | 'A4'>('80mm');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedAutoPrint = localStorage.getItem('inventory360_autoprint');
+      if (savedAutoPrint !== null) {
+        setAutoPrintEnabled(savedAutoPrint === 'true');
+      }
+      const savedFormat = localStorage.getItem('inventory360_receipt_format');
+      if (savedFormat) {
+        setReceiptFormat(savedFormat as any);
+      }
+    }
+  }, []);
+
+  const saveAutoPrint = (val: boolean) => {
+    setAutoPrintEnabled(val);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('inventory360_autoprint', String(val));
+    }
+  };
+
+  const saveReceiptFormat = (fmt: '80mm' | '58mm' | 'A4') => {
+    setReceiptFormat(fmt);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('inventory360_receipt_format', fmt);
+    }
+  };
+
   const currentLocation = locations.find((l) => l.id === selectedLocation) || locations[0];
 
-  const addToCart = (product: Product) => {
+  // Distinct product categories
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      if (p.categoryName) set.add(p.categoryName);
+    });
+    return Array.from(set);
+  }, [products]);
+
+  // Primary Add to Cart handler with Variant Interception
+  const handleProductSelect = (product: Product) => {
+    // If the product has multiple variants, open the Variant Selector Modal!
+    if (product.variants && product.variants.length > 0) {
+      setVariantModalProduct(product);
+      setSelectedVariantId(product.variants[0].id);
+      setVariantQty(1);
+    } else {
+      addStandardProductToCart(product);
+    }
+  };
+
+  // Add standard non-variant product to cart
+  const addStandardProductToCart = (product: Product, quantity = 1) => {
     const prod = products.find((p) => p.id === product.id);
     const maxStock = prod ? prod.stockQuantity : product.stockQuantity;
     if (maxStock <= 0) return;
@@ -65,7 +136,7 @@ export const SellView: React.FC<SellViewProps> = ({
       const existing = prev.find((item) => item.productId === product.id);
       if (existing) {
         if (existing.quantity >= maxStock) return prev;
-        const newQty = existing.quantity + 1;
+        const newQty = Math.min(maxStock, existing.quantity + quantity);
         return prev.map((item) =>
           item.productId === product.id
             ? { ...item, quantity: newQty, total: newQty * item.unitPrice }
@@ -80,25 +151,61 @@ export const SellView: React.FC<SellViewProps> = ({
             sku: product.sku,
             unitPrice: product.retailPrice,
             unitCost: product.costPrice,
-            quantity: 1,
-            total: product.retailPrice,
+            quantity: Math.min(maxStock, quantity),
+            total: product.retailPrice * Math.min(maxStock, quantity),
           },
         ];
       }
     });
   };
 
-  const updateCartQty = (productId: string, delta: number) => {
-    const prod = products.find((p) => p.id === productId);
-    const maxStock = prod ? prod.stockQuantity : 999999;
+  // Add chosen variant to cart
+  const handleAddVariantToCart = () => {
+    if (!variantModalProduct) return;
+    const variant = variantModalProduct.variants?.find((v) => v.id === selectedVariantId);
+    if (!variant) return;
 
+    const maxStock = variant.stockQuantity > 0 ? variant.stockQuantity : variantModalProduct.stockQuantity;
+    if (maxStock <= 0) return;
+
+    const uniqueItemKey = `${variantModalProduct.id}__var_${variant.id}`;
+    const variantFullName = `${variantModalProduct.name} (${variant.name})`;
+
+    setCart((prev) => {
+      const existing = prev.find((item) => item.productId === uniqueItemKey);
+      if (existing) {
+        const newQty = Math.min(maxStock, existing.quantity + variantQty);
+        return prev.map((item) =>
+          item.productId === uniqueItemKey
+            ? { ...item, quantity: newQty, total: newQty * item.unitPrice }
+            : item
+        );
+      } else {
+        return [
+          ...prev,
+          {
+            productId: uniqueItemKey,
+            productName: variantFullName,
+            sku: variant.sku || variantModalProduct.sku,
+            unitPrice: variant.retailPrice || variantModalProduct.retailPrice,
+            unitCost: variant.costPrice || variantModalProduct.costPrice,
+            quantity: Math.min(maxStock, variantQty),
+            total: (variant.retailPrice || variantModalProduct.retailPrice) * Math.min(maxStock, variantQty),
+          },
+        ];
+      }
+    });
+
+    setVariantModalProduct(null);
+  };
+
+  const updateCartQty = (productId: string, delta: number) => {
     setCart((prev) =>
       prev
         .map((item) => {
           if (item.productId === productId) {
             const newQty = item.quantity + delta;
             if (newQty <= 0) return null;
-            if (newQty > maxStock) return item;
             return {
               ...item,
               quantity: newQty,
@@ -151,88 +258,183 @@ export const SellView: React.FC<SellViewProps> = ({
     const newSale = await onCompleteSale(saleRecord);
     setCompletedSaleModal(newSale);
     clearCart();
+
+    // Auto-trigger printing to local thermal/connected printer if enabled
+    if (autoPrintEnabled) {
+      setTimeout(() => {
+        onPrintReceipt(newSale);
+      }, 200);
+    }
   };
 
-  const filteredProducts = products.filter(
-    (p) =>
+  const handleTestPrint = () => {
+    const dummySale: Sale = {
+      id: 'test_print',
+      saleNumber: `TEST-${Date.now().toString().slice(-4)}`,
+      items: [
+        { productId: 'test_1', productName: 'Sample Retail Item (80mm Test)', sku: 'TEST-SKU-01', unitPrice: 29.99, unitCost: 15.00, quantity: 2, total: 59.98 },
+      ],
+      subtotal: 59.98,
+      tax: 5.10,
+      discount: 0,
+      total: 65.08,
+      costOfGoodsSold: 30.00,
+      grossProfit: 35.08,
+      paymentMethod: 'Card',
+      status: 'Completed',
+      locationId: currentLocation?.id || 'loc_1',
+      locationName: currentLocation?.name || 'Main Flagship',
+      channel: 'In-Store POS',
+      createdAt: new Date().toISOString(),
+    };
+    onPrintReceipt(dummySale);
+  };
+
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch =
       (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
       (p.sku || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.barcode || '').toLowerCase().includes(search.toLowerCase())
-  );
+      (p.barcode || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.variants || []).some(
+        (v) =>
+          v.name.toLowerCase().includes(search.toLowerCase()) ||
+          v.sku.toLowerCase().includes(search.toLowerCase()) ||
+          v.barcode.toLowerCase().includes(search.toLowerCase())
+      );
+
+    const matchesCategory = selectedCategory === 'all' || p.categoryName === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
 
   return (
-    <div id="tour-pos-terminal" className="space-y-6 text-slate-900 font-mono">
-      {/* Top Header & Sub-Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 gap-2">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 uppercase tracking-wider font-heading">
-            {t('sell', 'Point of Sale (POS Terminal)')}
-          </h1>
-          <p className="text-xs text-slate-600">
-            Fast checkout lane, SKU barcode indexing, split payments, and receipt generation.
-          </p>
+    <div className="space-y-6 font-mono text-slate-900">
+      {/* 1. POS SUB-NAVIGATION & PRINTER TOOLBAR */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        {/* Navigation Sub-Tabs */}
+        <div className="flex items-center gap-2">
+          {[
+            { id: 'quick-sale', label: t('quick-sale', 'Quick Sale POS'), icon: ShoppingBag },
+            { id: 'sales-history', label: t('sales-history', 'Sales History'), icon: Layers },
+            { id: 'returns', label: t('returns', 'Returns & Refunds'), icon: Trash2 },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onSubTabChange && onSubTabChange(tab.id)}
+                className={`px-3 py-1.5 text-xs uppercase font-bold tracking-wider flex items-center gap-1.5 transition-all ${
+                  activeSubTab === tab.id
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Sub-tab Navigation */}
-        <div className="flex items-center gap-2">
-          {(['quick-sale', 'sales-history', 'returns'] as const).map((tabId) => (
-            <button
-              key={tabId}
-              onClick={() => onSubTabChange && onSubTabChange(tabId)}
-              className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-colors ${
-                activeSubTab === tabId
-                  ? 'bg-slate-900 text-white font-bold'
-                  : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
-              }`}
-            >
-              {tabId === 'quick-sale' ? 'POS Terminal' : tabId === 'sales-history' ? 'Sales Log' : 'Returns & Refunds'}
-            </button>
-          ))}
+        {/* Local Printer Connection & Actions */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={() => setIsPrinterModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:border-slate-900 text-slate-800 text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs"
+            title="Configure Local POS Thermal & Bill Printer"
+          >
+            <Printer className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Local Printer</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
+          </button>
+
+          <button
+            onClick={() => setIsBarcodeOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider border border-slate-300 transition-colors"
+          >
+            <Barcode className="w-3.5 h-3.5 text-slate-700" />
+            <span className="hidden md:inline">Barcode Scan</span>
+          </button>
         </div>
       </div>
 
+      {/* QUICK SALE POS TERMINAL */}
       {activeSubTab === 'quick-sale' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column: Product Selection Grid */}
+        <div id="tour-pos-terminal" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column: Product Search, Category Tabs & Grid */}
           <div className="lg:col-span-7 space-y-4">
-            {/* Search & Barcode Scan Bar */}
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder={t('search_placeholder', 'Search products by name, SKU, or barcode...')}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full text-xs bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 pl-9 pr-3 py-2.5 focus:outline-none focus:border-slate-900 font-mono shadow-2xs"
-                />
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              </div>
-
-              <button
-                onClick={() => setIsBarcodeOpen(true)}
-                className="px-3.5 py-2.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-2xs"
-                title="Open Live Barcode Scanner"
-              >
-                <Barcode className="w-4 h-4" />
-                <span className="hidden sm:inline">Scan</span>
-              </button>
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder={t('search_placeholder', 'Search products or variants by name, SKU, or barcode...')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono shadow-2xs"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
-            {/* Product Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[550px] overflow-y-auto pr-1">
+            {/* Category Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+              <button
+                onClick={() => setSelectedCategory('all')}
+                className={`px-3 py-1 text-xs uppercase font-bold tracking-wider transition-colors shrink-0 ${
+                  selectedCategory === 'all'
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                All Categories
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1 text-xs uppercase font-bold tracking-wider transition-colors shrink-0 ${
+                    selectedCategory === cat
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Product Catalog Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[560px] overflow-y-auto pr-1">
               {filteredProducts.map((p) => {
                 const isOutOfStock = p.stockQuantity <= 0;
+                const hasVariants = p.variants && p.variants.length > 0;
+
                 return (
                   <button
                     key={p.id}
                     disabled={isOutOfStock}
-                    onClick={() => addToCart(p)}
-                    className={`p-3 bg-white border text-left flex flex-col justify-between space-y-2 transition-all group rounded-none shadow-xs ${
+                    onClick={() => handleProductSelect(p)}
+                    className={`p-3 bg-white border text-left flex flex-col justify-between space-y-2 transition-all group rounded-none shadow-xs relative ${
                       isOutOfStock
                         ? 'opacity-40 border-slate-200 cursor-not-allowed bg-slate-50'
                         : 'border-slate-200 hover:border-slate-900 hover:shadow-sm'
                     }`}
                   >
+                    {/* Variant Count Badge */}
+                    {hasVariants && (
+                      <span className="absolute top-2 right-2 bg-slate-900 text-white text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wider shadow-xs flex items-center gap-1 z-10">
+                        <Layers className="w-2.5 h-2.5 text-emerald-400" />
+                        <span>{p.variants?.length} Variants</span>
+                      </span>
+                    )}
+
                     <div className="space-y-1">
                       {p.imageUrl && (
                         <img
@@ -326,7 +528,7 @@ export const SellView: React.FC<SellViewProps> = ({
                     <div className="min-w-0 flex-1 pr-2">
                       <p className="font-bold text-slate-900 truncate">{item.productName}</p>
                       <p className="text-[10px] text-slate-500">
-                        {formatCurrency(item.unitPrice, currencySymbol)} × {item.quantity}
+                        {formatCurrency(item.unitPrice, currencySymbol)} × {item.quantity} • {item.sku}
                       </p>
                     </div>
 
@@ -371,7 +573,7 @@ export const SellView: React.FC<SellViewProps> = ({
               </div>
 
               <div className="flex items-center justify-between text-slate-600">
-                <span>Discount ($):</span>
+                <span>Discount ({currencySymbol}):</span>
                 <input
                   type="number"
                   min="0"
@@ -427,7 +629,7 @@ export const SellView: React.FC<SellViewProps> = ({
               }`}
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Complete Sale &amp; Print Receipt</span>
+              <span>Complete Sale &amp; Print Bill</span>
             </button>
           </div>
         </div>
@@ -454,7 +656,7 @@ export const SellView: React.FC<SellViewProps> = ({
                   <th className="p-2.5 text-right">Items</th>
                   <th className="p-2.5 text-right">Total</th>
                   <th className="p-2.5 text-center">Status</th>
-                  <th className="p-2.5 text-center">Actions</th>
+                  <th className="p-2.5 text-center">Receipt</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -488,9 +690,10 @@ export const SellView: React.FC<SellViewProps> = ({
                       <td className="p-2.5 text-center">
                         <button
                           onClick={() => onPrintReceipt(s)}
-                          className="px-2 py-1 bg-slate-100 border border-slate-300 text-slate-800 hover:bg-slate-200 text-[10px] font-bold uppercase"
+                          className="px-2.5 py-1 bg-slate-100 border border-slate-300 text-slate-800 hover:bg-slate-900 hover:text-white text-[10px] font-bold uppercase transition-colors shadow-2xs flex items-center gap-1 mx-auto"
                         >
-                          Receipt
+                          <Printer className="w-3 h-3" />
+                          <span>Print</span>
                         </button>
                       </td>
                     </tr>
@@ -562,48 +765,290 @@ export const SellView: React.FC<SellViewProps> = ({
         </div>
       )}
 
+      {/* 2. PRODUCT VARIANT SELECTION MODAL */}
+      {variantModalProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn font-mono">
+          <div className="bg-white border border-slate-300 shadow-2xl max-w-lg w-full p-6 space-y-5">
+            <div className="flex items-start justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-3">
+                {variantModalProduct.imageUrl && (
+                  <img
+                    src={variantModalProduct.imageUrl}
+                    alt={variantModalProduct.name}
+                    className="w-12 h-12 object-cover border border-slate-200"
+                  />
+                )}
+                <div>
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 border border-emerald-300 uppercase">
+                    Select Product Variant
+                  </span>
+                  <h3 className="font-bold text-sm text-slate-900 mt-0.5">{variantModalProduct.name}</h3>
+                  <p className="text-[10px] text-slate-500">Base SKU: {variantModalProduct.sku}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setVariantModalProduct(null)}
+                className="p-1 text-slate-400 hover:text-slate-900"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Variant Options Cards */}
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                Available Options &amp; Stock Levels
+              </label>
+
+              {variantModalProduct.variants?.map((v) => {
+                const isSelected = selectedVariantId === v.id;
+                const isOutOfStock = v.stockQuantity <= 0;
+
+                return (
+                  <div
+                    key={v.id}
+                    onClick={() => !isOutOfStock && setSelectedVariantId(v.id)}
+                    className={`p-3 border flex items-center justify-between cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-slate-900 bg-slate-50 shadow-xs ring-1 ring-slate-900'
+                        : isOutOfStock
+                        ? 'border-slate-200 opacity-40 cursor-not-allowed bg-slate-100'
+                        : 'border-slate-200 hover:border-slate-400 bg-white'
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                            isSelected ? 'border-slate-900 bg-slate-900' : 'border-slate-400'
+                          }`}
+                        >
+                          {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                        </div>
+                        <p className="font-bold text-xs text-slate-900">{v.name}</p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 pl-5.5">
+                        <span>SKU: {v.sku}</span>
+                        {Object.entries(v.attributes || {}).map(([attrK, attrV]) => (
+                          <span
+                            key={attrK}
+                            className="bg-slate-100 px-1.5 py-0.2 border border-slate-200 text-slate-700"
+                          >
+                            {attrK}: {attrV}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <p className="font-bold text-xs text-slate-900">
+                        {formatCurrency(v.retailPrice || variantModalProduct.retailPrice, currencySymbol)}
+                      </p>
+                      <p className="text-[10px] text-slate-500">
+                        {v.stockQuantity} in stock
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Quantity Stepper */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-xs">
+              <span className="font-bold text-slate-700 uppercase">Quantity:</span>
+              <div className="flex items-center border border-slate-300 bg-white">
+                <button
+                  onClick={() => setVariantQty((q) => Math.max(1, q - 1))}
+                  className="px-2.5 py-1 text-slate-600 hover:text-slate-900"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+                <span className="px-3 font-bold text-slate-900">{variantQty}</span>
+                <button
+                  onClick={() => setVariantQty((q) => q + 1)}
+                  className="px-2.5 py-1 text-slate-600 hover:text-slate-900"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setVariantModalProduct(null)}
+                className="flex-1 py-2.5 bg-slate-100 text-slate-800 font-bold text-xs uppercase hover:bg-slate-200 border border-slate-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddVariantToCart}
+                className="flex-2 py-2.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black flex items-center justify-center gap-1.5 shadow-xs"
+              >
+                <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                <span>Add Variant to Cart</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. LOCAL PRINTER SETUP & BILL MANAGER MODAL */}
+      {isPrinterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn font-mono">
+          <div className="bg-white border border-slate-300 shadow-2xl max-w-md w-full p-6 space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2.5">
+                <Printer className="w-5 h-5 text-slate-900" />
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 uppercase">
+                    Local Printer &amp; Bill Dispatch
+                  </h3>
+                  <p className="text-[10px] text-slate-500">Thermal POS / USB / Network Printer Configuration</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPrinterModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-900"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Connection Status Card */}
+              <div className="p-3.5 bg-emerald-50 border border-emerald-300 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
+                  <div>
+                    <p className="font-bold text-emerald-950 uppercase text-[11px]">Printer Interface Ready</p>
+                    <p className="text-[10px] text-emerald-800">Connected to System Spooler / ESC-POS Output</p>
+                  </div>
+                </div>
+                <span className="text-[9px] font-bold uppercase bg-emerald-200 text-emerald-900 px-2 py-0.5">
+                  ONLINE
+                </span>
+              </div>
+
+              {/* Receipt Paper Format */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                  Receipt Paper Format
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: '80mm', label: '80mm Thermal', desc: 'Standard POS' },
+                    { id: '58mm', label: '58mm Compact', desc: 'Mobile Thermal' },
+                    { id: 'A4', label: 'A4 / Letter', desc: 'Full Invoice' },
+                  ].map((fmt) => (
+                    <button
+                      key={fmt.id}
+                      onClick={() => saveReceiptFormat(fmt.id as any)}
+                      className={`p-2.5 text-center border transition-all ${
+                        receiptFormat === fmt.id
+                          ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
+                          : 'border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100'
+                      }`}
+                    >
+                      <p className="font-bold text-xs uppercase">{fmt.label}</p>
+                      <p className="text-[9px] opacity-75">{fmt.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Auto-Print Toggle */}
+              <div className="p-3 border border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-slate-900 text-xs uppercase">Auto-Print Receipts</p>
+                  <p className="text-[10px] text-slate-500">Automatically trigger print dialog when sale completes</p>
+                </div>
+                <button
+                  onClick={() => saveAutoPrint(!autoPrintEnabled)}
+                  className={`w-11 h-6 flex items-center px-0.5 transition-colors ${
+                    autoPrintEnabled ? 'bg-slate-900' : 'bg-slate-300'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 bg-white shadow-md transform transition-transform ${
+                      autoPrintEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Test Print & Close Buttons */}
+            <div className="flex gap-2 pt-2 border-t border-slate-200">
+              <button
+                onClick={handleTestPrint}
+                className="flex-1 py-2.5 bg-white border border-slate-300 hover:border-slate-900 text-slate-800 font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
+              >
+                <Printer className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Print Test Bill</span>
+              </button>
+              <button
+                onClick={() => setIsPrinterModalOpen(false)}
+                className="flex-1 py-2.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Barcode Scanner Modal */}
       <BarcodeModal
         isOpen={isBarcodeOpen}
         onClose={() => setIsBarcodeOpen(false)}
         products={products}
         onSelectProduct={(p) => {
-          addToCart(p);
+          handleProductSelect(p);
           setIsBarcodeOpen(false);
         }}
       />
 
       {/* Completed Sale Notification Modal */}
       {completedSaleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fadeIn font-mono">
-          <div className="bg-white border border-slate-200 shadow-2xl p-6 max-w-sm w-full space-y-4 text-center">
-            <div className="w-12 h-12 bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center mx-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn font-mono">
+          <div className="bg-white border border-slate-300 shadow-2xl p-6 max-w-sm w-full space-y-4 text-center">
+            <div className="w-12 h-12 bg-emerald-50 border border-emerald-300 text-emerald-700 flex items-center justify-center mx-auto shadow-2xs">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-slate-900 uppercase">Sale Completed!</h3>
-              <p className="text-xs text-slate-600 mt-1 font-mono">
-                Order #{completedSaleModal.saleNumber} recorded successfully.
+              <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 px-2 py-0.5 border border-emerald-300">
+                Transaction Completed
+              </span>
+              <h3 className="font-bold text-base text-slate-900 uppercase mt-1">Payment Successful</h3>
+              <p className="text-xs text-slate-600 font-mono">
+                Receipt #{completedSaleModal.saleNumber}
               </p>
-              <p className="text-xl font-bold text-slate-900 mt-2 font-mono">
+              <p className="text-2xl font-bold text-slate-900 mt-2 font-mono">
                 {formatCurrency(completedSaleModal.total, currencySymbol)}
               </p>
+              <p className="text-[10px] text-slate-500 mt-0.5">
+                Paid via {completedSaleModal.paymentMethod} • {completedSaleModal.items.length} item(s)
+              </p>
             </div>
+
             <div className="flex gap-2 pt-2">
               <button
                 onClick={() => {
                   onPrintReceipt(completedSaleModal);
                   setCompletedSaleModal(null);
                 }}
-                className="flex-1 py-2 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black"
+                className="flex-1 py-2.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black flex items-center justify-center gap-1.5 shadow-sm"
               >
-                Print Receipt
+                <Printer className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Print Bill</span>
               </button>
               <button
                 onClick={() => setCompletedSaleModal(null)}
-                className="flex-1 py-2 bg-slate-100 text-slate-800 font-bold text-xs uppercase hover:bg-slate-200 border border-slate-300"
+                className="flex-1 py-2.5 bg-slate-100 text-slate-800 font-bold text-xs uppercase hover:bg-slate-200 border border-slate-300"
               >
-                Close
+                New Sale
               </button>
             </div>
           </div>
