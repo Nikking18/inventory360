@@ -37,6 +37,10 @@ interface SidebarProps {
   onSubTabChange?: (subTab: string) => void;
   businessName: string;
   ownerName: string;
+  currencyCode?: string;
+  onCurrencyChange?: (code: string) => void;
+  language?: string;
+  onLanguageChange?: (lang: string) => void;
   onOpenLanding?: () => void;
   onOpenDemoModal?: () => void;
   onOpenTour?: () => void;
@@ -79,6 +83,7 @@ export const NAV_ITEMS: {
       { id: 'sales-report', label: 'Sales Report' },
       { id: 'inventory-report', label: 'Inventory Report' },
       { id: 'purchase-report', label: 'Purchase Report' },
+      { id: 'turnover-velocity', label: 'Turnover & Sales Velocity' },
       { id: 'profit-report', label: 'Profitability Report' },
       { id: 'tax-report', label: 'Tax Report' },
     ],
@@ -126,6 +131,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSubTabChange,
   businessName,
   ownerName,
+  currencyCode,
+  onCurrencyChange,
+  language,
+  onLanguageChange,
   onOpenLanding,
   onOpenTour,
   onOpenDataPolicy,
@@ -260,6 +269,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <ArrowUpRight className="w-3 h-3 text-slate-600" />
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Currency & Language Controls in Sidebar Footer */}
+      <div className="px-3 py-2 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between gap-2 text-[10px] font-mono">
+        <div className="flex items-center gap-1 bg-white border border-slate-300 px-2 py-1 shadow-2xs flex-1">
+          <span className="font-bold text-slate-500">$</span>
+          <select
+            value={currencyCode || 'USD'}
+            onChange={(e) => onCurrencyChange && onCurrencyChange(e.target.value)}
+            className="bg-transparent text-slate-900 font-bold focus:outline-none cursor-pointer text-[10px] w-full"
+            title="Change Global Currency"
+          >
+            <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+            <option value="GBP">£ GBP</option>
+            <option value="CAD">C$ CAD</option>
+            <option value="AUD">A$ AUD</option>
+            <option value="JPY">¥ JPY</option>
+            <option value="INR">₹ INR</option>
+            <option value="BRL">R$ BRL</option>
+            <option value="MXN">Mex$ MXN</option>
+            <option value="AED">AED</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-1 bg-white border border-slate-300 px-2 py-1 shadow-2xs flex-1">
+          <Globe className="w-3 h-3 text-slate-500 shrink-0" />
+          <select
+            value={language || 'en'}
+            onChange={(e) => onLanguageChange && onLanguageChange(e.target.value)}
+            className="bg-transparent text-slate-900 font-bold focus:outline-none cursor-pointer text-[10px] w-full"
+            title="Change Language"
+          >
+            <option value="en">🇺🇸 EN</option>
+            <option value="es">🇪🇸 ES</option>
+            <option value="fr">🇫🇷 FR</option>
+            <option value="de">🇩🇪 DE</option>
+            <option value="hi">🇮🇳 HI</option>
+            <option value="ja">🇯🇵 JA</option>
+            <option value="pt">🇧🇷 PT</option>
+            <option value="ar">🇦🇪 AR</option>
+          </select>
         </div>
       </div>
 

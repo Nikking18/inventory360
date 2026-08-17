@@ -178,12 +178,88 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     e.preventDefault();
     setFormError(null);
 
+    // Mandatory Basic Info Validations
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      setModalFormTab('basic');
+      setFormError('Product Name is mandatory (must be at least 2 characters).');
+      return;
+    }
+
+    const trimmedSku = sku.trim().toUpperCase();
+    if (!trimmedSku || trimmedSku.length < 2) {
+      setModalFormTab('basic');
+      setFormError('SKU (Stock Keeping Unit) is mandatory (minimum 2 characters).');
+      return;
+    }
+
+    if (!categoryId) {
+      setModalFormTab('basic');
+      setFormError('Please select a Category. Category is mandatory.');
+      return;
+    }
+
+    if (!supplierId) {
+      setModalFormTab('basic');
+      setFormError('Please select a Supplier. Supplier is mandatory.');
+      return;
+    }
+
+    const numCostPrice = Number(costPrice);
+    if (isNaN(numCostPrice) || numCostPrice < 0) {
+      setModalFormTab('basic');
+      setFormError('Cost Price is mandatory and cannot be negative.');
+      return;
+    }
+
+    const numRetailPrice = Number(retailPrice);
+    if (isNaN(numRetailPrice) || numRetailPrice <= 0) {
+      setModalFormTab('basic');
+      setFormError('Retail Price is mandatory and must be greater than 0.');
+      return;
+    }
+
+    const numStock = Number(stockQuantity);
+    if (isNaN(numStock) || numStock < 0) {
+      setModalFormTab('basic');
+      setFormError('Current Stock is mandatory (enter 0 or greater).');
+      return;
+    }
+
+    const numReorderPoint = Number(reorderPoint);
+    if (isNaN(numReorderPoint) || numReorderPoint < 0) {
+      setModalFormTab('basic');
+      setFormError('Reorder Point is mandatory (default is 10).');
+      return;
+    }
+
+    // Validate Variants if added
+    for (let i = 0; i < variants.length; i++) {
+      const v = variants[i];
+      if (!v.name || !v.name.trim()) {
+        setModalFormTab('variants');
+        setFormError(`Variant #${i + 1}: Name is mandatory.`);
+        return;
+      }
+      if (!v.sku || !v.sku.trim()) {
+        setModalFormTab('variants');
+        setFormError(`Variant #${i + 1}: SKU is mandatory.`);
+        return;
+      }
+      if (isNaN(Number(v.retailPrice)) || Number(v.retailPrice) <= 0) {
+        setModalFormTab('variants');
+        setFormError(`Variant #${i + 1}: Retail Price must be greater than 0.`);
+        return;
+      }
+    }
+
     // Collision checks for SKU
     const existingSku = products.find(
-      (p) => p.sku.toLowerCase() === sku.trim().toLowerCase() && p.id !== editingProduct?.id
+      (p) => p.sku.toLowerCase() === trimmedSku.toLowerCase() && p.id !== editingProduct?.id
     );
     if (existingSku) {
-      setFormError(`A product with SKU "${sku}" already exists.`);
+      setModalFormTab('basic');
+      setFormError(`A product with SKU "${trimmedSku}" already exists in the catalog.`);
       return;
     }
 
@@ -191,19 +267,21 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     const sup = suppliers.find((s) => s.id === supplierId);
 
     const productPayload = {
-      name: name.trim(),
-      sku: sku.trim().toUpperCase(),
+      name: trimmedName,
+      sku: trimmedSku,
       barcode: barcode.trim() || '',
       description: description.trim() || '',
       categoryId,
       categoryName: cat?.name || 'Uncategorized',
       supplierId,
       supplierName: sup?.name || 'Primary Supplier',
-      costPrice: Number(costPrice),
-      retailPrice: Number(retailPrice),
-      stockQuantity: Number(stockQuantity),
-      reorderPoint: Number(reorderPoint),
-      locationQuantities: editingProduct?.locationQuantities || { [locations[0]?.id || 'loc_downtown']: Number(stockQuantity) },
+      costPrice: numCostPrice,
+      retailPrice: numRetailPrice,
+      stockQuantity: numStock,
+      reorderPoint: numReorderPoint,
+      locationQuantities: editingProduct?.locationQuantities || {
+        [locations[0]?.id || 'loc_downtown']: numStock,
+      },
       imageUrl: imageUrl.trim() || undefined,
       variants: variants.length > 0 ? variants : undefined,
       customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
@@ -570,12 +648,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Category</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Category *</label>
                   <select
                     value={categoryId}
+                    required
                     onChange={(e) => setCategoryId(e.target.value)}
                     className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
                   >
+                    <option value="">Select Category...</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
@@ -584,12 +664,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Supplier</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Supplier *</label>
                   <select
                     value={supplierId}
+                    required
                     onChange={(e) => setSupplierId(e.target.value)}
                     className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
                   >
+                    <option value="">Select Supplier...</option>
                     {suppliers.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name}

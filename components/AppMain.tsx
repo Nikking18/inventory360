@@ -919,6 +919,24 @@ export default function AppMain() {
               onSubTabChange={setActiveSubTab}
               businessName={settings.businessName}
               ownerName={settings.ownerName}
+              currencyCode={settings.currencyCode}
+              onCurrencyChange={async (code) => {
+                const found = CURRENCIES.find((c) => c.code === code);
+                if (found) {
+                  await handleUpdateSettings({
+                    ...settings,
+                    currencyCode: found.code,
+                    currencySymbol: found.symbol,
+                  });
+                }
+              }}
+              language={settings.language}
+              onLanguageChange={async (lang) => {
+                await handleUpdateSettings({
+                  ...settings,
+                  language: lang as SupportedLanguage,
+                });
+              }}
               onOpenLanding={closeToLanding}
               onOpenTour={() => setIsTourOpen(true)}
               onOpenDataPolicy={() => setShowDataPolicyNotice(true)}
@@ -959,6 +977,24 @@ export default function AppMain() {
                     }}
                     businessName={settings.businessName}
                     ownerName={settings.ownerName}
+                    currencyCode={settings.currencyCode}
+                    onCurrencyChange={async (code) => {
+                      const found = CURRENCIES.find((c) => c.code === code);
+                      if (found) {
+                        await handleUpdateSettings({
+                          ...settings,
+                          currencyCode: found.code,
+                          currencySymbol: found.symbol,
+                        });
+                      }
+                    }}
+                    language={settings.language}
+                    onLanguageChange={async (lang) => {
+                      await handleUpdateSettings({
+                        ...settings,
+                        language: lang as SupportedLanguage,
+                      });
+                    }}
                     onOpenLanding={() => {
                       closeToLanding();
                       setIsMobileMenuOpen(false);
@@ -979,130 +1015,28 @@ export default function AppMain() {
 
           {/* 2. Main Application Frame */}
           <main className="flex-1 min-w-0 flex flex-col min-h-screen overflow-y-auto bg-slate-50">
-            {/* Top Header Bar */}
-            <header className="h-16 px-3 sm:px-6 lg:px-8 border-b border-slate-200 bg-white/95 backdrop-blur-md sticky top-0 z-20 flex items-center justify-between no-print gap-1.5 sm:gap-4 overflow-hidden shadow-2xs">
-              <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
-                <button
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="md:hidden p-1.5 text-slate-700 hover:text-slate-900 bg-slate-100 border border-slate-300 shrink-0"
-                  aria-label="Toggle Navigation"
-                >
-                  <Menu className="w-4 h-4" />
-                </button>
+            {/* Mobile Header Bar Trigger */}
+            <div className="md:hidden p-3 flex items-center justify-between bg-white border-b border-slate-200 sticky top-0 z-20 font-mono shadow-2xs">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-1.5 text-slate-700 hover:text-slate-900 bg-slate-100 border border-slate-300 flex items-center gap-1.5 text-xs font-bold uppercase"
+                aria-label="Toggle Navigation"
+              >
+                <Menu className="w-4 h-4" />
+                <span>Menu</span>
+              </button>
 
-                {/* Back to Portal Button */}
-                <button
-                  onClick={closeToLanding}
-                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold font-mono uppercase tracking-wider border border-slate-300 transition-colors flex items-center gap-1.5 shrink-0"
-                  title="Return to Main Portal"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Main Portal</span>
-                </button>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-900 truncate max-w-[180px]">
+                {settings.businessName || 'Inventory 360'}
+              </span>
 
-                {/* Clickable Breadcrumbs Navigation */}
-                <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono">
-                  <button
-                    onClick={() => {
-                      setActiveTab('home');
-                      setActiveSubTab('retail-dashboard');
-                    }}
-                    className="text-slate-500 hover:text-slate-900 uppercase font-bold transition-colors flex items-center gap-1"
-                    title="Return to Main Dashboard"
-                  >
-                    <div className="w-1.5 h-1.5 bg-emerald-500 rotate-45 hidden sm:block shrink-0" />
-                    <span>Inventory 360</span>
-                  </button>
-                  <span className="text-slate-400 shrink-0">/</span>
-                  <span className="text-slate-600 uppercase tracking-wider truncate">
-                    {activeTab}
-                  </span>
-                  <span className="text-slate-400 shrink-0">/</span>
-                  <span className="text-slate-900 font-bold uppercase tracking-wider truncate max-w-[90px] sm:max-w-none bg-slate-100 px-1.5 py-0.5 border border-slate-200">
-                    {activeSubTab.replace('-', ' ')}
-                  </span>
-                </nav>
-              </div>
-
-              <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-                {/* Instant Currency Selector */}
-                <div className="flex items-center gap-1 bg-white border border-slate-300 px-2 py-1 text-xs font-mono shadow-2xs">
-                  <DollarSign className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  <select
-                    value={settings.currencyCode || 'USD'}
-                    onChange={async (e) => {
-                      const found = CURRENCIES.find((c) => c.code === e.target.value);
-                      if (found) {
-                        await handleUpdateSettings({
-                          ...settings,
-                          currencyCode: found.code,
-                          currencySymbol: found.symbol,
-                        });
-                      }
-                    }}
-                    className="bg-transparent text-slate-900 font-bold focus:outline-none cursor-pointer text-[11px]"
-                    title="Change Global Currency"
-                  >
-                    {CURRENCIES.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.symbol} {c.code}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Instant Language Selector */}
-                <div className="flex items-center gap-1 bg-white border border-slate-300 px-2 py-1 text-xs font-mono shadow-2xs">
-                  <Globe className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  <select
-                    value={settings.language || 'en'}
-                    onChange={async (e) => {
-                      await handleUpdateSettings({
-                        ...settings,
-                        language: e.target.value as SupportedLanguage,
-                      });
-                    }}
-                    className="bg-transparent text-slate-900 font-bold focus:outline-none cursor-pointer text-[11px]"
-                    title="Change Global Language"
-                  >
-                    {LANGUAGES.map((l) => (
-                      <option key={l.code} value={l.code}>
-                        {l.flag} {l.code.toUpperCase()}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Business Badge */}
-                <div className="hidden xl:flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 border border-slate-300 text-slate-800 rounded-none text-[10px] sm:text-[11px] font-mono shrink-0">
-                  <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse shrink-0" />
-                  <span className="truncate max-w-[110px] uppercase font-bold text-slate-900">
-                    {settings.businessName}
-                  </span>
-                </div>
-
-                {/* Interactive Product Tour Button */}
-                <button
-                  onClick={() => setIsTourOpen(true)}
-                  className="px-2.5 sm:px-3 py-1.5 bg-slate-900 text-white font-bold uppercase tracking-wider text-[10px] sm:text-xs hover:bg-black transition-colors flex items-center gap-1.5 shrink-0 shadow-xs"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden md:inline">Tour</span>
-                </button>
-
-                {/* Demo Mode Badge */}
-                <button
-                  onClick={async () => {
-                    await seedDemoData();
-                  }}
-                  className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 text-[10px] font-mono uppercase tracking-wider transition-colors shadow-2xs"
-                  title="Reload Demo Store Datasets"
-                >
-                  <Layers className="w-3 h-3 text-emerald-600" />
-                  <span>Reset</span>
-                </button>
-              </div>
-            </header>
+              <button
+                onClick={closeToLanding}
+                className="px-2.5 py-1 bg-slate-100 border border-slate-300 text-[10px] font-bold uppercase text-slate-800 hover:bg-slate-200"
+              >
+                Portal
+              </button>
+            </div>
 
             {/* View Container */}
             <div className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">

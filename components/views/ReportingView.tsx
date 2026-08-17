@@ -16,7 +16,6 @@ import {
   Tooltip as ChartTooltip,
   Legend,
   Filler,
-  ChartOptions,
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -43,7 +42,8 @@ import {
   Clock,
   Boxes,
   Receipt,
-  FileBarChart,
+  Truck,
+  Building2,
 } from 'lucide-react';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../lib/exportImport';
 
@@ -74,7 +74,7 @@ interface ReportingViewProps {
 export const ReportingView: React.FC<ReportingViewProps> = ({
   products,
   sales,
-  purchaseOrders,
+  purchaseOrders = [],
   locations,
   categories = [],
   currencySymbol,
@@ -88,11 +88,12 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
   const [search, setSearch] = useState('');
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  // Sub-tabs list matching the sidebar
+  // Sub-tabs list matching the sidebar exactly
   const reportTabs = [
     { id: 'retail-dashboard', label: 'Retail Dashboard', icon: Activity },
     { id: 'sales-report', label: 'Sales Report', icon: ShoppingBag },
     { id: 'inventory-report', label: 'Inventory Valuation', icon: Package },
+    { id: 'purchase-report', label: 'Purchase Report', icon: Truck },
     { id: 'turnover-velocity', label: 'Turnover & Sales Velocity', icon: Zap },
     { id: 'profit-report', label: 'Profitability & COGS', icon: Percent },
     { id: 'tax-report', label: 'Tax Report', icon: Receipt },
@@ -125,6 +126,19 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
     });
   }, [sales, selectedLocation, dateRange]);
 
+  // Filtering Purchase Orders based on location
+  const filteredPOs = useMemo(() => {
+    return purchaseOrders.filter((po) => {
+      const matchesLocation = selectedLocation === 'all' || po.locationId === selectedLocation;
+      if (!matchesLocation) return false;
+      const matchesSearch =
+        !search ||
+        po.poNumber.toLowerCase().includes(search.toLowerCase()) ||
+        po.supplierName.toLowerCase().includes(search.toLowerCase());
+      return matchesSearch;
+    });
+  }, [purchaseOrders, selectedLocation, search]);
+
   // Aggregate metrics
   const totalStockCostValuation = products.reduce((acc, p) => acc + (p.costPrice || 0) * (p.stockQuantity || 0), 0);
   const totalStockRetailValuation = products.reduce((acc, p) => acc + (p.retailPrice || 0) * (p.stockQuantity || 0), 0);
@@ -135,7 +149,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
   const totalSalesTax = filteredSales.reduce((acc, s) => acc + (s.tax || 0), 0);
   const totalSalesDiscount = filteredSales.reduce((acc, s) => acc + (s.discount || 0), 0);
   const totalSalesCOGS = filteredSales.reduce((acc, s) => acc + (s.costOfGoodsSold || 0), 0);
-  const totalGrossProfit = filteredSales.reduce((acc, s) => acc + (s.grossProfit || (s.total - (s.costOfGoodsSold || 0))), 0);
+  const totalGrossProfit = filteredSales.reduce((acc, s) => acc + (s.grossProfit || s.total - (s.costOfGoodsSold || 0)), 0);
   const averageOrderValue = filteredSales.length > 0 ? totalSalesRevenue / filteredSales.length : 0;
   const grossMarginPercent = totalSalesRevenue > 0 ? (totalGrossProfit / totalSalesRevenue) * 100 : 0;
 
@@ -143,10 +157,17 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
   const turnoverRate = totalStockCostValuation > 0 ? (totalSalesCOGS / totalStockCostValuation).toFixed(2) : '0.00';
 
   // Dead stock and low stock
-  const deadStockProducts = products.filter((p) => p.status === 'Dead Stock' || p.stockQuantity > 50 && !filteredSales.some(s => s.items.some(i => i.productId === p.id)));
+  const deadStockProducts = products.filter(
+    (p) => p.status === 'Dead Stock' || (p.stockQuantity > 50 && !filteredSales.some((s) => s.items.some((i) => i.productId === p.id)))
+  );
   const deadStockValuation = deadStockProducts.reduce((acc, p) => acc + p.costPrice * p.stockQuantity, 0);
   const lowStockProducts = products.filter((p) => p.stockQuantity > 0 && p.stockQuantity <= p.reorderPoint);
   const outOfStockProducts = products.filter((p) => p.stockQuantity <= 0);
+
+  // Purchase Order Metrics
+  const totalPOSpend = filteredPOs.reduce((acc, po) => acc + po.total, 0);
+  const receivedPOSpend = filteredPOs.filter((po) => po.status === 'Received').reduce((acc, po) => acc + po.total, 0);
+  const pendingPOSpend = filteredPOs.filter((po) => po.status !== 'Received' && po.status !== 'Cancelled').reduce((acc, po) => acc + po.total, 0);
 
   // Group Product Revenue / Profit Aggregations
   const productPerformanceMap = useMemo(() => {
@@ -162,7 +183,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
           map[pId].revenue += item.total;
           map[pId].units += item.quantity;
           map[pId].cogs += item.quantity * (item.unitCost || map[pId].product.costPrice);
-          map[pId].profit += item.total - (item.quantity * (item.unitCost || map[pId].product.costPrice));
+          map[pId].profit += item.total - item.quantity * (item.unitCost || map[pId].product.costPrice);
         }
       });
     });
@@ -183,7 +204,6 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
   // Chart 1: Revenue vs COGS trend over time
   const revenueTrendChartData = useMemo(() => {
     const daysMap: Record<string, { revenue: number; cogs: number }> = {};
-    // Last 7 days or date range days
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now.getTime() - i * 86400000);
       const key = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
@@ -292,6 +312,27 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
     };
   }, [performanceList]);
 
+  // Chart 5: Purchase Spend by Supplier Bar Chart
+  const poSupplierChartData = useMemo(() => {
+    const supMap: Record<string, number> = {};
+    filteredPOs.forEach((po) => {
+      supMap[po.supplierName] = (supMap[po.supplierName] || 0) + po.total;
+    });
+
+    const labels = Object.keys(supMap);
+    return {
+      labels: labels.map((l) => (l.length > 15 ? l.substring(0, 15) + '…' : l)),
+      datasets: [
+        {
+          label: 'Procurement Spend ($)',
+          data: labels.map((l) => supMap[l]),
+          backgroundColor: '#0F172A',
+          borderRadius: 0,
+        },
+      ],
+    };
+  }, [filteredPOs]);
+
   // Export handlers
   const handleExportCSV = () => {
     const data = performanceList.map((i) => ({
@@ -342,7 +383,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
 
   return (
     <div id="tour-reporting-analytics" className="space-y-6 text-slate-900 font-mono">
-      {/* 1. TOP SUB-NAVIGATION BAR (6 DISTINCT REPORT PAGES) */}
+      {/* 1. TOP SUB-NAVIGATION BAR (7 DISTINCT REPORT PAGES) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div className="flex flex-wrap items-center gap-2">
           {reportTabs.map((tab) => {
@@ -450,23 +491,25 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             ))}
           </select>
 
-          <select
-            value={selectedCategoryFilter}
-            onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-            className="text-xs bg-white border border-slate-300 px-2.5 py-1 text-slate-900 font-mono shadow-2xs"
-          >
-            <option value="all">All Categories</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          {activeSubTab !== 'purchase-report' && (
+            <select
+              value={selectedCategoryFilter}
+              onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+              className="text-xs bg-white border border-slate-300 px-2.5 py-1 text-slate-900 font-mono shadow-2xs"
+            >
+              <option value="all">All Categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          )}
 
           <div className="relative min-w-[180px]">
             <input
               type="text"
-              placeholder="Search product / SKU..."
+              placeholder={activeSubTab === 'purchase-report' ? 'Search PO #, supplier...' : 'Search product / SKU...'}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full text-xs bg-white border border-slate-300 text-slate-900 pl-8 pr-3 py-1 font-mono shadow-2xs"
@@ -481,7 +524,6 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
       {/* ========================================================================= */}
       {activeSubTab === 'retail-dashboard' && (
         <div className="space-y-6">
-          {/* Executive KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="p-4 bg-white border border-slate-200 shadow-xs space-y-1">
               <span className="text-[10px] text-slate-500 uppercase font-bold">Gross Revenue</span>
@@ -508,9 +550,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             </div>
           </div>
 
-          {/* Chart.js Visual Telemetry Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Revenue & COGS Line Chart */}
             <div className="lg:col-span-8 p-5 bg-white border border-slate-200 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <div>
@@ -539,7 +579,6 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
               </div>
             </div>
 
-            {/* Category Valuation Breakdown */}
             <div className="lg:col-span-4 p-5 bg-white border border-slate-200 shadow-xs space-y-4">
               <div className="border-b border-slate-100 pb-2">
                 <h3 className="font-bold text-xs text-slate-900 uppercase">Category Capital Share</h3>
@@ -588,7 +627,6 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             </div>
           </div>
 
-          {/* Bar Chart */}
           <div className="p-5 bg-white border border-slate-200 shadow-xs space-y-4">
             <h3 className="font-bold text-xs text-slate-900 uppercase">Top Products by Revenue &amp; Profit</h3>
             <div className="h-64 w-full">
@@ -609,7 +647,6 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             </div>
           </div>
 
-          {/* Detailed Sales Ledger Table */}
           <div className="bg-white border border-slate-200 p-5 shadow-xs overflow-x-auto">
             <h3 className="font-bold text-xs text-slate-900 uppercase mb-3">Product Sales Performance Ledger</h3>
             <table className="w-full text-left text-xs border-collapse font-mono">
@@ -675,7 +712,6 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             </div>
           </div>
 
-          {/* Inventory Valuation Table */}
           <div className="bg-white border border-slate-200 p-5 shadow-xs overflow-x-auto">
             <h3 className="font-bold text-xs text-slate-900 uppercase mb-3">Inventory Valuation &amp; Stock Ledger</h3>
             <table className="w-full text-left text-xs border-collapse font-mono">
@@ -731,7 +767,112 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 4. TURNOVER & SALES VELOCITY SUB-TAB                                      */}
+      {/* 4. PURCHASE REPORT SUB-TAB (NEW & COMPLETE)                                */}
+      {/* ========================================================================= */}
+      {activeSubTab === 'purchase-report' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
+              <span className="text-[10px] text-slate-500 uppercase font-bold">Total PO Spend</span>
+              <p className="text-xl font-bold text-slate-900">{formatCurrency(totalPOSpend, currencySymbol)}</p>
+            </div>
+            <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
+              <span className="text-[10px] text-slate-500 uppercase font-bold">Received Inventory</span>
+              <p className="text-xl font-bold text-emerald-700">{formatCurrency(receivedPOSpend, currencySymbol)}</p>
+            </div>
+            <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
+              <span className="text-[10px] text-slate-500 uppercase font-bold">Inbound / Pending</span>
+              <p className="text-xl font-bold text-amber-700">{formatCurrency(pendingPOSpend, currencySymbol)}</p>
+            </div>
+            <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
+              <span className="text-[10px] text-slate-500 uppercase font-bold">Purchase Orders</span>
+              <p className="text-xl font-bold text-slate-900">{filteredPOs.length} Issued</p>
+            </div>
+          </div>
+
+          {/* Supplier Spend Bar Chart */}
+          <div className="p-5 bg-white border border-slate-200 shadow-xs space-y-4">
+            <h3 className="font-bold text-xs text-slate-900 uppercase">Procurement Volume by Supplier</h3>
+            <div className="h-64 w-full">
+              <Bar
+                data={poSupplierChartData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: 'top' as const, labels: { font: { family: 'monospace', size: 10 } } },
+                  },
+                  scales: {
+                    x: { grid: { display: false }, ticks: { font: { family: 'monospace', size: 9 } } },
+                    y: { grid: { color: '#F1F5F9' }, ticks: { font: { family: 'monospace', size: 9 } } },
+                  },
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Purchase Orders Table */}
+          <div className="bg-white border border-slate-200 p-5 shadow-xs overflow-x-auto">
+            <h3 className="font-bold text-xs text-slate-900 uppercase mb-3">Procurement &amp; Inbound Purchase Orders</h3>
+            <table className="w-full text-left text-xs border-collapse font-mono">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] bg-slate-50">
+                  <th className="p-2.5">PO Number</th>
+                  <th className="p-2.5">Supplier</th>
+                  <th className="p-2.5">Location</th>
+                  <th className="p-2.5">Expected Date</th>
+                  <th className="p-2.5 text-right">Items / Quantity</th>
+                  <th className="p-2.5 text-right">Total Amount</th>
+                  <th className="p-2.5 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredPOs.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-6 text-center text-slate-500 text-xs">
+                      No purchase orders recorded for the selected filter.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredPOs.map((po) => {
+                    const totalQty = po.items.reduce((acc, it) => acc + (it.orderedQuantity || 0), 0);
+                    return (
+                      <tr key={po.id} className="hover:bg-slate-50">
+                        <td className="p-2.5 font-bold text-slate-900">{po.poNumber}</td>
+                        <td className="p-2.5 text-slate-800">{po.supplierName}</td>
+                        <td className="p-2.5 text-slate-600">{po.locationName}</td>
+                        <td className="p-2.5 text-slate-600">{po.expectedDate ? po.expectedDate.split('T')[0] : 'N/A'}</td>
+                        <td className="p-2.5 text-right text-slate-800 font-bold">
+                          {po.items.length} SKUs ({totalQty} units)
+                        </td>
+                        <td className="p-2.5 text-right font-bold text-slate-900">
+                          {formatCurrency(po.total, currencySymbol)}
+                        </td>
+                        <td className="p-2.5 text-center">
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.5 border uppercase ${
+                              po.status === 'Received'
+                                ? 'border-emerald-300 text-emerald-800 bg-emerald-50'
+                                : po.status === 'Sent' || po.status === 'Partial'
+                                ? 'border-sky-300 text-sky-800 bg-sky-50'
+                                : 'border-slate-300 text-slate-700 bg-slate-100'
+                            }`}
+                          >
+                            {po.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. TURNOVER & SALES VELOCITY SUB-TAB                                      */}
       {/* ========================================================================= */}
       {activeSubTab === 'turnover-velocity' && (
         <div className="space-y-6">
@@ -756,7 +897,6 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             </div>
           </div>
 
-          {/* Velocity Chart */}
           <div className="p-5 bg-white border border-slate-200 shadow-xs space-y-4">
             <h3 className="font-bold text-xs text-slate-900 uppercase">Daily Sales Velocity (Units / Day)</h3>
             <div className="h-64 w-full">
@@ -778,7 +918,6 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             </div>
           </div>
 
-          {/* Velocity Table */}
           <div className="bg-white border border-slate-200 p-5 shadow-xs overflow-x-auto">
             <h3 className="font-bold text-xs text-slate-900 uppercase mb-3">Sales Velocity &amp; Days Supply Forecasting</h3>
             <table className="w-full text-left text-xs border-collapse font-mono">
@@ -830,7 +969,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 5. PROFITABILITY & COGS SUB-TAB                                           */}
+      {/* 6. PROFITABILITY & COGS SUB-TAB                                           */}
       {/* ========================================================================= */}
       {activeSubTab === 'profit-report' && (
         <div className="space-y-6">
@@ -853,7 +992,6 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             </div>
           </div>
 
-          {/* Profitability Table */}
           <div className="bg-white border border-slate-200 p-5 shadow-xs overflow-x-auto">
             <h3 className="font-bold text-xs text-slate-900 uppercase mb-3">Profitability &amp; COGS Margin Ledger</h3>
             <table className="w-full text-left text-xs border-collapse font-mono">
@@ -895,7 +1033,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 6. TAX REPORT SUB-TAB                                                     */}
+      {/* 7. TAX REPORT SUB-TAB                                                     */}
       {/* ========================================================================= */}
       {activeSubTab === 'tax-report' && (
         <div className="space-y-6">
@@ -920,7 +1058,6 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             </div>
           </div>
 
-          {/* Tax Invoices Table */}
           <div className="bg-white border border-slate-200 p-5 shadow-xs overflow-x-auto">
             <h3 className="font-bold text-xs text-slate-900 uppercase mb-3">Tax Collection &amp; Invoice Breakdown</h3>
             <table className="w-full text-left text-xs border-collapse font-mono">
