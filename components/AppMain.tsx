@@ -233,6 +233,38 @@ export default function AppMain() {
     };
   }, []);
 
+  // Handle browser back button (popstate) so pressing back while in dashboard smoothly returns to Landing Portal
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state?.view === 'workspace') {
+        setShowLanding(false);
+        if (event.state.tab) setActiveTab(event.state.tab);
+        if (event.state.subTab) setActiveSubTab(event.state.subTab);
+      } else {
+        setShowLanding(true);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const openWorkspace = (tab: NavItemKey = 'home', subTab: string = 'retail-dashboard') => {
+    setShowLanding(false);
+    setActiveTab(tab);
+    setActiveSubTab(subTab);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ view: 'workspace', tab, subTab }, '', '/#app');
+    }
+  };
+
+  const closeToLanding = () => {
+    setShowLanding(true);
+    if (typeof window !== 'undefined' && window.location.hash) {
+      window.history.pushState({ view: 'landing' }, '', '/');
+    }
+  };
+
   // HANDLERS FOR PRODUCTS
   const handleAddProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newProduct: Product = {
@@ -767,31 +799,18 @@ export default function AppMain() {
       {/* If showLanding is true, render the Main Webapp Landing Portal */}
       {showLanding ? (
         <LandingView
-          onOpenDashboard={() => {
-            setShowLanding(false);
-            setActiveTab('home');
-            setActiveSubTab('retail-dashboard');
-          }}
-          onOpenPOS={() => {
-            setShowLanding(false);
-            setActiveTab('sell');
-            setActiveSubTab('quick-sale');
-          }}
+          onOpenDashboard={() => openWorkspace('home', 'retail-dashboard')}
+          onOpenPOS={() => openWorkspace('sell', 'quick-sale')}
           onStartDemo={async () => {
             await seedDemoData();
-            setShowLanding(false);
-            setActiveTab('home');
-            setActiveSubTab('retail-dashboard');
+            openWorkspace('home', 'retail-dashboard');
           }}
           onStartFresh={async () => {
             await initCleanData();
-            setShowLanding(false);
-            setActiveTab('home');
-            setActiveSubTab('retail-dashboard');
+            openWorkspace('home', 'retail-dashboard');
           }}
           onOpenTour={() => {
-            setShowLanding(false);
-            setActiveTab('home');
+            openWorkspace('home', 'retail-dashboard');
             setIsTourOpen(true);
           }}
         />
@@ -809,7 +828,7 @@ export default function AppMain() {
               onSubTabChange={setActiveSubTab}
               businessName={settings.businessName}
               ownerName={settings.ownerName}
-              onOpenLanding={() => setShowLanding(true)}
+              onOpenLanding={closeToLanding}
               onOpenTour={() => setIsTourOpen(true)}
               onOpenDataPolicy={() => setShowDataPolicyNotice(true)}
             />
@@ -850,7 +869,7 @@ export default function AppMain() {
                     businessName={settings.businessName}
                     ownerName={settings.ownerName}
                     onOpenLanding={() => {
-                      setShowLanding(true);
+                      closeToLanding();
                       setIsMobileMenuOpen(false);
                     }}
                     onOpenTour={() => {
@@ -882,7 +901,7 @@ export default function AppMain() {
 
                 {/* Back to Portal Button */}
                 <button
-                  onClick={() => setShowLanding(true)}
+                  onClick={closeToLanding}
                   className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold font-mono uppercase tracking-wider border border-slate-300 transition-colors flex items-center gap-1.5 shrink-0"
                   title="Return to Main Portal"
                 >

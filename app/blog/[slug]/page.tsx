@@ -161,13 +161,32 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       {/* 2. MAIN ARTICLE CONTAINER */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-8 w-full flex-1">
-        {/* Navigation Breadcrumb */}
-        <div className="flex items-center gap-2 text-[11px] text-slate-500 font-mono uppercase">
-          <Link href="/" className="hover:text-slate-900">Home</Link>
-          <span>/</span>
-          <Link href="/blog" className="hover:text-slate-900">Blog</Link>
-          <span>/</span>
-          <span className="text-slate-900 font-bold truncate max-w-[250px]">{post.title}</span>
+        {/* Navigation Breadcrumb & Back Button */}
+        <div className="flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+          <div className="flex items-center gap-2 text-[11px] text-slate-500 uppercase">
+            <Link href="/" className="hover:text-slate-900 font-semibold">Home</Link>
+            <span>/</span>
+            <Link href="/blog" className="hover:text-slate-900 font-semibold">Blog</Link>
+            <span>/</span>
+            <span className="text-slate-900 font-bold truncate max-w-[180px] sm:max-w-[280px]">{post.title}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/blog"
+              className="px-3 py-1 bg-white border border-slate-300 hover:border-slate-900 text-slate-800 text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-2xs"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Articles</span>
+            </Link>
+            <Link
+              href="/"
+              className="px-3 py-1 bg-slate-900 text-white hover:bg-black text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-2xs"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Home Portal</span>
+            </Link>
+          </div>
         </div>
 
         {/* Article Header Card */}
