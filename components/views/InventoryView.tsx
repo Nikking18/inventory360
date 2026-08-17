@@ -20,7 +20,6 @@ import {
   Plus,
   Package,
   Search,
-  ClipboardList,
   Download,
   FileText,
   FileSpreadsheet,
@@ -103,18 +102,20 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     setIsPOModalOpen(true);
   };
 
-  const handlePOSubmit = async (e: React.FormEvent) => {
+  const handleCreatePOSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!poProduct) return;
-    const targetLoc =
-      locations.find((l) => l.id === poTargetLocId) ||
-      locations[0] || { id: 'main-loc', name: 'Main Outlet' };
-    const totalCost = poProduct.costPrice * poOrderQty;
 
-    await onCreatePO({
-      supplierId: poProduct.supplierId,
-      supplierName: poProduct.supplierName,
-      status: 'Sent',
+    const sup = suppliers.find((s) => s.id === poProduct.supplierId) || {
+      id: poProduct.supplierId,
+      name: poProduct.supplierName,
+    };
+    const targetLoc = locations.find((l) => l.id === poTargetLocId) || locations[0];
+
+    const lineTotal = poProduct.costPrice * poOrderQty;
+    const poPayload: Omit<PurchaseOrder, 'id' | 'poNumber' | 'createdAt'> = {
+      supplierId: sup.id,
+      supplierName: sup.name,
       items: [
         {
           productId: poProduct.id,
@@ -123,768 +124,556 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           unitCost: poProduct.costPrice,
           orderedQuantity: poOrderQty,
           receivedQuantity: 0,
-          total: totalCost,
+          total: lineTotal,
         },
       ],
-      subtotal: totalCost,
-      tax: totalCost * 0.085,
-      total: totalCost * 1.085,
+      subtotal: lineTotal,
+      tax: lineTotal * 0.085,
+      total: lineTotal * 1.085,
+      status: 'Sent',
       expectedDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
-      locationId: targetLoc.id,
-      locationName: targetLoc.name,
-      notes: `Restock order triggered from inventory low-stock alert.`,
-    });
+      locationId: targetLoc?.id || 'loc_downtown',
+      locationName: targetLoc?.name || 'Downtown Flagship',
+      notes: `Restock PO for ${poProduct.name} generated via Inventory Control.`,
+    };
+
+    await onCreatePO(poPayload);
     setIsPOModalOpen(false);
   };
 
-  const handleOpenReceiveModal = (po: PurchaseOrder) => {
+  const handleBulkAutoReorders = async () => {
+    if (onBulkAutoGeneratePOs) {
+      await onBulkAutoGeneratePOs();
+      setBulkPOSuccess(true);
+      setTimeout(() => setBulkPOSuccess(false), 3500);
+    }
+  };
+
+  const openAdjustModal = (p: Product) => {
+    setSelectedProductForAdjust(p);
+    setAdjustQty(0);
+    setAdjustReason('Cycle Count Physical Audit');
+    setIsAdjustModalOpen(true);
+  };
+
+  const handleAdjustSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProductForAdjust) return;
+
+    await onStockAdjustment(selectedProductForAdjust.id, adjustQty, adjustReason);
+    setIsAdjustModalOpen(false);
+  };
+
+  const handleTransferSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (sourceLocId === targetLocId) return;
+
+    const prod = products.find((p) => p.id === transferProductId);
+    const src = locations.find((l) => l.id === sourceLocId);
+    const dst = locations.find((l) => l.id === targetLocId);
+
+    if (!prod || !src || !dst) return;
+
+    await onStockTransfer({
+      sourceLocationId: src.id,
+      sourceLocationName: src.name,
+      targetLocationId: dst.id,
+      targetLocationName: dst.name,
+      items: [
+        {
+          productId: prod.id,
+          productName: prod.name,
+          sku: prod.sku,
+          quantity: transferQty,
+        },
+      ],
+      status: 'Completed',
+    });
+
+    setIsTransferModalOpen(false);
+  };
+
+  const openReceiveModal = (po: PurchaseOrder) => {
     setReceivingPO(po);
     const initialMap: Record<string, number> = {};
-    po.items?.forEach((item) => {
+    po.items.forEach((item) => {
       initialMap[item.productId] = item.orderedQuantity - (item.receivedQuantity || 0);
     });
     setReceivedQtyMap(initialMap);
   };
 
-  const handleConfirmReceivePO = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleConfirmReceive = async () => {
     if (!receivingPO || !onReceivePO) return;
     await onReceivePO(receivingPO.id, receivedQtyMap);
     setReceivingPO(null);
   };
 
-  const handleBulkPO = async () => {
-    if (onBulkAutoGeneratePOs) {
-      await onBulkAutoGeneratePOs();
-      setBulkPOSuccess(true);
-      setTimeout(() => setBulkPOSuccess(false), 3000);
-    }
-  };
-
-  // Expiration calculation helper
-  const getDaysUntilExpiration = (expDate?: string) => {
-    if (!expDate) return null;
-    const exp = new Date(expDate).getTime();
-    const today = new Date().getTime();
-    return Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
-  };
-
-  const lowStockProducts = products.filter(
-    (p) => p.stockQuantity <= p.reorderPoint && p.status !== 'Dead Stock'
+  const filteredProducts = products.filter(
+    (p) =>
+      (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.sku || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.lotNumber || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const lotProducts = products.filter((p) => p.lotNumber || p.expirationDate);
-
-  const recalledMovements = movements.filter((m) => {
-    if (!recallSearchQuery.trim()) return false;
-    const q = recallSearchQuery.toLowerCase();
-    return (
-      (m.lotNumber && m.lotNumber.toLowerCase().includes(q)) ||
-      m.productName.toLowerCase().includes(q) ||
-      m.sku.toLowerCase().includes(q) ||
-      (m.notes && m.notes.toLowerCase().includes(q))
-    );
-  });
+  const lowStockItems = products.filter((p) => p.stockQuantity <= p.reorderPoint && p.status !== 'Dead Stock');
+  const expiringItems = products.filter((p) => p.expirationDate);
 
   return (
-    <div className="space-y-6 text-neutral-200 font-mono">
-      {/* Subtabs Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-800 pb-4 gap-4">
-        <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap pb-1">
-          <button
-            onClick={() => onSubTabChange && onSubTabChange('stock-levels')}
-            className={`text-xs font-bold uppercase tracking-wider pb-1 transition-all relative ${
-              activeSubTab === 'stock-levels' ? 'text-white font-bold' : 'text-neutral-500 hover:text-white'
-            }`}
-          >
-            {t('stock_levels', 'Stock Levels')} ({products.length})
-            {activeSubTab === 'stock-levels' && (
-              <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-white" />
-            )}
-          </button>
-
-          <button
-            onClick={() => onSubTabChange && onSubTabChange('low-stock')}
-            className={`text-xs font-bold uppercase tracking-wider pb-1 transition-all relative ${
-              activeSubTab === 'low-stock' ? 'text-amber-400 font-bold' : 'text-neutral-500 hover:text-white'
-            }`}
-          >
-            {t('low_stock', 'Low Stock &amp; Reorder')} ({lowStockProducts.length})
-            {activeSubTab === 'low-stock' && (
-              <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-amber-400" />
-            )}
-          </button>
-
-          <button
-            onClick={() => onSubTabChange && onSubTabChange('lots-expiry')}
-            className={`text-xs font-bold uppercase tracking-wider pb-1 transition-all relative ${
-              activeSubTab === 'lots-expiry' ? 'text-emerald-400 font-bold' : 'text-neutral-500 hover:text-white'
-            }`}
-          >
-            Lot Tracking &amp; FIFO Expiry ({lotProducts.length})
-            {activeSubTab === 'lots-expiry' && (
-              <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-emerald-400" />
-            )}
-          </button>
-
-          <button
-            onClick={() => onSubTabChange && onSubTabChange('multi-location')}
-            className={`text-xs font-bold uppercase tracking-wider pb-1 transition-all relative ${
-              activeSubTab === 'multi-location' ? 'text-white font-bold' : 'text-neutral-500 hover:text-white'
-            }`}
-          >
-            Multi-Outlet Matrix ({locations.length})
-            {activeSubTab === 'multi-location' && (
-              <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-white" />
-            )}
-          </button>
-
-          <button
-            onClick={() => onSubTabChange && onSubTabChange('movements')}
-            className={`text-xs font-bold uppercase tracking-wider pb-1 transition-all relative ${
-              activeSubTab === 'movements' ? 'text-white font-bold' : 'text-neutral-500 hover:text-white'
-            }`}
-          >
-            {t('movements', 'Audit Trail')} ({movements.length})
-            {activeSubTab === 'movements' && (
-              <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-white" />
-            )}
-          </button>
-
-          <button
-            onClick={() => onSubTabChange && onSubTabChange('purchases')}
-            className={`text-xs font-bold uppercase tracking-wider pb-1 transition-all relative ${
-              activeSubTab === 'purchases' ? 'text-white font-bold' : 'text-neutral-500 hover:text-white'
-            }`}
-          >
-            {t('purchases', 'Purchase Orders')} ({purchaseOrders.length})
-            {activeSubTab === 'purchases' && (
-              <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-white" />
-            )}
-          </button>
+    <div id="tour-inventory-hub" className="space-y-6 text-slate-900 font-mono">
+      {/* Top Header & Sub-Tabs */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-slate-200 pb-3 gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 uppercase tracking-wider font-heading">
+            {t('inventory', 'Multi-Outlet Inventory Management')}
+          </h1>
+          <p className="text-xs text-slate-600">
+            Stock ledger, inter-branch transfers, low-stock PO automation, and lot tracking.
+          </p>
         </div>
 
-        {/* Global Action Buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2">
+          {(
+            [
+              'stock-levels',
+              'low-stock',
+              'lots-expiry',
+              'multi-location',
+              'movements',
+              'purchases',
+            ] as const
+          ).map((tabId) => (
+            <button
+              key={tabId}
+              onClick={() => onSubTabChange && onSubTabChange(tabId)}
+              className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-colors ${
+                activeSubTab === tabId
+                  ? 'bg-slate-900 text-white font-bold'
+                  : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              {tabId === 'stock-levels'
+                ? 'Stock Levels'
+                : tabId === 'low-stock'
+                ? `Low Stock (${lowStockItems.length})`
+                : tabId === 'lots-expiry'
+                ? 'Lots & Expiry'
+                : tabId === 'multi-location'
+                ? 'Multi-Outlet'
+                : tabId === 'movements'
+                ? 'Movements'
+                : 'Purchase Orders'}
+            </button>
+          ))}
+
           <button
             onClick={() => setIsTransferModalOpen(true)}
-            className="px-3 py-2 bg-neutral-900 border border-neutral-800 text-white hover:border-white text-xs font-bold uppercase flex items-center gap-1.5 transition-colors"
+            className="px-3.5 py-1.5 bg-slate-900 text-white hover:bg-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs shrink-0"
           >
-            <ArrowRightLeft className="w-3.5 h-3.5" />
-            <span>Transfer Stock</span>
+            <ArrowRightLeft className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Transfer</span>
           </button>
-
-          {activeSubTab === 'low-stock' && onBulkAutoGeneratePOs && (
-            <button
-              onClick={handleBulkPO}
-              className="px-3 py-2 bg-white text-black hover:bg-neutral-200 text-xs font-bold uppercase flex items-center gap-1.5 transition-colors"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{bulkPOSuccess ? 'Draft POs Created!' : 'Bulk Auto-Generate POs'}</span>
-            </button>
-          )}
         </div>
       </div>
 
-      {/* 1. TAB: STOCK LEVELS */}
+      {/* 1. STOCK LEVELS TAB */}
       {activeSubTab === 'stock-levels' && (
-        <div className="bg-neutral-900 border border-neutral-800 p-5 space-y-4">
+        <div className="bg-white border border-slate-200 p-5 space-y-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative max-w-sm w-full">
               <input
                 type="text"
-                placeholder="Search stock by SKU, product..."
+                placeholder="Search stock by SKU, product name, lot..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full text-xs bg-neutral-950 border border-neutral-800 text-white pl-9 pr-3 py-2 focus:outline-none focus:border-white"
+                className="w-full text-xs bg-white border border-slate-300 text-slate-900 pl-9 pr-3 py-2 focus:outline-none focus:border-slate-900 font-mono shadow-2xs"
               />
-              <Search className="w-4 h-4 text-neutral-500 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             </div>
 
-            <div className="text-right text-xs text-neutral-400">
-              Total Stock Units: <strong className="text-white">{products.reduce((acc, p) => acc + p.stockQuantity, 0)}</strong>
-            </div>
+            <button
+              onClick={() => setIsTransferModalOpen(true)}
+              className="px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-2xs"
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5 text-slate-600" />
+              <span>New Inter-Outlet Transfer</span>
+            </button>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-neutral-950 border-b border-neutral-800 text-[10px] text-neutral-400 uppercase tracking-wider">
-                <tr>
-                  <th className="p-3">Product Name &amp; SKU</th>
-                  <th className="p-3">Category</th>
-                  <th className="p-3 text-right">Unit Cost</th>
-                  <th className="p-3 text-right">Available Qty</th>
-                  <th className="p-3 text-right">Reorder Point</th>
-                  <th className="p-3 text-right">Stock Valuation</th>
-                  <th className="p-3 text-center">Status</th>
-                  <th className="p-3 text-right">Quick Action</th>
+            <table className="w-full text-left text-xs border-collapse font-mono">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
+                  <th className="p-2.5">Product &amp; SKU</th>
+                  <th className="p-2.5">Category</th>
+                  <th className="p-2.5 text-right">Cost Value</th>
+                  <th className="p-2.5 text-right">Retail Value</th>
+                  <th className="p-2.5 text-right">In Stock</th>
+                  <th className="p-2.5 text-right">Min Reorder</th>
+                  <th className="p-2.5 text-center">Health</th>
+                  <th className="p-2.5 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-800/60">
-                {products
-                  .filter(
-                    (p) =>
-                      p.name.toLowerCase().includes(search.toLowerCase()) ||
-                      p.sku.toLowerCase().includes(search.toLowerCase())
-                  )
-                  .map((p) => (
-                    <tr key={p.id} className="hover:bg-neutral-950/60 transition-colors">
-                      <td className="p-3 font-bold text-white">
-                        {p.name}
-                        <p className="text-[10px] text-neutral-500 font-normal font-mono">
-                          SKU: {p.sku} | Barcode: {p.barcode}
-                        </p>
-                      </td>
-                      <td className="p-3 text-neutral-300">{p.categoryName}</td>
-                      <td className="p-3 text-right text-neutral-400 font-mono">
-                        {formatCurrency(p.costPrice, currencySymbol)}
-                      </td>
-                      <td className="p-3 text-right font-bold text-white font-mono">
-                        {p.stockQuantity}
-                      </td>
-                      <td className="p-3 text-right text-neutral-400 font-mono">
-                        {p.reorderPoint}
-                      </td>
-                      <td className="p-3 text-right font-bold text-emerald-400 font-mono">
-                        {formatCurrency(p.costPrice * p.stockQuantity, currencySymbol)}
-                      </td>
-                      <td className="p-3 text-center">
-                        <span
-                          className={`text-[9px] font-bold px-2 py-0.5 border uppercase ${
-                            p.status === 'Healthy'
-                              ? 'border-emerald-800 text-emerald-400 bg-emerald-950/60'
-                              : p.status === 'Low Stock'
-                              ? 'border-amber-900/60 text-amber-400 bg-amber-950/60'
-                              : p.status === 'Out of Stock'
-                              ? 'border-rose-900/60 text-rose-400 bg-rose-950/60'
-                              : 'border-neutral-700 text-neutral-400 bg-neutral-900'
-                          }`}
-                        >
-                          {p.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-right">
-                        <button
-                          onClick={() => {
-                            setSelectedProductForAdjust(p);
-                            setAdjustQty(0);
-                            setIsAdjustModalOpen(true);
-                          }}
-                          className="px-2.5 py-1 bg-neutral-950 border border-neutral-800 hover:border-white text-[10px] font-bold uppercase transition-colors"
-                        >
-                          Adjust Qty
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* 2. TAB: LOW STOCK ALERTS & REORDERS */}
-      {activeSubTab === 'low-stock' && (
-        <div className="space-y-4">
-          <div className="p-4 bg-neutral-950 border border-amber-900/60 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-400" />
-              <div>
-                <p className="text-xs font-bold text-white uppercase">
-                  {lowStockProducts.length} Items Below Reorder Threshold
-                </p>
-                <p className="text-[11px] text-neutral-400">
-                  Generate instant supplier purchase orders to prevent stockout disruptions.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {lowStockProducts.map((p) => (
-              <div
-                key={p.id}
-                className="p-4 bg-neutral-900 border border-neutral-800 flex items-center justify-between gap-4"
-              >
-                <div>
-                  <p className="font-bold text-white text-xs">{p.name}</p>
-                  <p className="text-[10px] text-neutral-400 font-mono">
-                    SKU: {p.sku} • Supplier: {p.supplierName}
-                  </p>
-                  <div className="flex items-center gap-3 text-xs mt-2">
-                    <span className="text-rose-400 font-bold">Current Stock: {p.stockQuantity}</span>
-                    <span className="text-neutral-500 font-mono">|</span>
-                    <span className="text-neutral-400">Reorder Point: {p.reorderPoint}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => openCreatePOModal(p)}
-                  className="px-3 py-2 bg-white text-black font-bold uppercase text-[10px] hover:bg-neutral-200 shrink-0"
-                >
-                  Create PO
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 3. TAB: LOT TRACKING & FIFO EXPIRATION */}
-      {activeSubTab === 'lots-expiry' && (
-        <div className="space-y-6">
-          {/* Expiration Health Summary */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            <div className="p-3.5 bg-neutral-900 border border-neutral-800 space-y-1">
-              <p className="text-[10px] uppercase font-bold text-neutral-400">Total Tracked Lots</p>
-              <p className="text-xl font-bold text-white">{lotProducts.length} Batches</p>
-            </div>
-
-            <div className="p-3.5 bg-neutral-900 border border-rose-900/60 space-y-1">
-              <p className="text-[10px] uppercase font-bold text-rose-400">Expired Batches</p>
-              <p className="text-xl font-bold text-rose-400">
-                {lotProducts.filter((p) => {
-                  const days = getDaysUntilExpiration(p.expirationDate);
-                  return days !== null && days <= 0;
-                }).length}
-              </p>
-            </div>
-
-            <div className="p-3.5 bg-neutral-900 border border-amber-900/60 space-y-1">
-              <p className="text-[10px] uppercase font-bold text-amber-400">Expiring in &lt; 90 Days</p>
-              <p className="text-xl font-bold text-amber-400">
-                {lotProducts.filter((p) => {
-                  const days = getDaysUntilExpiration(p.expirationDate);
-                  return days !== null && days > 0 && days <= 90;
-                }).length}
-              </p>
-            </div>
-
-            <div className="p-3.5 bg-neutral-900 border border-emerald-900/60 space-y-1">
-              <p className="text-[10px] uppercase font-bold text-emerald-400">FIFO Rotation Rule</p>
-              <p className="text-xs font-bold text-emerald-400 mt-1">Oldest First Active</p>
-            </div>
-          </div>
-
-          {/* Batch Recall Search Engine */}
-          <div className="p-4 bg-neutral-950 border border-neutral-800 space-y-3">
-            <div className="flex items-center gap-2 text-white font-bold text-xs uppercase">
-              <ShieldAlert className="w-4 h-4 text-rose-400" />
-              <span>Instant Lot &amp; Batch Recall Lookup</span>
-            </div>
-            <p className="text-[11px] text-neutral-400">
-              Enter any lot number or batch code to audit all current store outlets and transaction history.
-            </p>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={recallSearchQuery}
-                onChange={(e) => setRecallSearchQuery(e.target.value)}
-                placeholder="Search Lot Number (e.g. LOT-2026-MX3 or BATCH-SURPLUS)..."
-                className="flex-1 text-xs bg-neutral-900 border border-neutral-700 text-white px-3 py-2 focus:outline-none focus:border-white font-mono"
-              />
-              {recallSearchQuery && (
-                <button
-                  onClick={() => setRecallSearchQuery('')}
-                  className="px-3 py-2 bg-neutral-800 text-neutral-400 hover:text-white text-xs"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-
-            {recallSearchQuery && (
-              <div className="p-3 bg-neutral-900 border border-neutral-800 space-y-2 mt-2">
-                <p className="text-[10px] uppercase font-bold text-white">
-                  Recall Audit Results ({recalledMovements.length} Events Found)
-                </p>
-                {recalledMovements.length === 0 ? (
-                  <p className="text-neutral-500 text-xs italic">No past movements matched this batch.</p>
-                ) : (
-                  <div className="space-y-1 text-xs">
-                    {recalledMovements.map((m) => (
-                      <div
-                        key={m.id}
-                        className="p-2 bg-neutral-950 border border-neutral-800 flex items-center justify-between"
-                      >
-                        <div>
-                          <p className="font-bold text-white">
-                            {m.productName} ({m.quantityChange > 0 ? `+${m.quantityChange}` : m.quantityChange} Qty)
-                          </p>
-                          <p className="text-[10px] text-neutral-500 font-mono">
-                            Type: {m.type} • Outlet: {m.locationName} • Date: {formatDateTime(m.createdAt)}
-                          </p>
-                        </div>
-                        <span className="text-[10px] font-mono text-neutral-400 font-bold">{m.referenceId || 'N/A'}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Lot & Expiry Table with FIFO Flags */}
-          <div className="bg-neutral-900 border border-neutral-800 overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-neutral-950 border-b border-neutral-800 text-[10px] text-neutral-400 uppercase tracking-wider">
-                <tr>
-                  <th className="p-3">Product Name</th>
-                  <th className="p-3">Lot Number</th>
-                  <th className="p-3">Batch Code</th>
-                  <th className="p-3">Expiration Date</th>
-                  <th className="p-3">Days Left</th>
-                  <th className="p-3 text-center">FIFO Dispatch Priority</th>
-                  <th className="p-3 text-right">Available Qty</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-800/60">
-                {lotProducts.map((p) => {
-                  const daysLeft = getDaysUntilExpiration(p.expirationDate);
-                  const isExpired = daysLeft !== null && daysLeft <= 0;
-                  const isUrgent = daysLeft !== null && daysLeft > 0 && daysLeft <= 90;
-
-                  return (
-                    <tr key={p.id} className="hover:bg-neutral-950/60 transition-colors">
-                      <td className="p-3 font-bold text-white">
-                        {p.name}
-                        <p className="text-[10px] text-neutral-500 font-normal font-mono">{p.sku}</p>
-                      </td>
-                      <td className="p-3 font-mono text-emerald-400 font-bold">{p.lotNumber || '—'}</td>
-                      <td className="p-3 font-mono text-neutral-300">{p.batchNumber || '—'}</td>
-                      <td className="p-3 font-mono text-neutral-300">
-                        {p.expirationDate ? p.expirationDate.split('T')[0] : '—'}
-                      </td>
-                      <td className="p-3 font-mono">
-                        {daysLeft === null ? (
-                          '—'
-                        ) : isExpired ? (
-                          <span className="text-rose-400 font-bold uppercase text-[10px]">
-                            Expired ({Math.abs(daysLeft)}d ago)
-                          </span>
-                        ) : isUrgent ? (
-                          <span className="text-amber-400 font-bold text-xs">{daysLeft} days remaining</span>
-                        ) : (
-                          <span className="text-emerald-400 text-xs">{daysLeft} days</span>
-                        )}
-                      </td>
-                      <td className="p-3 text-center">
-                        {isExpired ? (
-                          <span className="text-[9px] font-bold bg-rose-950/60 text-rose-400 border border-rose-800 px-2 py-0.5 uppercase">
-                            Quarantine / Recall
-                          </span>
-                        ) : (
-                          <span className="text-[9px] font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-800 px-2 py-0.5 uppercase">
-                            FIFO Tier 1 (Ship First)
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-3 text-right font-bold font-mono text-white">{p.stockQuantity}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* 4. TAB: MULTI-OUTLET INVENTORY MATRIX */}
-      {activeSubTab === 'multi-location' && (
-        <div className="bg-neutral-900 border border-neutral-800 p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-white uppercase flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-emerald-400" />
-                <span>Multi-Outlet Stock Matrix</span>
-              </h3>
-              <p className="text-xs text-neutral-400">
-                View real-time stock allocation and reorder thresholds across all retail outlets.
-              </p>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-neutral-950 border-b border-neutral-800 text-[10px] text-neutral-400 uppercase tracking-wider">
-                <tr>
-                  <th className="p-3">Product / SKU</th>
-                  <th className="p-3 text-right">Total Aggregate</th>
-                  {locations.map((loc) => (
-                    <th key={loc.id} className="p-3 text-right">
-                      {loc.name}
-                      <p className="text-[8px] text-neutral-500 font-normal font-mono">{loc.code}</p>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-800/60">
-                {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-neutral-950/60 transition-colors">
-                    <td className="p-3 font-bold text-white">
-                      {p.name}
-                      <p className="text-[10px] text-neutral-500 font-normal font-mono">{p.sku}</p>
+              <tbody className="divide-y divide-slate-100">
+                {filteredProducts.map((p) => (
+                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-2.5">
+                      <p className="font-bold text-slate-900">{p.name}</p>
+                      <p className="text-[10px] text-slate-500 font-mono">SKU: {p.sku}</p>
                     </td>
-                    <td className="p-3 text-right font-bold text-emerald-400 font-mono">
-                      {p.stockQuantity}
+                    <td className="p-2.5 text-slate-700">{p.categoryName}</td>
+                    <td className="p-2.5 text-right font-mono text-slate-600">
+                      {formatCurrency(p.costPrice * p.stockQuantity, currencySymbol)}
                     </td>
-                    {locations.map((loc) => {
-                      const qty = p.locationQuantities?.[loc.id] || 0;
-                      const locReorder = p.locationReorderPoints?.[loc.id] || p.reorderPoint;
-                      const isLow = qty <= locReorder;
-
-                      return (
-                        <td key={loc.id} className="p-3 text-right font-mono">
-                          <span className={`font-bold ${isLow ? 'text-amber-400' : 'text-white'}`}>
-                            {qty}
-                          </span>
-                          <span className="text-[9px] text-neutral-500 ml-1">
-                            (Min: {locReorder})
-                          </span>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* 5. TAB: MOVEMENTS AUDIT TRAIL */}
-      {activeSubTab === 'movements' && (
-        <div className="bg-neutral-900 border border-neutral-800 p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-            <h3 className="font-bold text-sm uppercase tracking-wider text-white">
-              {t('stock_movements', 'Stock Movements Ledger')}
-            </h3>
-            <span className="text-xs text-neutral-400">{movements.length} Total Audit Records</span>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-neutral-950 border-b border-neutral-800 text-[10px] text-neutral-400 uppercase tracking-wider">
-                <tr>
-                  <th className="p-3">Timestamp</th>
-                  <th className="p-3">Product Name</th>
-                  <th className="p-3">Movement Type</th>
-                  <th className="p-3 text-right">Change</th>
-                  <th className="p-3 text-right">Balance</th>
-                  <th className="p-3">Location</th>
-                  <th className="p-3">Reference / Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-800/60">
-                {movements.map((m) => (
-                  <tr key={m.id} className="hover:bg-neutral-950/60 transition-colors">
-                    <td className="p-3 whitespace-nowrap text-neutral-400 font-mono text-[10px]">
-                      {formatDateTime(m.createdAt)}
+                    <td className="p-2.5 text-right font-mono font-bold text-slate-900">
+                      {formatCurrency(p.retailPrice * p.stockQuantity, currencySymbol)}
                     </td>
-                    <td className="p-3 font-bold text-white">{m.productName}</td>
-                    <td className="p-3 whitespace-nowrap">
-                      <span className="text-[10px] font-bold text-neutral-300 uppercase px-1.5 py-0.5 bg-neutral-950 border border-neutral-800">
-                        {m.type}
-                      </span>
-                    </td>
-                    <td className="p-3 text-right font-bold font-mono">
-                      <span className={m.quantityChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
-                        {m.quantityChange >= 0 ? `+${m.quantityChange}` : m.quantityChange}
-                      </span>
-                    </td>
-                    <td className="p-3 text-right font-mono text-white font-bold">{m.newStock}</td>
-                    <td className="p-3 text-neutral-300">{m.locationName}</td>
-                    <td className="p-3 text-neutral-400 font-mono text-[10px]">
-                      {m.referenceId ? `${m.referenceId} — ` : ''}
-                      {m.notes || 'Routine inventory update'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* 6. TAB: PURCHASE ORDERS */}
-      {activeSubTab === 'purchases' && (
-        <div className="bg-neutral-900 border border-neutral-800 p-5 space-y-4">
-          <h3 className="font-bold text-sm uppercase tracking-wider text-white border-b border-neutral-800 pb-3">
-            {t('purchases', 'Purchase Orders Register')}
-          </h3>
-          <div className="space-y-3">
-            {purchaseOrders.length === 0 ? (
-              <p className="text-xs text-neutral-500 italic py-4">
-                No purchase orders created yet. Use Low Stock alerts to create a PO.
-              </p>
-            ) : (
-              purchaseOrders.map((po) => (
-                <div
-                  key={po.id}
-                  className="p-4 bg-neutral-950 border border-neutral-800 flex items-center justify-between"
-                >
-                  <div>
-                    <p className="font-bold text-white">{po.poNumber}</p>
-                    <p className="text-[11px] text-neutral-400">
-                      {po.supplierName} • {formatDateTime(po.createdAt)} • {po.items?.length || 1} line item(s)
-                    </p>
-                    {po.items && po.items.length > 0 && (
-                      <p className="text-[10px] text-neutral-500 mt-0.5">
-                        Items:{' '}
-                        {po.items
-                          .map((i) => `${i.productName} (${i.receivedQuantity || 0}/${i.orderedQuantity} rcvd)`)
-                          .join(', ')}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-bold text-white">{formatCurrency(po.total, currencySymbol)}</p>
+                    <td className="p-2.5 text-right font-bold text-slate-900">{p.stockQuantity}</td>
+                    <td className="p-2.5 text-right text-slate-500">{p.reorderPoint}</td>
+                    <td className="p-2.5 text-center">
                       <span
-                        className={`text-[9px] font-bold px-2 py-0.5 border uppercase ${
-                          po.status === 'Received'
-                            ? 'border-emerald-800 text-emerald-400 bg-emerald-950/60'
-                            : po.status === 'Partial'
-                            ? 'border-sky-800 text-sky-400 bg-sky-950/60'
-                            : 'border-amber-900/60 text-amber-400 bg-amber-950/60'
+                        className={`text-[9px] font-bold px-1.5 py-0.5 border uppercase ${
+                          p.status === 'Healthy'
+                            ? 'text-emerald-800 border-emerald-300 bg-emerald-50'
+                            : p.status === 'Low Stock'
+                            ? 'text-amber-800 border-amber-300 bg-amber-50'
+                            : 'text-rose-800 border-rose-300 bg-rose-50'
                         }`}
                       >
-                        {po.status}
+                        {p.status}
                       </span>
-                    </div>
-
-                    {po.status !== 'Received' && onReceivePO && (
-                      <button
-                        onClick={() => handleOpenReceiveModal(po)}
-                        className="px-3 py-1.5 bg-white text-black font-bold uppercase text-[10px] hover:bg-neutral-200 transition-colors"
-                      >
-                        Receive Shipment
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
+                    </td>
+                    <td className="p-2.5 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => openAdjustModal(p)}
+                          className="px-2 py-1 bg-slate-100 border border-slate-300 text-slate-800 hover:bg-slate-200 text-[10px] uppercase font-bold"
+                        >
+                          Adjust
+                        </button>
+                        <button
+                          onClick={() => openCreatePOModal(p)}
+                          className="px-2 py-1 bg-slate-900 text-white hover:bg-black text-[10px] uppercase font-bold"
+                        >
+                          + PO
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      {/* Modal: Interactive Partial/Full PO Receiving */}
-      {receivingPO && (
-        <Modal
-          isOpen={Boolean(receivingPO)}
-          onClose={() => setReceivingPO(null)}
-          title={`RECEIVE SHIPMENT // PO #${receivingPO.poNumber}`}
-        >
-          <form onSubmit={handleConfirmReceivePO} className="space-y-4 font-mono text-xs text-neutral-200">
-            <p className="text-neutral-400 leading-relaxed">
-              Verify actual physical quantities received from supplier{' '}
-              <strong className="text-white">{receivingPO.supplierName}</strong>. Partial receipts will mark PO
-              as &apos;Partial&apos; and track backorders.
-            </p>
+      {/* 2. LOW STOCK & AUTO REORDERS TAB */}
+      {activeSubTab === 'low-stock' && (
+        <div className="bg-white border border-slate-200 p-6 space-y-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 gap-3">
+            <div>
+              <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <span>Restock Alerts &amp; PO Generator ({lowStockItems.length})</span>
+              </h3>
+              <p className="text-xs text-slate-600">
+                Products currently below defined minimum inventory thresholds.
+              </p>
+            </div>
 
-            <div className="space-y-3 p-3 bg-neutral-950 border border-neutral-800">
-              {receivingPO.items.map((item) => (
-                <div
-                  key={item.productId}
-                  className="p-3 bg-neutral-900 border border-neutral-800 flex items-center justify-between gap-4"
-                >
-                  <div className="flex-1">
-                    <p className="font-bold text-white">{item.productName}</p>
-                    <p className="text-[10px] text-neutral-400 font-mono">
-                      SKU: {item.sku} • Ordered: {item.orderedQuantity} • Already Received:{' '}
-                      {item.receivedQuantity || 0}
-                    </p>
+            {lowStockItems.length > 0 && (
+              <button
+                onClick={handleBulkAutoReorders}
+                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Auto-Generate All Restock POs</span>
+              </button>
+            )}
+          </div>
+
+          {bulkPOSuccess && (
+            <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-700" />
+              <span>Automated purchase orders generated and dispatched to supplier registry.</span>
+            </div>
+          )}
+
+          {lowStockItems.length === 0 ? (
+            <div className="p-12 text-center bg-slate-50 border border-dashed border-slate-200 space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
+              <h4 className="font-bold text-slate-900 uppercase text-xs">All Inventory Healthy</h4>
+              <p className="text-xs text-slate-500 font-mono">No products currently breach minimum reorder levels.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {lowStockItems.map((p) => (
+                <div key={p.id} className="p-4 bg-slate-50 border border-amber-200 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-bold text-slate-900 text-xs">{p.name}</p>
+                      <p className="text-[10px] text-slate-500">SKU: {p.sku}</p>
+                      <p className="text-[10px] text-slate-600">Supplier: {p.supplierName}</p>
+                    </div>
+                    <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 border border-amber-300">
+                      {p.stockQuantity} / Min {p.reorderPoint}
+                    </span>
                   </div>
 
-                  <div className="w-32">
-                    <label className="block text-[9px] uppercase text-neutral-400 mb-0.5">
-                      Receive Qty
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max={item.orderedQuantity - (item.receivedQuantity || 0)}
-                      value={receivedQtyMap[item.productId] ?? (item.orderedQuantity - (item.receivedQuantity || 0))}
-                      onChange={(e) =>
-                        setReceivedQtyMap({
-                          ...receivedQtyMap,
-                          [item.productId]: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full bg-neutral-950 border border-neutral-700 text-white p-1.5 text-xs text-right font-mono focus:border-white outline-none"
-                    />
+                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-slate-900">
+                      Cost: {formatCurrency(p.costPrice, currencySymbol)}
+                    </span>
+                    <button
+                      onClick={() => openCreatePOModal(p)}
+                      className="px-3 py-1.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black"
+                    >
+                      Create PO
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setReceivingPO(null)}
-                className="px-4 py-2 bg-neutral-900 text-neutral-300 uppercase font-bold text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-6 py-2 bg-white text-black uppercase font-bold text-xs hover:bg-neutral-200 flex items-center gap-1.5"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Confirm &amp; Credit Inventory</span>
-              </button>
-            </div>
-          </form>
-        </Modal>
+          )}
+        </div>
       )}
 
-      {/* Modal: Inter-Outlet Stock Transfer */}
+      {/* 3. LOTS & EXPIRY TAB */}
+      {activeSubTab === 'lots-expiry' && (
+        <div className="bg-white border border-slate-200 p-6 space-y-4 shadow-sm">
+          <div className="border-b border-slate-200 pb-3">
+            <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+              Batch, Lot &amp; Expiration Tracking
+            </h3>
+            <p className="text-xs text-slate-600">
+              FIFO audit trail and expiration date warnings across active lots.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse font-mono">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
+                  <th className="p-2.5">Product</th>
+                  <th className="p-2.5">SKU</th>
+                  <th className="p-2.5">Lot #</th>
+                  <th className="p-2.5">Batch #</th>
+                  <th className="p-2.5">Expiration Date</th>
+                  <th className="p-2.5 text-right">In Stock</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {expiringItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-slate-500 text-xs">
+                      No batch/lot expiration dates assigned to products yet.
+                    </td>
+                  </tr>
+                ) : (
+                  expiringItems.map((p) => (
+                    <tr key={p.id} className="hover:bg-slate-50">
+                      <td className="p-2.5 font-bold text-slate-900">{p.name}</td>
+                      <td className="p-2.5 text-slate-600">{p.sku}</td>
+                      <td className="p-2.5 text-slate-800 font-bold">{p.lotNumber || 'N/A'}</td>
+                      <td className="p-2.5 text-slate-600">{p.batchNumber || 'N/A'}</td>
+                      <td className="p-2.5 font-bold text-amber-800">{p.expirationDate}</td>
+                      <td className="p-2.5 text-right font-bold text-slate-900">{p.stockQuantity}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 4. MULTI-LOCATION MATRIX TAB */}
+      {activeSubTab === 'multi-location' && (
+        <div className="bg-white border border-slate-200 p-6 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+            <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+              Multi-Outlet Stock Allocation Matrix
+            </h3>
+            <button
+              onClick={() => setIsTransferModalOpen(true)}
+              className="px-3 py-1.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black"
+            >
+              Transfer Stock
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse font-mono">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
+                  <th className="p-2.5">Product &amp; SKU</th>
+                  {locations.map((loc) => (
+                    <th key={loc.id} className="p-2.5 text-right">
+                      {loc.name}
+                    </th>
+                  ))}
+                  <th className="p-2.5 text-right">Total Aggregate</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {products.map((p) => (
+                  <tr key={p.id} className="hover:bg-slate-50">
+                    <td className="p-2.5">
+                      <p className="font-bold text-slate-900">{p.name}</p>
+                      <p className="text-[10px] text-slate-500">{p.sku}</p>
+                    </td>
+                    {locations.map((loc) => {
+                      const locQty = p.locationQuantities?.[loc.id] ?? Math.floor(p.stockQuantity / locations.length);
+                      return (
+                        <td key={loc.id} className="p-2.5 text-right font-mono text-slate-800">
+                          {locQty}
+                        </td>
+                      );
+                    })}
+                    <td className="p-2.5 text-right font-bold text-slate-900 font-mono">
+                      {p.stockQuantity}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 5. MOVEMENTS AUDIT LOG TAB */}
+      {activeSubTab === 'movements' && (
+        <div className="bg-white border border-slate-200 p-6 space-y-4 shadow-sm">
+          <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider border-b border-slate-200 pb-3">
+            Immutable Stock Movement Audit Trail ({movements.length})
+          </h3>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse font-mono">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
+                  <th className="p-2.5">Date &amp; Time</th>
+                  <th className="p-2.5">Product &amp; SKU</th>
+                  <th className="p-2.5">Type</th>
+                  <th className="p-2.5">Outlet</th>
+                  <th className="p-2.5 text-right">Qty Change</th>
+                  <th className="p-2.5 text-right">Ending Stock</th>
+                  <th className="p-2.5">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {movements.map((m) => (
+                  <tr key={m.id} className="hover:bg-slate-50">
+                    <td className="p-2.5 text-slate-500 text-[10px]">{formatDateTime(m.createdAt)}</td>
+                    <td className="p-2.5 font-bold text-slate-900">{m.productName}</td>
+                    <td className="p-2.5">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 border border-slate-300 bg-slate-100 text-slate-800 uppercase">
+                        {m.type}
+                      </span>
+                    </td>
+                    <td className="p-2.5 text-slate-600">{m.locationName}</td>
+                    <td
+                      className={`p-2.5 text-right font-bold ${
+                        m.quantityChange > 0 ? 'text-emerald-700' : 'text-rose-700'
+                      }`}
+                    >
+                      {m.quantityChange > 0 ? `+${m.quantityChange}` : m.quantityChange}
+                    </td>
+                    <td className="p-2.5 text-right font-bold text-slate-900">{m.newStock}</td>
+                    <td className="p-2.5 text-slate-500 text-[10px] max-w-[200px] truncate">{m.notes}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 6. PURCHASE ORDERS TAB */}
+      {activeSubTab === 'purchases' && (
+        <div className="bg-white border border-slate-200 p-6 space-y-4 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+            <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+              Purchase Orders ({purchaseOrders.length})
+            </h3>
+            {products[0] && (
+              <button
+                onClick={() => openCreatePOModal(products[0])}
+                className="px-3 py-1.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black"
+              >
+                + New PO
+              </button>
+            )}
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse font-mono">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
+                  <th className="p-2.5">PO #</th>
+                  <th className="p-2.5">Supplier</th>
+                  <th className="p-2.5">Target Location</th>
+                  <th className="p-2.5 text-right">Items</th>
+                  <th className="p-2.5 text-right">Total</th>
+                  <th className="p-2.5 text-center">Status</th>
+                  <th className="p-2.5 text-center">Receiving</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {purchaseOrders.map((po) => (
+                  <tr key={po.id} className="hover:bg-slate-50">
+                    <td className="p-2.5 font-bold text-slate-900">{po.poNumber}</td>
+                    <td className="p-2.5 text-slate-700">{po.supplierName}</td>
+                    <td className="p-2.5 text-slate-600">{po.locationName}</td>
+                    <td className="p-2.5 text-right text-slate-800">{po.items.length} SKUs</td>
+                    <td className="p-2.5 text-right font-bold text-slate-900">
+                      {formatCurrency(po.total, currencySymbol)}
+                    </td>
+                    <td className="p-2.5 text-center">
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.5 border uppercase ${
+                          po.status === 'Received'
+                            ? 'text-emerald-800 border-emerald-300 bg-emerald-50'
+                            : 'text-amber-800 border-amber-300 bg-amber-50'
+                        }`}
+                      >
+                        {po.status}
+                      </span>
+                    </td>
+                    <td className="p-2.5 text-center">
+                      {po.status !== 'Received' && (
+                        <button
+                          onClick={() => openReceiveModal(po)}
+                          className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-bold uppercase"
+                        >
+                          Receive Stock
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Stock Transfer Modal */}
       <Modal
         isOpen={isTransferModalOpen}
         onClose={() => setIsTransferModalOpen(false)}
         title="INTER-OUTLET STOCK TRANSFER"
       >
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const srcLoc = locations.find((l) => l.id === sourceLocId) || locations[0];
-            const dstLoc = locations.find((l) => l.id === targetLocId) || locations[1] || locations[0];
-            const p = products.find((prod) => prod.id === transferProductId);
-            if (!p || !srcLoc || !dstLoc) return;
-
-            await onStockTransfer({
-              sourceLocationId: srcLoc.id,
-              sourceLocationName: srcLoc.name,
-              targetLocationId: dstLoc.id,
-              targetLocationName: dstLoc.name,
-              status: 'Completed',
-              items: [
-                {
-                  productId: p.id,
-                  productName: p.name,
-                  sku: p.sku,
-                  quantity: transferQty,
-                },
-              ],
-            });
-            setIsTransferModalOpen(false);
-          }}
-          className="space-y-4 font-mono text-xs text-neutral-200"
-        >
+        <form onSubmit={handleTransferSubmit} className="space-y-4 font-mono text-xs">
           <div>
-            <label className="block text-[10px] text-neutral-400 uppercase font-bold mb-1">
-              Select Product to Transfer
-            </label>
+            <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Select Product</label>
             <select
               value={transferProductId}
               onChange={(e) => setTransferProductId(e.target.value)}
-              className="w-full bg-neutral-950 border border-neutral-800 text-white p-2 focus:border-white outline-none"
+              className="w-full bg-white border border-slate-300 p-2 text-slate-900"
             >
               {products.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} (Total Avail: {p.stockQuantity})
+                  {p.name} ({p.sku}) — {p.stockQuantity} in stock
                 </option>
               ))}
             </select>
@@ -892,13 +681,11 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] text-neutral-400 uppercase font-bold mb-1">
-                Source Location
-              </label>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Source Outlet</label>
               <select
                 value={sourceLocId}
                 onChange={(e) => setSourceLocId(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 text-white p-2 focus:border-white outline-none"
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900"
               >
                 {locations.map((loc) => (
                   <option key={loc.id} value={loc.id}>
@@ -907,15 +694,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 ))}
               </select>
             </div>
-
             <div>
-              <label className="block text-[10px] text-neutral-400 uppercase font-bold mb-1">
-                Target Location
-              </label>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Target Outlet</label>
               <select
                 value={targetLocId}
                 onChange={(e) => setTargetLocId(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 text-white p-2 focus:border-white outline-none"
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900"
               >
                 {locations.map((loc) => (
                   <option key={loc.id} value={loc.id}>
@@ -927,103 +711,83 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           </div>
 
           <div>
-            <label className="block text-[10px] text-neutral-400 uppercase font-bold mb-1">
-              Transfer Quantity
-            </label>
+            <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Transfer Quantity</label>
             <input
               type="number"
               min="1"
               required
               value={transferQty}
-              onChange={(e) => setTransferQty(parseInt(e.target.value) || 1)}
-              className="w-full bg-neutral-950 border border-neutral-800 text-white p-2 focus:border-white outline-none font-mono"
+              onChange={(e) => setTransferQty(Number(e.target.value))}
+              className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={() => setIsTransferModalOpen(false)}
-              className="px-4 py-2 bg-neutral-900 text-neutral-300 uppercase font-bold text-xs"
+              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase border border-slate-300"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-white text-black uppercase font-bold text-xs hover:bg-neutral-200 flex items-center gap-1"
+              className="px-6 py-2 bg-slate-900 text-white font-bold uppercase hover:bg-black"
             >
-              <ArrowRightLeft className="w-4 h-4" />
-              <span>Execute Transfer</span>
+              Execute Transfer
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* Modal: Adjust Stock */}
+      {/* Stock Adjustment Modal */}
       <Modal
         isOpen={isAdjustModalOpen}
         onClose={() => setIsAdjustModalOpen(false)}
-        title="ADJUST STOCK QUANTITY"
+        title={`ADJUST INVENTORY: ${selectedProductForAdjust?.name || ''}`}
       >
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (!selectedProductForAdjust) return;
-            await onStockAdjustment(selectedProductForAdjust.id, adjustQty, adjustReason);
-            setIsAdjustModalOpen(false);
-          }}
-          className="space-y-4 font-mono text-xs text-neutral-200"
-        >
-          {selectedProductForAdjust && (
-            <div className="p-3 bg-neutral-950 border border-neutral-800">
-              <p className="font-bold text-white">{selectedProductForAdjust.name}</p>
-              <p className="text-[10px] text-neutral-400 font-mono">
-                Current Stock: {selectedProductForAdjust.stockQuantity}
-              </p>
-            </div>
-          )}
+        <form onSubmit={handleAdjustSubmit} className="space-y-4 font-mono text-xs">
+          <div>
+            <p className="text-slate-600">
+              Current Stock: <strong>{selectedProductForAdjust?.stockQuantity}</strong>
+            </p>
+          </div>
 
           <div>
-            <label className="block text-[10px] text-neutral-400 uppercase font-bold mb-1">
-              Quantity Change (+ or -)
+            <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+              Quantity Change (+ / -)
             </label>
             <input
               type="number"
               required
               value={adjustQty}
-              onChange={(e) => setAdjustQty(parseInt(e.target.value) || 0)}
-              placeholder="e.g. +5 or -2"
-              className="w-full bg-neutral-950 border border-neutral-800 text-white p-2 focus:border-white outline-none font-mono"
+              onChange={(e) => setAdjustQty(Number(e.target.value))}
+              className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
             />
           </div>
 
           <div>
-            <label className="block text-[10px] text-neutral-400 uppercase font-bold mb-1">
-              Reason for Adjustment
-            </label>
-            <select
+            <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Reason / Note</label>
+            <input
+              type="text"
+              required
               value={adjustReason}
               onChange={(e) => setAdjustReason(e.target.value)}
-              className="w-full bg-neutral-950 border border-neutral-800 text-white p-2 focus:border-white outline-none"
-            >
-              <option value="Physical Count Variance">Physical Count Variance</option>
-              <option value="Damaged / Broken Inventory">Damaged / Broken Inventory</option>
-              <option value="Returned by Customer">Returned by Customer</option>
-              <option value="Supplier Promotional Sample">Supplier Promotional Sample</option>
-            </select>
+              className="w-full bg-white border border-slate-300 p-2 text-slate-900"
+            />
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={() => setIsAdjustModalOpen(false)}
-              className="px-4 py-2 bg-neutral-900 text-neutral-300 uppercase font-bold text-xs"
+              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase border border-slate-300"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-white text-black uppercase font-bold text-xs hover:bg-neutral-200"
+              className="px-6 py-2 bg-slate-900 text-white font-bold uppercase hover:bg-black"
             >
               Save Adjustment
             </button>
@@ -1031,74 +795,128 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         </form>
       </Modal>
 
-      {/* Modal: Create PO */}
+      {/* Purchase Order Creation Modal */}
       <Modal
         isOpen={isPOModalOpen}
         onClose={() => setIsPOModalOpen(false)}
-        title="GENERATE PURCHASE ORDER"
+        title={`CREATE PO: ${poProduct?.name || ''}`}
       >
-        <form onSubmit={handlePOSubmit} className="space-y-4 font-mono text-xs text-neutral-200">
-          {poProduct && (
-            <div className="p-3 bg-neutral-950 border border-neutral-800 space-y-1">
-              <p className="font-bold text-white">{poProduct.name}</p>
-              <p className="text-[10px] text-neutral-400">
-                Supplier: <strong className="text-white">{poProduct.supplierName}</strong>
-              </p>
-              <p className="text-[10px] text-neutral-400">
-                Unit Cost: {formatCurrency(poProduct.costPrice, currencySymbol)}
-              </p>
-            </div>
-          )}
-
+        <form onSubmit={handleCreatePOSubmit} className="space-y-4 font-mono text-xs">
           <div>
-            <label className="block text-[10px] text-neutral-400 uppercase font-bold mb-1">
-              Quantity to Order
-            </label>
-            <input
-              type="number"
-              min="1"
-              required
-              value={poOrderQty}
-              onChange={(e) => setPoOrderQty(parseInt(e.target.value) || 1)}
-              className="w-full bg-neutral-950 border border-neutral-800 text-white p-2 focus:border-white outline-none font-mono"
-            />
+            <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Supplier</label>
+            <p className="p-2 bg-slate-50 border border-slate-200 font-bold text-slate-900">
+              {poProduct?.supplierName || 'Default Supplier'}
+            </p>
           </div>
 
           <div>
-            <label className="block text-[10px] text-neutral-400 uppercase font-bold mb-1">
-              Destination Warehouse / Store
-            </label>
+            <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Ship to Location</label>
             <select
               value={poTargetLocId}
               onChange={(e) => setPoTargetLocId(e.target.value)}
-              className="w-full bg-neutral-950 border border-neutral-800 text-white p-2 focus:border-white outline-none"
+              className="w-full bg-white border border-slate-300 p-2 text-slate-900"
             >
               {locations.map((loc) => (
                 <option key={loc.id} value={loc.id}>
-                  {loc.name} ({loc.code})
+                  {loc.name}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Order Quantity</label>
+            <input
+              type="number"
+              min="1"
+              required
+              value={poOrderQty}
+              onChange={(e) => setPoOrderQty(Number(e.target.value))}
+              className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
+            />
+          </div>
+
+          <div className="p-3 bg-slate-50 border border-slate-200 flex justify-between">
+            <span className="text-slate-600">Estimated Total:</span>
+            <span className="font-bold text-slate-900">
+              {formatCurrency((poProduct?.costPrice || 0) * poOrderQty * 1.085, currencySymbol)}
+            </span>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={() => setIsPOModalOpen(false)}
-              className="px-4 py-2 bg-neutral-900 text-neutral-300 uppercase font-bold text-xs"
+              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase border border-slate-300"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-white text-black uppercase font-bold text-xs hover:bg-neutral-200 flex items-center gap-1.5"
+              className="px-6 py-2 bg-slate-900 text-white font-bold uppercase hover:bg-black"
             >
-              <Truck className="w-4 h-4" />
-              <span>Issue Purchase Order</span>
+              Dispatch PO
             </button>
           </div>
         </form>
       </Modal>
+
+      {/* PO Receiving Modal */}
+      {receivingPO && (
+        <Modal
+          isOpen={!!receivingPO}
+          onClose={() => setReceivingPO(null)}
+          title={`RECEIVE PURCHASE ORDER: ${receivingPO.poNumber}`}
+        >
+          <div className="space-y-4 font-mono text-xs">
+            <p className="text-slate-600">Verify received units to update active inventory levels.</p>
+
+            <div className="space-y-2 max-h-56 overflow-y-auto">
+              {receivingPO.items.map((item) => (
+                <div key={item.productId} className="p-3 bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-slate-900">{item.productName}</p>
+                    <p className="text-[10px] text-slate-500">Ordered: {item.orderedQuantity} | Received so far: {item.receivedQuantity || 0}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-[10px] text-slate-600 uppercase font-bold">Qty:</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={item.orderedQuantity - (item.receivedQuantity || 0)}
+                      value={receivedQtyMap[item.productId] ?? 0}
+                      onChange={(e) =>
+                        setReceivedQtyMap({
+                          ...receivedQtyMap,
+                          [item.productId]: Number(e.target.value),
+                        })
+                      }
+                      className="w-16 bg-white border border-slate-300 p-1 text-center font-bold text-slate-900"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => setReceivingPO(null)}
+                className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase border border-slate-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmReceive}
+                className="px-6 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold uppercase"
+              >
+                Confirm Receipt &amp; Restock
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

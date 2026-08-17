@@ -10,12 +10,12 @@ import {
   Boxes,
   Users,
   Settings,
-  Layers,
   Sparkles,
   ShieldCheck,
   ArrowUpRight,
   ChevronRight,
   Globe,
+  Home,
 } from 'lucide-react';
 
 export type NavItemKey =
@@ -47,10 +47,10 @@ export const NAV_ITEMS: {
   icon: React.ElementType;
   subTabs?: { id: string; label: string }[];
 }[] = [
-  { key: 'home', label: 'Home', icon: LayoutDashboard },
+  { key: 'home', label: 'Dashboard', icon: LayoutDashboard },
   {
     key: 'sell',
-    label: 'Sell',
+    label: 'Sell (POS)',
     icon: ShoppingBag,
     subTabs: [
       { id: 'quick-sale', label: 'Quick Sale POS' },
@@ -60,7 +60,7 @@ export const NAV_ITEMS: {
   },
   {
     key: 'fulfillment',
-    label: 'Channels & Fulfillment',
+    label: 'Channels & Orders',
     icon: Globe,
     subTabs: [
       { id: 'all-orders', label: 'All Fulfillment Orders' },
@@ -131,28 +131,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { t } = useTranslation();
 
   return (
-    <aside className="w-full md:w-64 bg-neutral-950 text-neutral-100 flex flex-col h-full md:h-screen md:sticky md:top-0 shrink-0 border-r border-neutral-800 z-30 select-none">
+    <aside className="w-full md:w-64 bg-white text-slate-900 flex flex-col h-full md:h-screen md:sticky md:top-0 shrink-0 border-r border-slate-200 z-30 select-none shadow-xs">
       {/* Top Brand Area */}
-      <div className="h-16 px-5 flex items-center justify-between border-b border-neutral-800">
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 border-2 border-white flex items-center justify-center rotate-45 shrink-0">
-            <div className="w-3 h-3 bg-white -rotate-45" />
-          </div>
-          <span className="font-heading font-extrabold text-xs uppercase tracking-[0.25em] text-white">
-            INVENTORY<span className="text-neutral-500">360</span>
-          </span>
-        </div>
+      <div className="h-16 px-5 flex items-center justify-between border-b border-slate-200 bg-white">
         <button
           onClick={onOpenLanding}
-          className="text-neutral-500 hover:text-white p-1 transition-colors"
-          title={t('app_info')}
+          className="flex items-center gap-3 text-left group"
+          title="Return to Main Portal"
         >
-          <Layers className="w-4 h-4" />
+          <div className="w-7 h-7 bg-slate-900 flex items-center justify-center rotate-45 shrink-0 group-hover:bg-black transition-colors">
+            <div className="w-3 h-3 bg-white -rotate-45" />
+          </div>
+          <span className="font-heading font-extrabold text-xs uppercase tracking-[0.25em] text-slate-900">
+            INVENTORY<span className="text-emerald-600">360</span>
+          </span>
         </button>
+        {onOpenLanding && (
+          <button
+            onClick={onOpenLanding}
+            className="text-slate-400 hover:text-slate-900 p-1.5 hover:bg-slate-100 transition-colors"
+            title="Main Webapp Portal"
+          >
+            <Home className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Navigation Stack */}
-      <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.key;
@@ -170,25 +176,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-none text-xs font-mono tracking-wider uppercase transition-all group ${
                   isActive
-                    ? 'bg-neutral-900 text-white border-l-2 border-white font-bold'
-                    : 'text-neutral-400 hover:text-white hover:bg-neutral-900/60'
+                    ? 'bg-slate-900 text-white font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <Icon
                     className={`w-4 h-4 transition-colors ${
-                      isActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-300'
+                      isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-800'
                     }`}
-                    strokeWidth={isActive ? 2 : 1.5}
+                    strokeWidth={isActive ? 2 : 1.75}
                   />
                   <span>{translatedLabel}</span>
                 </div>
-                {isActive && <div className="w-1.5 h-1.5 bg-white" />}
+                {isActive && <div className="w-1.5 h-1.5 bg-emerald-400" />}
               </button>
 
               {/* Collapsible Sub-Items if Active */}
               {isActive && hasSubTabs && (
-                <div className="ml-5 pl-3 border-l border-neutral-800 space-y-0.5 py-1">
+                <div className="ml-5 pl-3 border-l border-slate-200 space-y-0.5 py-1">
                   {item.subTabs?.map((sub) => {
                     const isSubActive = activeSubTab === sub.id;
                     const translatedSubLabel = t(sub.id) !== sub.id ? t(sub.id) : sub.label;
@@ -198,8 +204,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         onClick={() => onSubTabChange && onSubTabChange(sub.id)}
                         className={`w-full text-left px-2.5 py-1.5 text-[11px] font-mono transition-colors ${
                           isSubActive
-                            ? 'text-white font-semibold bg-neutral-900'
-                            : 'text-neutral-500 hover:text-neutral-300 hover:bg-neutral-900/40'
+                            ? 'text-slate-900 font-bold bg-slate-100 border-l-2 border-slate-900 -ml-3 pl-3'
+                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                         }`}
                       >
                         {translatedSubLabel}
@@ -214,53 +220,55 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* Data Policy Notice & Product Tour Actions */}
-      <div className="p-3 mx-3 my-2 bg-neutral-900 border border-neutral-800 space-y-2 text-[10px] font-mono">
+      <div className="p-3 mx-3 my-2 bg-slate-50 border border-slate-200 space-y-2 text-[10px] font-mono">
         <button
           onClick={onOpenDataPolicy}
-          className="w-full py-1.5 px-2 bg-neutral-950 border border-neutral-700 text-neutral-200 hover:text-white font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:border-white transition-colors"
+          className="w-full py-1.5 px-2 bg-white border border-slate-300 text-slate-800 hover:text-black font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:border-slate-400 transition-colors shadow-2xs"
         >
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>Data Policy &amp; Backup</span>
         </button>
 
         <button
           onClick={onOpenTour}
-          className="w-full py-1.5 px-2 bg-white text-black font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:bg-neutral-200 transition-colors"
+          className="w-full py-1.5 px-2 bg-slate-900 text-white font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:bg-black transition-colors shadow-2xs"
         >
-          <Sparkles className="w-3.5 h-3.5 text-black" />
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           <span>Interactive Tour</span>
         </button>
-        <div className="flex items-center justify-between pt-1 border-t border-neutral-800">
-          <div className="flex items-center gap-1.5 text-neutral-400">
-            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-            <span className="uppercase tracking-wider">{t('demo_mode')}</span>
+        <div className="flex items-center justify-between pt-1 border-t border-slate-200">
+          <div className="flex items-center gap-1.5 text-slate-500">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+            <span className="uppercase tracking-wider font-semibold">{t('demo_mode', 'Ready')}</span>
           </div>
-          <button
-            onClick={onOpenLanding}
-            className="text-white hover:underline flex items-center gap-0.5 uppercase tracking-wider font-bold"
-          >
-            <span>Overview</span>
-            <ArrowUpRight className="w-3 h-3" />
-          </button>
+          {onOpenLanding && (
+            <button
+              onClick={onOpenLanding}
+              className="text-slate-900 hover:underline flex items-center gap-0.5 uppercase tracking-wider font-bold"
+            >
+              <span>Main Portal</span>
+              <ArrowUpRight className="w-3 h-3 text-slate-600" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Bottom Business Owner Area */}
-      <div className="p-4 border-t border-neutral-800 bg-neutral-950 flex items-center justify-between">
+      <div className="p-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-7 h-7 bg-white text-black font-mono font-bold text-xs flex items-center justify-center shrink-0">
+          <div className="w-7 h-7 bg-slate-900 text-white font-mono font-bold text-xs flex items-center justify-center shrink-0">
             {ownerName ? ownerName.charAt(0) : 'B'}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-mono font-semibold text-white truncate leading-tight uppercase tracking-wide">
+            <p className="text-xs font-mono font-bold text-slate-900 truncate leading-tight uppercase tracking-wide">
               {businessName || 'ACME Retail & Tech'}
             </p>
-            <p className="text-[10px] text-neutral-500 font-mono truncate leading-tight mt-0.5 uppercase">
+            <p className="text-[10px] text-slate-500 font-mono truncate leading-tight mt-0.5 uppercase">
               {ownerName || 'Business Owner'}
             </p>
           </div>
         </div>
-        <ChevronRight className="w-4 h-4 text-neutral-600" />
+        <ChevronRight className="w-4 h-4 text-slate-400" />
       </div>
     </aside>
   );

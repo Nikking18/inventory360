@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Modal } from './common/Modal';
 import { Product, ProductVariant } from '../lib/types';
 import { formatCurrency } from '../lib/utils';
-import { Printer, QrCode, Barcode, Copy, Check } from 'lucide-react';
+import { Printer, Copy, Check } from 'lucide-react';
 
 interface LabelPrintModalProps {
   isOpen: boolean;
@@ -47,7 +47,7 @@ export const LabelPrintModal: React.FC<LabelPrintModalProps> = ({
   // Generate SVG QR pattern representation
   const renderSvgQr = (code: string) => {
     return (
-      <svg className="w-14 h-14 bg-white p-1" viewBox="0 0 29 29" fill="none">
+      <svg className="w-14 h-14 bg-white p-1 border border-slate-200" viewBox="0 0 29 29" fill="none">
         <rect width="29" height="29" fill="white" />
         {/* Finder pattern Top-Left */}
         <rect x="2" y="2" width="7" height="7" fill="black" />
@@ -64,7 +64,7 @@ export const LabelPrintModal: React.FC<LabelPrintModalProps> = ({
         <rect x="3" y="21" width="5" height="5" fill="white" />
         <rect x="4" y="22" width="3" height="3" fill="black" />
 
-        {/* Dynamic data dots derived from code */}
+        {/* Dynamic data dots */}
         <rect x="11" y="4" width="2" height="2" fill="black" />
         <rect x="15" y="4" width="2" height="2" fill="black" />
         <rect x="11" y="8" width="2" height="2" fill="black" />
@@ -120,17 +120,17 @@ export const LabelPrintModal: React.FC<LabelPrintModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="PRINT BARCODE &amp; QR LABELS" maxWidth="max-w-3xl">
-      <div className="space-y-6 text-neutral-200 font-mono">
+      <div className="space-y-6 text-slate-900 font-mono">
         {/* Configuration Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-neutral-950 border border-neutral-800">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-50 border border-slate-200">
           <div>
-            <label className="block text-[10px] text-neutral-400 uppercase font-bold mb-1">
+            <label className="block text-[10px] text-slate-600 uppercase font-bold mb-1">
               Label Quantity
             </label>
             <select
               value={labelQuantity}
               onChange={(e) => setLabelQuantity(Number(e.target.value))}
-              className="w-full bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-white outline-none"
+              className="w-full bg-white border border-slate-300 text-slate-900 text-xs p-2 focus:border-slate-900 outline-none"
             >
               <option value={1}>1 Label (Single Test)</option>
               <option value={4}>4 Labels</option>
@@ -141,13 +141,13 @@ export const LabelPrintModal: React.FC<LabelPrintModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-[10px] text-neutral-400 uppercase font-bold mb-1">
+            <label className="block text-[10px] text-slate-600 uppercase font-bold mb-1">
               Label Template
             </label>
             <select
               value={labelFormat}
               onChange={(e) => setLabelFormat(e.target.value as any)}
-              className="w-full bg-neutral-900 border border-neutral-700 text-white text-xs p-2 focus:border-white outline-none"
+              className="w-full bg-white border border-slate-300 text-slate-900 text-xs p-2 focus:border-slate-900 outline-none"
             >
               <option value="standard">Standard (Barcode + QR + Price)</option>
               <option value="compact">Compact Barcode Sticker</option>
@@ -158,7 +158,7 @@ export const LabelPrintModal: React.FC<LabelPrintModalProps> = ({
           <div className="flex items-end">
             <button
               onClick={handlePrint}
-              className="w-full py-2 bg-white text-black font-bold text-xs uppercase tracking-wider hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2 bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-xs"
             >
               <Printer className="w-4 h-4" />
               <span>Print Sticker Sheet</span>
@@ -167,22 +167,22 @@ export const LabelPrintModal: React.FC<LabelPrintModalProps> = ({
         </div>
 
         {/* Product Details Header */}
-        <div className="flex items-center justify-between p-3 bg-neutral-900 border border-neutral-800 text-xs">
+        <div className="flex items-center justify-between p-3 bg-white border border-slate-200 text-xs shadow-xs">
           <div>
-            <p className="font-bold text-white uppercase">{activeName}</p>
-            <p className="text-[11px] text-neutral-400">
-              SKU: <span className="text-white font-bold">{activeSku}</span> • Barcode: {activeBarcode}
+            <p className="font-bold text-slate-900 uppercase">{activeName}</p>
+            <p className="text-[11px] text-slate-600">
+              SKU: <span className="text-slate-900 font-bold">{activeSku}</span> • Barcode: {activeBarcode}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopySku}
-              className="p-1.5 bg-neutral-950 border border-neutral-700 hover:text-white text-neutral-400 text-[10px] flex items-center gap-1"
+              className="p-1.5 bg-slate-100 border border-slate-300 hover:text-slate-900 text-slate-700 text-[10px] flex items-center gap-1"
             >
-              {copiedSku ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+              {copiedSku ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
               <span>{copiedSku ? 'Copied' : 'Copy SKU'}</span>
             </button>
-            <span className="text-sm font-bold text-emerald-400">
+            <span className="text-sm font-bold text-emerald-700 font-mono">
               {formatCurrency(activePrice, currencySymbol)}
             </span>
           </div>
@@ -190,30 +190,30 @@ export const LabelPrintModal: React.FC<LabelPrintModalProps> = ({
 
         {/* Printable Label Sheet Preview */}
         <div className="space-y-2">
-          <p className="text-[10px] uppercase tracking-wider text-neutral-400 font-bold">
+          <p className="text-[10px] uppercase tracking-wider text-slate-600 font-bold">
             Print Preview ({labelQuantity} Labels Ready)
           </p>
 
-          <div className="max-h-80 overflow-y-auto p-4 bg-neutral-950 border border-neutral-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="max-h-80 overflow-y-auto p-4 bg-slate-100 border border-slate-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {[...Array(labelQuantity)].map((_, i) => (
               <div
                 key={i}
-                className="p-3 bg-white text-black border border-neutral-300 shadow-sm flex flex-col justify-between space-y-2 rounded-sm"
+                className="p-3 bg-white text-black border border-slate-300 shadow-sm flex flex-col justify-between space-y-2 rounded-sm"
               >
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
                     INVENTORY 360
                   </p>
-                  <p className="text-[11px] font-bold text-black leading-tight line-clamp-1">
+                  <p className="text-[11px] font-bold text-slate-900 leading-tight line-clamp-1">
                     {activeName}
                   </p>
-                  <p className="text-[9px] font-mono text-neutral-600">
+                  <p className="text-[9px] font-mono text-slate-600">
                     SKU: {activeSku}
                   </p>
                 </div>
 
                 {labelFormat === 'standard' && (
-                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-neutral-200">
+                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200">
                     <div className="flex-1 min-w-0">
                       {renderSvgBarcode(activeBarcode)}
                     </div>
@@ -222,24 +222,24 @@ export const LabelPrintModal: React.FC<LabelPrintModalProps> = ({
                 )}
 
                 {labelFormat === 'compact' && (
-                  <div className="pt-1 border-t border-neutral-200">
+                  <div className="pt-1 border-t border-slate-200">
                     {renderSvgBarcode(activeBarcode)}
                   </div>
                 )}
 
                 {labelFormat === 'qr-only' && (
-                  <div className="flex items-center justify-between pt-1 border-t border-neutral-200">
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-200">
                     <div className="space-y-0.5">
-                      <p className="text-[10px] font-mono text-neutral-600">SCAN TO LOOKUP</p>
-                      <p className="text-sm font-bold text-black">{formatCurrency(activePrice, currencySymbol)}</p>
+                      <p className="text-[10px] font-mono text-slate-600">SCAN TO LOOKUP</p>
+                      <p className="text-sm font-bold text-slate-900">{formatCurrency(activePrice, currencySymbol)}</p>
                     </div>
                     <div>{renderSvgQr(activeSku)}</div>
                   </div>
                 )}
 
-                <div className="flex items-center justify-between text-[10px] font-bold border-t border-neutral-200 pt-1">
-                  <span className="text-neutral-500 text-[8px] uppercase">Official Tag</span>
-                  <span className="text-black text-xs font-mono">
+                <div className="flex items-center justify-between text-[10px] font-bold border-t border-slate-200 pt-1">
+                  <span className="text-slate-500 text-[8px] uppercase">Official Tag</span>
+                  <span className="text-slate-900 text-xs font-mono">
                     {formatCurrency(activePrice, currencySymbol)}
                   </span>
                 </div>
@@ -252,13 +252,13 @@ export const LabelPrintModal: React.FC<LabelPrintModalProps> = ({
         <div className="flex justify-end gap-3 pt-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-neutral-900 text-neutral-300 text-xs uppercase font-bold hover:bg-neutral-800"
+            className="px-4 py-2 bg-slate-100 text-slate-700 border border-slate-300 text-xs uppercase font-bold hover:bg-slate-200"
           >
             Close
           </button>
           <button
             onClick={handlePrint}
-            className="px-6 py-2 bg-white text-black text-xs uppercase font-bold hover:bg-neutral-200 flex items-center gap-2"
+            className="px-6 py-2 bg-slate-900 text-white text-xs uppercase font-bold hover:bg-black flex items-center gap-2 shadow-xs"
           >
             <Printer className="w-4 h-4" />
             <span>Print {labelQuantity} Labels</span>

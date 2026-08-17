@@ -60,8 +60,8 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
     { id: 'retail-dashboard', label: t('reports', 'Retail Dashboard') },
     { id: 'sales-report', label: t('sales_report', 'Sales Report') },
     { id: 'inventory-report', label: t('inventory-report', 'Inventory Valuation') },
-    { id: 'turnover-velocity', label: 'Turnover &amp; Sales Velocity' },
-    { id: 'profit-report', label: t('profit_report', 'Profitability &amp; COGS') },
+    { id: 'turnover-velocity', label: 'Turnover & Sales Velocity' },
+    { id: 'profit-report', label: t('profit_report', 'Profitability & COGS') },
     { id: 'tax-report', label: t('tax_report', 'Tax Report') },
   ];
 
@@ -178,15 +178,15 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
   };
 
   return (
-    <div id="tour-reporting-analytics" className="space-y-6 text-neutral-200 font-mono">
+    <div id="tour-reporting-analytics" className="space-y-6 text-slate-900 font-mono">
       {/* Report Header & Navigation */}
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white uppercase tracking-wider">
-              {t('reports', 'Business Intelligence &amp; Analytics')}
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 uppercase tracking-wider font-heading">
+              {t('reports', 'Business Intelligence & Analytics')}
             </h1>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-slate-600">
               Granular financial analytics, stock turnover, sales velocity, and export tools.
             </p>
           </div>
@@ -195,7 +195,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
           <div className="relative self-start sm:self-auto">
             <button
               onClick={() => setShowExportMenu(!showExportMenu)}
-              className="px-4 py-2 bg-white text-black hover:bg-neutral-200 text-xs font-bold uppercase tracking-wider rounded-none flex items-center gap-2"
+              className="px-4 py-2 bg-slate-900 text-white hover:bg-black text-xs font-bold uppercase tracking-wider rounded-none flex items-center gap-2 shadow-xs"
             >
               <Download className="w-4 h-4" />
               <span>{t('export', 'Export Report')}</span>
@@ -203,37 +203,37 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             </button>
 
             {showExportMenu && (
-              <div className="absolute right-0 mt-1 w-56 bg-neutral-900 border border-neutral-700 shadow-2xl z-30 divide-y divide-neutral-800">
+              <div className="absolute right-0 mt-1 w-56 bg-white border border-slate-200 shadow-2xl z-30 divide-y divide-slate-100">
                 <button
                   onClick={handleExportCSV}
-                  className="w-full text-left px-4 py-2.5 text-xs text-neutral-200 hover:bg-neutral-800 hover:text-white flex items-center gap-2.5 transition-colors font-mono"
+                  className="w-full text-left px-4 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition-colors font-mono"
                 >
-                  <FileText className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
                   <div>
-                    <div className="font-bold uppercase">CSV (.csv)</div>
-                    <div className="text-[10px] text-neutral-400">Comma-separated text file</div>
+                    <div className="font-bold uppercase text-slate-900">CSV (.csv)</div>
+                    <div className="text-[10px] text-slate-500">Comma-separated text file</div>
                   </div>
                 </button>
 
                 <button
                   onClick={handleExportExcel}
-                  className="w-full text-left px-4 py-2.5 text-xs text-neutral-200 hover:bg-neutral-800 hover:text-white flex items-center gap-2.5 transition-colors font-mono"
+                  className="w-full text-left px-4 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition-colors font-mono"
                 >
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
                   <div>
-                    <div className="font-bold uppercase">Excel (.xls / .xlsx)</div>
-                    <div className="text-[10px] text-neutral-400">Sortable spreadsheet file</div>
+                    <div className="font-bold uppercase text-slate-900">Excel (.xls / .xlsx)</div>
+                    <div className="text-[10px] text-slate-500">Sortable spreadsheet file</div>
                   </div>
                 </button>
 
                 <button
                   onClick={handleExportPDF}
-                  className="w-full text-left px-4 py-2.5 text-xs text-neutral-200 hover:bg-neutral-800 hover:text-white flex items-center gap-2.5 transition-colors font-mono"
+                  className="w-full text-left px-4 py-2.5 text-xs text-slate-800 hover:bg-slate-50 flex items-center gap-2.5 transition-colors font-mono"
                 >
-                  <Printer className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <Printer className="w-4 h-4 text-emerald-600 shrink-0" />
                   <div>
-                    <div className="font-bold uppercase">PDF (.pdf)</div>
-                    <div className="text-[10px] text-neutral-400">Fixed document &amp; printable record</div>
+                    <div className="font-bold uppercase text-slate-900">PDF (.pdf)</div>
+                    <div className="text-[10px] text-slate-500">Fixed document &amp; printable record</div>
                   </div>
                 </button>
               </div>
@@ -243,46 +243,46 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
 
         {/* 4 Analytics Summary Metric Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="p-3.5 bg-neutral-900 border border-neutral-800 space-y-1">
-            <div className="flex items-center justify-between text-neutral-400 text-[10px] uppercase font-bold">
+          <div className="p-3.5 bg-white border border-slate-200 shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-slate-500 text-[10px] uppercase font-bold">
               <span>Stock Turnover Rate</span>
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
             </div>
-            <p className="text-xl font-bold text-white">{turnoverRate}x / mo</p>
-            <p className="text-[10px] text-neutral-500">COGS ÷ Avg Inventory Value</p>
+            <p className="text-xl font-bold text-slate-900">{turnoverRate}x / mo</p>
+            <p className="text-[10px] text-slate-500">COGS ÷ Avg Inventory Value</p>
           </div>
 
-          <div className="p-3.5 bg-neutral-900 border border-neutral-800 space-y-1">
-            <div className="flex items-center justify-between text-neutral-400 text-[10px] uppercase font-bold">
+          <div className="p-3.5 bg-white border border-slate-200 shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-slate-500 text-[10px] uppercase font-bold">
               <span>Stock Cost Valuation</span>
-              <Activity className="w-3.5 h-3.5 text-sky-400" />
+              <Activity className="w-3.5 h-3.5 text-sky-600" />
             </div>
-            <p className="text-xl font-bold text-white font-mono">
+            <p className="text-xl font-bold text-slate-900 font-mono">
               {formatCurrency(totalStockCostValuation, currencySymbol)}
             </p>
-            <p className="text-[10px] text-neutral-500">
+            <p className="text-[10px] text-slate-500">
               Retail: {formatCurrency(totalStockRetailValuation, currencySymbol)}
             </p>
           </div>
 
-          <div className="p-3.5 bg-neutral-900 border border-neutral-800 space-y-1">
-            <div className="flex items-center justify-between text-neutral-400 text-[10px] uppercase font-bold">
+          <div className="p-3.5 bg-white border border-slate-200 shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-slate-500 text-[10px] uppercase font-bold">
               <span>Dead Stock Capital</span>
-              <AlertOctagon className="w-3.5 h-3.5 text-rose-400" />
+              <AlertOctagon className="w-3.5 h-3.5 text-rose-600" />
             </div>
-            <p className="text-xl font-bold text-rose-400 font-mono">
+            <p className="text-xl font-bold text-rose-700 font-mono">
               {formatCurrency(deadStockValuation, currencySymbol)}
             </p>
-            <p className="text-[10px] text-neutral-500">{deadStockProducts.length} Discontinued SKUs</p>
+            <p className="text-[10px] text-slate-500">{deadStockProducts.length} Discontinued SKUs</p>
           </div>
 
-          <div className="p-3.5 bg-neutral-900 border border-neutral-800 space-y-1">
-            <div className="flex items-center justify-between text-neutral-400 text-[10px] uppercase font-bold">
+          <div className="p-3.5 bg-white border border-slate-200 shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-slate-500 text-[10px] uppercase font-bold">
               <span>Inventory Accuracy</span>
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
             </div>
-            <p className="text-xl font-bold text-emerald-400">99.4%</p>
-            <p className="text-[10px] text-neutral-500">Physical vs System Count</p>
+            <p className="text-xl font-bold text-emerald-700">99.4%</p>
+            <p className="text-[10px] text-slate-500">Physical vs System Count</p>
           </div>
         </div>
 
@@ -305,17 +305,17 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
       />
 
       {/* Analytics Chart & Breakdown */}
-      <div className="bg-neutral-900 border border-neutral-800 p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-800 pb-3 gap-2">
+      <div className="bg-white border border-slate-200 p-6 space-y-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 gap-2">
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
               {measure} by Product Performance
             </h3>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-slate-600">
               Aggregated across {filteredSales.length} completed customer sales.
             </p>
           </div>
-          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 uppercase">
+          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 uppercase">
             ● Real-Time Feed
           </span>
         </div>
@@ -325,22 +325,22 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
           {isMounted && (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
-                <XAxis dataKey="name" stroke="#737373" tick={{ fontSize: 10 }} interval={0} angle={-15} textAnchor="end" />
-                <YAxis stroke="#737373" tick={{ fontSize: 10 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                <XAxis dataKey="name" stroke="#64748B" tick={{ fontSize: 10 }} interval={0} angle={-15} textAnchor="end" />
+                <YAxis stroke="#64748B" tick={{ fontSize: 10 }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#0a0a0a', borderColor: '#262626', color: '#fff', fontSize: '11px' }}
+                  contentStyle={{ backgroundColor: '#0F172A', borderColor: '#334155', color: '#fff', fontSize: '11px' }}
                 />
-                <Bar dataKey="Value" fill="#ffffff" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="Value" fill="#0F172A" radius={[0, 0, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
 
         {/* Product Performance & Sales Velocity Table */}
-        <div className="overflow-x-auto border-t border-neutral-800 pt-4">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-neutral-950 text-[10px] text-neutral-400 uppercase tracking-wider">
+        <div className="overflow-x-auto border-t border-slate-200 pt-4">
+          <table className="w-full text-left text-xs font-mono">
+            <thead className="bg-slate-50 text-[10px] text-slate-500 uppercase tracking-wider">
               <tr>
                 <th className="p-3">Product Name &amp; SKU</th>
                 <th className="p-3 text-right">Units Sold</th>
@@ -352,7 +352,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
                 <th className="p-3 text-right">Margin %</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-800/60">
+            <tbody className="divide-y divide-slate-100">
               {performanceList.map((item) => {
                 const velocityPerDay = (item.units / 30).toFixed(2);
                 const daysSupply =
@@ -361,30 +361,30 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
                     : '999+';
 
                 return (
-                  <tr key={item.product.id} className="hover:bg-neutral-950/60 transition-colors">
-                    <td className="p-3 font-bold text-white">
+                  <tr key={item.product.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-3 font-bold text-slate-900">
                       {item.product.name}
-                      <p className="text-[10px] text-neutral-500 font-normal font-mono">
+                      <p className="text-[10px] text-slate-500 font-normal font-mono">
                         {item.product.sku}
                       </p>
                     </td>
-                    <td className="p-3 text-right font-bold text-white font-mono">{item.units}</td>
-                    <td className="p-3 text-right font-mono text-neutral-300">
-                      {velocityPerDay} <span className="text-[9px] text-neutral-500">units/day</span>
+                    <td className="p-3 text-right font-bold text-slate-900 font-mono">{item.units}</td>
+                    <td className="p-3 text-right font-mono text-slate-700">
+                      {velocityPerDay} <span className="text-[9px] text-slate-500">units/day</span>
                     </td>
-                    <td className="p-3 text-right font-mono text-emerald-400 font-bold">
+                    <td className="p-3 text-right font-mono text-emerald-700 font-bold">
                       {daysSupply}d
                     </td>
-                    <td className="p-3 text-right font-mono text-white">
+                    <td className="p-3 text-right font-mono text-slate-900">
                       {formatCurrency(item.revenue, currencySymbol)}
                     </td>
-                    <td className="p-3 text-right font-mono text-neutral-400">
+                    <td className="p-3 text-right font-mono text-slate-600">
                       {formatCurrency(item.cogs, currencySymbol)}
                     </td>
-                    <td className="p-3 text-right font-bold text-emerald-400 font-mono">
+                    <td className="p-3 text-right font-bold text-emerald-700 font-mono">
                       {formatCurrency(item.profit, currencySymbol)}
                     </td>
-                    <td className="p-3 text-right font-mono text-white">
+                    <td className="p-3 text-right font-mono text-slate-900">
                       {item.revenue > 0 ? (((item.profit) / item.revenue) * 100).toFixed(1) : '0.0'}%
                     </td>
                   </tr>

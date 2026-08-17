@@ -106,35 +106,35 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   });
 
   return (
-    <div className="space-y-6 text-neutral-200">
+    <div className="space-y-6 text-slate-900 font-mono">
       {/* Page Title & Timeframe Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 bg-white" />
-            <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-[0.2em]">
+            <div className="w-2 h-2 bg-slate-900" />
+            <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">
               {t('system_overview', 'Executive Dashboard')}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white font-heading tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-heading tracking-tight">
             {t('dashboard', 'Store Operations Overview')}
           </h1>
-          <p className="text-xs text-neutral-400 mt-1 font-mono">
+          <p className="text-xs text-slate-600 mt-1 font-mono">
             {t('welcome', 'Real-time stock telemetry, sales revenue, and supply flow.')}
           </p>
         </div>
 
         <div className="flex items-center gap-3 self-start md:self-auto font-mono text-xs">
           {/* Timeframe selector pills */}
-          <div className="bg-neutral-900 border border-neutral-800 p-1 flex items-center">
+          <div className="bg-white border border-slate-300 p-1 flex items-center shadow-2xs">
             {(['today', 'week', 'month'] as const).map((tf) => (
               <button
                 key={tf}
                 onClick={() => setTimeframe(tf)}
                 className={`px-3 py-1 text-xs font-mono uppercase tracking-wider transition-all ${
                   timeframe === tf
-                    ? 'bg-white text-black font-bold'
-                    : 'text-neutral-400 hover:text-white'
+                    ? 'bg-slate-900 text-white font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 {tf === 'today' ? 'Today' : tf === 'week' ? 'Week' : 'Month'}
@@ -146,7 +146,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <select
             value={selectedLocation}
             onChange={(e) => onLocationChange(e.target.value)}
-            className="text-xs bg-neutral-900 border border-neutral-800 px-3 py-2 font-mono text-white focus:outline-none focus:border-white"
+            className="text-xs bg-white border border-slate-300 px-3 py-2 font-mono text-slate-900 focus:outline-none focus:border-slate-900 shadow-2xs"
           >
             <option value="all">{t('all_locations', 'All Outlets')}</option>
             {locations.map((loc) => (
@@ -159,17 +159,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* PRIMARY DASHBOARD CARD */}
-      <div id="tour-dashboard-metrics" className="bg-neutral-900 border border-neutral-800 p-6">
+      <div id="tour-dashboard-metrics" className="bg-white border border-slate-200 p-6 shadow-sm">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           {/* Left Column: Primary Metric */}
-          <div className="lg:col-span-3 space-y-2 border-b lg:border-b-0 lg:border-r border-neutral-800 pb-4 lg:pb-0 lg:pr-6">
-            <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-[0.2em]">
+          <div className="lg:col-span-3 space-y-2 border-b lg:border-b-0 lg:border-r border-slate-200 pb-4 lg:pb-0 lg:pr-6">
+            <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">
               {t('today_revenue', 'Sales Revenue')} ({timeframe})
             </span>
-            <p className="text-3xl sm:text-4xl font-mono font-bold text-white tracking-tight">
+            <p className="text-3xl sm:text-4xl font-mono font-bold text-slate-900 tracking-tight">
               {formatCurrency(totalRevenue, currencySymbol)}
             </p>
-            <div className="flex items-center gap-1.5 text-xs font-mono font-semibold text-emerald-400">
+            <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-700">
               <TrendingUp className="w-4 h-4" />
               <span>
                 {totalOrders > 0
@@ -177,17 +177,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   : t('no_sales', 'Ready for sales transactions')}
               </span>
             </div>
-            <p className="text-[11px] text-neutral-500 font-mono">{t('recent_transactions', 'Verified POS transactions.')}</p>
+            <p className="text-[11px] text-slate-500 font-mono">{t('recent_transactions', 'Verified POS transactions.')}</p>
           </div>
 
-          {/* Center Column: Clean Geometric Chart */}
+          {/* Center Column: Clean Chart */}
           <div className="lg:col-span-6 h-44 w-full">
             {isMounted ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="whiteGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0F172A" stopOpacity={0.2} />
+                    <linearGradient id="slateGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0F172A" stopOpacity={0.15} />
                       <stop offset="95%" stopColor="#0F172A" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
@@ -198,27 +198,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     contentStyle={{ backgroundColor: '#0F172A', borderRadius: '0px', border: '1px solid #334155', color: '#fff', fontSize: '12px', fontFamily: 'monospace' }}
                     formatter={(val: any) => [`${currencySymbol}${val}`, t('today_revenue', 'Revenue')]}
                   />
-                  <Area type="monotone" dataKey="revenue" stroke="#0F172A" strokeWidth={2} fill="url(#whiteGradient)" />
+                  <Area type="monotone" dataKey="revenue" stroke="#0F172A" strokeWidth={2} fill="url(#slateGradient)" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="w-full h-full bg-neutral-950 animate-pulse" />
+              <div className="w-full h-full bg-slate-100 animate-pulse" />
             )}
           </div>
 
           {/* Right Column: Two Stacked Key Metrics */}
-          <div className="lg:col-span-3 space-y-4 border-t lg:border-t-0 lg:border-l border-neutral-800 pt-4 lg:pt-0 lg:pl-6 font-mono">
+          <div className="lg:col-span-3 space-y-4 border-t lg:border-t-0 lg:border-l border-slate-200 pt-4 lg:pt-0 lg:pl-6 font-mono">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.2em]">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
                 {t('total_sales', 'Completed Orders')}
               </span>
-              <p className="text-xl font-bold text-white">{totalOrders} {t('total_orders', 'orders')}</p>
+              <p className="text-xl font-bold text-slate-900">{totalOrders} {t('total_orders', 'orders')}</p>
             </div>
-            <div className="border-t border-neutral-800 pt-3 space-y-1">
-              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.2em]">
+            <div className="border-t border-slate-200 pt-3 space-y-1">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
                 {t('profit_margin', 'Avg Order Value')}
               </span>
-              <p className="text-xl font-bold text-white">
+              <p className="text-xl font-bold text-slate-900">
                 {formatCurrency(avgOrderValue, currencySymbol)}
               </p>
             </div>
@@ -229,17 +229,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* SECONDARY GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Side: Inventory Valuation & Stock Health Card */}
-        <div className="lg:col-span-8 bg-neutral-900 border border-neutral-800 p-6 space-y-5">
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+        <div className="lg:col-span-8 bg-white border border-slate-200 p-6 space-y-5 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-4">
             <div>
-              <h3 className="font-mono font-bold text-sm uppercase tracking-wider text-white">
+              <h3 className="font-mono font-bold text-sm uppercase tracking-wider text-slate-900">
                 {t('inventory-report', 'Stock Valuation & Health Breakdown')}
               </h3>
-              <p className="text-xs text-neutral-400 font-mono mt-0.5">{t('stock-levels', 'Real-time inventory asset calculations.')}</p>
+              <p className="text-xs text-slate-500 font-mono mt-0.5">{t('stock-levels', 'Real-time inventory asset calculations.')}</p>
             </div>
             <button
               onClick={() => onNavigate('inventory', 'stock-levels')}
-              className="text-xs font-mono uppercase tracking-wider text-white hover:underline flex items-center gap-1"
+              className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 hover:underline flex items-center gap-1"
             >
               <span>{t('view_all', 'View Stock')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -247,48 +247,48 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono">
-            <div className="p-3.5 bg-neutral-950 border border-neutral-800">
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">{t('in_stock', 'Healthy')}</span>
-              <p className="text-xl font-bold text-white mt-1">{healthyCount}</p>
+            <div className="p-3.5 bg-emerald-50/60 border border-emerald-200">
+              <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">{t('in_stock', 'Healthy')}</span>
+              <p className="text-xl font-bold text-emerald-950 mt-1">{healthyCount}</p>
             </div>
-            <div className="p-3.5 bg-neutral-950 border border-amber-900/60">
-              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{t('low_stock_badge', 'Low Stock')}</span>
-              <p className="text-xl font-bold text-amber-300 mt-1">{lowStockCount}</p>
+            <div className="p-3.5 bg-amber-50/60 border border-amber-200">
+              <span className="text-[10px] font-bold text-amber-800 uppercase tracking-widest">{t('low_stock_badge', 'Low Stock')}</span>
+              <p className="text-xl font-bold text-amber-950 mt-1">{lowStockCount}</p>
             </div>
-            <div className="p-3.5 bg-neutral-950 border border-rose-900/60">
-              <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">{t('out_of_stock', 'Out of Stock')}</span>
-              <p className="text-xl font-bold text-rose-300 mt-1">{outOfStockCount}</p>
+            <div className="p-3.5 bg-rose-50/60 border border-rose-200">
+              <span className="text-[10px] font-bold text-rose-800 uppercase tracking-widest">{t('out_of_stock', 'Out of Stock')}</span>
+              <p className="text-xl font-bold text-rose-950 mt-1">{outOfStockCount}</p>
             </div>
-            <div className="p-3.5 bg-neutral-950 border border-neutral-800">
-              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{t('dead-stock', 'Dead Stock')}</span>
-              <p className="text-xl font-bold text-neutral-300 mt-1">{deadStockCount}</p>
+            <div className="p-3.5 bg-slate-50 border border-slate-200">
+              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{t('dead-stock', 'Dead Stock')}</span>
+              <p className="text-xl font-bold text-slate-900 mt-1">{deadStockCount}</p>
             </div>
           </div>
 
           {/* Total Asset Valuation Summary */}
           <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono">
-            <div className="p-4 border border-neutral-800 bg-neutral-950 flex items-center justify-between">
+            <div className="p-4 border border-slate-200 bg-slate-50 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                   {t('cost_price', 'Cost Valuation')}
                 </span>
-                <p className="text-xl font-bold text-white mt-0.5">
+                <p className="text-xl font-bold text-slate-900 mt-0.5">
                   {formatCurrency(totalInventoryValue, currencySymbol)}
                 </p>
               </div>
-              <Boxes className="w-5 h-5 text-neutral-500" />
+              <Boxes className="w-5 h-5 text-slate-400" />
             </div>
 
-            <div className="p-4 border border-neutral-800 bg-neutral-950 flex items-center justify-between">
+            <div className="p-4 border border-slate-200 bg-slate-50 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                   {t('retail_price', 'Retail Valuation')}
                 </span>
-                <p className="text-xl font-bold text-white mt-0.5">
+                <p className="text-xl font-bold text-slate-900 mt-0.5">
                   {formatCurrency(totalRetailValuation, currencySymbol)}
                 </p>
               </div>
-              <Package className="w-5 h-5 text-white" />
+              <Package className="w-5 h-5 text-slate-700" />
             </div>
           </div>
         </div>
@@ -296,40 +296,40 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Right Side: Stacked Operational Cards */}
         <div className="lg:col-span-4 space-y-6">
           {/* Pending Purchase Orders Card */}
-          <div className="bg-neutral-900 border border-neutral-800 p-5 space-y-3">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+          <div className="bg-white border border-slate-200 p-5 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
-                <Truck className="w-4 h-4 text-white" />
-                <h4 className="font-mono font-bold text-xs uppercase tracking-wider text-white">
+                <Truck className="w-4 h-4 text-slate-900" />
+                <h4 className="font-mono font-bold text-xs uppercase tracking-wider text-slate-900">
                   {t('purchases', 'Pending POs')}
                 </h4>
               </div>
               <button
                 onClick={() => onNavigate('inventory', 'purchases')}
-                className="text-[11px] font-mono uppercase text-neutral-400 hover:text-white underline"
+                className="text-[11px] font-mono font-bold uppercase text-slate-600 hover:text-slate-900 underline"
               >
                 {t('view_all', 'View POs')}
               </button>
             </div>
 
             {pendingPOs.length === 0 ? (
-              <p className="text-xs text-neutral-500 font-mono italic">{t('no_sales', 'No pending purchase orders.')}</p>
+              <p className="text-xs text-slate-500 font-mono italic">{t('no_sales', 'No pending purchase orders.')}</p>
             ) : (
               <div className="space-y-2 font-mono">
                 {pendingPOs.map((po) => (
                   <div
                     key={po.id}
-                    className="p-3 bg-neutral-950 border border-neutral-800 flex items-center justify-between text-xs"
+                    className="p-3 bg-slate-50 border border-slate-200 flex items-center justify-between text-xs"
                   >
                     <div>
-                      <p className="font-bold text-white">{po.poNumber}</p>
-                      <p className="text-[10px] text-neutral-400">{po.supplierName}</p>
+                      <p className="font-bold text-slate-900">{po.poNumber}</p>
+                      <p className="text-[10px] text-slate-500">{po.supplierName}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-white">
+                      <p className="font-bold text-slate-900">
                         {formatCurrency(po.total, currencySymbol)}
                       </p>
-                      <span className="text-[9px] font-bold text-amber-400 bg-amber-950/60 px-1.5 py-0.5 border border-amber-900/60 uppercase">
+                      <span className="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 border border-amber-200 uppercase">
                         {po.status}
                       </span>
                     </div>
@@ -340,17 +340,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* Urgent Stock Reorder Alerts Card */}
-          <div className="bg-neutral-900 border border-neutral-800 p-5 space-y-3">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+          <div className="bg-white border border-slate-200 p-5 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-400" />
-                <h4 className="font-mono font-bold text-xs uppercase tracking-wider text-white">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <h4 className="font-mono font-bold text-xs uppercase tracking-wider text-slate-900">
                   {t('low_stock_alerts', 'Low Stock Reorder')}
                 </h4>
               </div>
               <button
                 onClick={() => onNavigate('inventory', 'low-stock')}
-                className="text-[11px] font-mono uppercase text-neutral-400 hover:text-white underline"
+                className="text-[11px] font-mono font-bold uppercase text-slate-600 hover:text-slate-900 underline"
               >
                 {t('view_all', 'View All')}
               </button>
@@ -358,7 +358,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             {filteredProducts.filter((p) => p.status === 'Low Stock' || p.status === 'Out of Stock')
               .length === 0 ? (
-              <p className="text-xs text-neutral-500 font-mono italic">{t('in_stock', 'All product stock levels healthy.')}</p>
+              <p className="text-xs text-slate-500 font-mono italic">{t('in_stock', 'All product stock levels healthy.')}</p>
             ) : (
               <div className="space-y-2 font-mono">
                 {filteredProducts
@@ -367,24 +367,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   .map((p) => (
                     <div
                       key={p.id}
-                      className="p-2.5 bg-neutral-950 border border-neutral-800 flex items-center justify-between text-xs"
+                      className="p-2.5 bg-slate-50 border border-slate-200 flex items-center justify-between text-xs"
                     >
                       <div className="flex items-center gap-2.5">
                         {p.imageUrl && (
                           <img
                             src={p.imageUrl}
                             alt={p.name}
-                            className="w-8 h-8 rounded-none object-cover border border-neutral-800"
+                            className="w-8 h-8 rounded-none object-cover border border-slate-200"
                           />
                         )}
                         <div>
-                          <p className="font-bold text-white truncate max-w-[130px]">{p.name}</p>
-                          <p className="text-[10px] text-neutral-500">SKU: {p.sku}</p>
+                          <p className="font-bold text-slate-900 truncate max-w-[130px]">{p.name}</p>
+                          <p className="text-[10px] text-slate-500">SKU: {p.sku}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-amber-400">{p.stockQuantity} {t('stock', 'left')}</p>
-                        <p className="text-[9px] text-neutral-500">Min: {p.reorderPoint}</p>
+                        <p className="font-bold text-amber-700">{p.stockQuantity} {t('stock', 'left')}</p>
+                        <p className="text-[9px] text-slate-500">Min: {p.reorderPoint}</p>
                       </div>
                     </div>
                   ))}

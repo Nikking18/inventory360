@@ -94,15 +94,15 @@ export const BarcodeModal: React.FC<BarcodeModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('barcode_scanner_title', 'Barcode Scanner & SKU Lookup')}>
-      <div className="space-y-4 font-mono text-neutral-200 text-xs">
+      <div className="space-y-4 font-mono text-slate-900 text-xs">
         {/* Camera Permission & Usage Info Box */}
-        <div className="p-3 bg-neutral-950 border border-neutral-800 flex items-start gap-2.5 text-neutral-300">
-          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+        <div className="p-3 bg-slate-50 border border-slate-200 flex items-start gap-2.5 text-slate-700">
+          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
           <div className="space-y-0.5">
-            <p className="font-bold text-white uppercase text-[10px] tracking-wider">
+            <p className="font-bold text-slate-900 uppercase text-[10px] tracking-wider">
               {t('camera_permission_title', 'Camera Access for Barcode Scanning')}
             </p>
-            <p className="text-neutral-400 text-[10px] leading-relaxed">
+            <p className="text-slate-600 text-[10px] leading-relaxed">
               {t(
                 'camera_permission_desc',
                 'Camera permission is required solely for scanning product barcodes and SKUs directly via your device camera. No video or images are stored or transmitted.'
@@ -112,21 +112,21 @@ export const BarcodeModal: React.FC<BarcodeModalProps> = ({
         </div>
 
         {/* Camera Toggle & Scanner Frame */}
-        <div className="bg-neutral-950 border border-neutral-800 p-4 text-center space-y-3">
+        <div className="bg-slate-50 border border-slate-200 p-4 text-center space-y-3">
           {!isCameraActive ? (
             <button
               onClick={() => setIsCameraActive(true)}
-              className="w-full py-2.5 px-4 bg-white hover:bg-neutral-200 text-black font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 bg-slate-900 hover:bg-black text-white font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs"
             >
               <Camera className="w-4 h-4" />
               <span>{t('start_camera_scanner', 'Start Camera Scanner')}</span>
             </button>
           ) : (
             <div className="space-y-3">
-              <div id="reader" className="w-full overflow-hidden bg-black min-h-[200px] border border-neutral-800" />
+              <div id="reader" className="w-full overflow-hidden bg-black min-h-[200px] border border-slate-300" />
               <button
                 onClick={() => setIsCameraActive(false)}
-                className="text-xs text-neutral-400 hover:text-white underline font-mono uppercase"
+                className="text-xs text-slate-600 hover:text-slate-900 underline font-mono uppercase"
               >
                 {t('stop_camera_scanner', 'Stop Camera Scanner')}
               </button>
@@ -136,7 +136,7 @@ export const BarcodeModal: React.FC<BarcodeModalProps> = ({
 
         {/* Manual Barcode / SKU Input Form */}
         <form onSubmit={handleManualSubmit} className="space-y-2">
-          <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+          <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest">
             {t('enter_barcode_manually', 'Enter Barcode / SKU Manually')}
           </label>
           <div className="flex gap-2">
@@ -146,14 +146,14 @@ export const BarcodeModal: React.FC<BarcodeModalProps> = ({
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value)}
                 placeholder="e.g. 883920194821 or LOG-MX3S-GRY"
-                className="w-full text-xs bg-neutral-950 border border-neutral-800 text-white pl-9 pr-3 py-2 focus:outline-none focus:border-white font-mono"
+                className="w-full text-xs bg-white border border-slate-300 text-slate-900 pl-9 pr-3 py-2 focus:outline-none focus:border-slate-900 font-mono"
                 autoFocus
               />
-              <Barcode className="w-4 h-4 text-neutral-500 absolute left-3 top-2.5" />
+              <Barcode className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             </div>
             <button
               type="submit"
-              className="px-4 py-2 bg-white text-black font-bold text-xs uppercase tracking-wider hover:bg-neutral-200"
+              className="px-4 py-2 bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-black"
             >
               {t('lookup', 'Lookup')}
             </button>
@@ -162,28 +162,28 @@ export const BarcodeModal: React.FC<BarcodeModalProps> = ({
 
         {/* Scan Result */}
         {foundProduct && (
-          <div className="p-4 bg-neutral-950 border border-emerald-800 flex items-center justify-between gap-3">
+          <div className="p-4 bg-emerald-50 border border-emerald-300 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               {foundProduct.imageUrl && (
                 <img
                   src={foundProduct.imageUrl}
                   alt={foundProduct.name}
-                  className="w-10 h-10 object-cover border border-neutral-800"
+                  className="w-10 h-10 object-cover border border-slate-200"
                 />
               )}
               <div>
-                <p className="text-xs font-bold text-white">{foundProduct.name}</p>
-                <p className="text-[10px] text-neutral-400 font-mono">
+                <p className="text-xs font-bold text-slate-900">{foundProduct.name}</p>
+                <p className="text-[10px] text-slate-600 font-mono">
                   SKU: {foundProduct.sku} | Barcode: {foundProduct.barcode}
                 </p>
-                <p className="text-xs font-bold text-emerald-400 mt-0.5">
+                <p className="text-xs font-bold text-emerald-700 mt-0.5">
                   ${foundProduct.retailPrice.toFixed(2)} — {foundProduct.stockQuantity} in stock
                 </p>
               </div>
             </div>
             <button
               onClick={handleConfirmAdd}
-              className="px-3.5 py-1.5 bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider hover:bg-emerald-300 flex items-center gap-1.5 shrink-0"
+              className="px-3.5 py-1.5 bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider hover:bg-emerald-800 flex items-center gap-1.5 shrink-0 shadow-xs"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>{t('select_item', 'Select Item')}</span>
@@ -192,7 +192,7 @@ export const BarcodeModal: React.FC<BarcodeModalProps> = ({
         )}
 
         {errorMsg && (
-          <div className="p-3 bg-neutral-950 border border-rose-800 text-rose-400 text-xs font-bold uppercase tracking-wider">
+          <div className="p-3 bg-rose-50 border border-rose-300 text-rose-700 text-xs font-bold uppercase tracking-wider">
             {errorMsg}
           </div>
         )}

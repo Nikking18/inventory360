@@ -60,28 +60,19 @@ import { calculateStockStatus } from '../lib/utils';
 import {
   Layers,
   Sparkles,
-  MapPin,
-  Printer,
   Menu,
   X,
-  Globe,
-  DollarSign,
-  Download,
-  FileText,
-  FileSpreadsheet,
-  ChevronDown,
-  BarChart3,
-  HelpCircle,
+  Home,
+  ArrowLeft,
 } from 'lucide-react';
-import { exportToCSV, exportToExcel, exportToPDF } from '../lib/exportImport';
-import { LANGUAGES, SupportedLanguage } from '../lib/i18n';
-import { CURRENCIES } from '../lib/currencies';
+import { SupportedLanguage } from '../lib/i18n';
 import { I18nProvider } from '../context/I18nContext';
 
 export default function AppMain() {
   const [activeTab, setActiveTab] = useState<NavItemKey>('home');
   const [activeSubTab, setActiveSubTab] = useState<string>('retail-dashboard');
-  const [showLanding, setShowLanding] = useState<boolean>(false);
+  // Default to Main Page (Landing Portal). When user clicks Dashboard, show them the dashboard and left panel!
+  const [showLanding, setShowLanding] = useState<boolean>(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [showDataPolicyNotice, setShowDataPolicyNotice] = useState<boolean>(false);
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
@@ -152,7 +143,6 @@ export default function AppMain() {
     setExpenses(INITIAL_EXPENSES);
     setSalesChannels(INITIAL_SALES_CHANNELS);
     setFulfillmentOrders(INITIAL_FULFILLMENT_ORDERS);
-    setShowLanding(false);
   };
 
   const handleClearAllData = async () => {
@@ -189,7 +179,7 @@ export default function AppMain() {
 
   // Dynamic Page Title Sync
   useEffect(() => {
-    const tabName = showLanding ? 'Welcome' : activeTab.toUpperCase();
+    const tabName = showLanding ? 'Portal' : activeTab.toUpperCase();
     const subTabName = showLanding ? 'Overview' : activeSubTab.replace('-', ' ').toUpperCase();
     document.title = `${tabName} • ${subTabName} | ${settings.businessName || 'Inventory 360'}`;
   }, [activeTab, activeSubTab, showLanding, settings.businessName]);
@@ -203,6 +193,7 @@ export default function AppMain() {
         let storedLocations = await getAllFromStore<Location>('locations');
 
         if (!storedSettings || storedSettings.length === 0 || !storedLocations || storedLocations.length === 0) {
+          // Initialize clean starter data
           await initCleanData();
           return;
         }
@@ -413,7 +404,7 @@ export default function AppMain() {
     setMovements((prev) => [...newMovements, ...prev]);
   };
 
-  // HANDLER FOR PURCHASE ORDERS WITH PARTIAL RECEIVING
+  // HANDLER FOR PURCHASE ORDERS
   const handleCreatePO = async (poData: Omit<PurchaseOrder, 'id' | 'poNumber' | 'createdAt'>) => {
     const newPO: PurchaseOrder = {
       ...poData,
@@ -506,7 +497,6 @@ export default function AppMain() {
     const lowStockItems = products.filter((p) => p.stockQuantity <= p.reorderPoint && p.status !== 'Dead Stock');
     if (lowStockItems.length === 0) return;
 
-    // Group by supplier
     const supplierGroups: Record<string, Product[]> = {};
     lowStockItems.forEach((p) => {
       if (!supplierGroups[p.supplierId]) {
@@ -591,7 +581,6 @@ export default function AppMain() {
     await putToStore('fulfillmentOrders', updatedOrder);
     setFulfillmentOrders((prev) => prev.map((o) => (o.id === orderId ? updatedOrder : o)));
 
-    // When order is dispatched, decrement inventory and log movements
     if (status === 'Shipped' && order.status !== 'Shipped') {
       const newMovements: StockMovement[] = [];
       const updatedProds = [...products];
@@ -684,7 +673,6 @@ export default function AppMain() {
     };
     await putToStore('stockTransfers', transfer);
 
-    // Record stock movements for source and target
     const newMovements: StockMovement[] = [];
     const updatedProds = [...products];
 
@@ -776,308 +764,334 @@ export default function AppMain() {
 
   return (
     <I18nProvider language={(settings.language as SupportedLanguage) || 'en'}>
-      <div className="flex h-screen bg-neutral-950 text-neutral-200 antialiased overflow-hidden font-mono">
-        {/* 1. Left Fixed Navigation Rail */}
-        <aside className="hidden md:block shrink-0">
-          <Sidebar
-            activeTab={activeTab}
-            onTabChange={(tab) => {
-              setActiveTab(tab);
-              setShowLanding(false);
-            }}
-            activeSubTab={activeSubTab}
-            onSubTabChange={setActiveSubTab}
-            businessName={settings.businessName}
-            ownerName={settings.ownerName}
-            onOpenLanding={() => setShowLanding(true)}
-            onOpenTour={() => setIsTourOpen(true)}
-            onOpenDataPolicy={() => setShowDataPolicyNotice(true)}
-          />
-        </aside>
-
-        {/* Mobile Drawer Navigation Overlay */}
-        {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 flex md:hidden">
-            <div
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-              onClick={() => setIsMobileMenuOpen(false)}
+      {/* If showLanding is true, render the Main Webapp Landing Portal */}
+      {showLanding ? (
+        <LandingView
+          onOpenDashboard={() => {
+            setShowLanding(false);
+            setActiveTab('home');
+            setActiveSubTab('retail-dashboard');
+          }}
+          onOpenPOS={() => {
+            setShowLanding(false);
+            setActiveTab('sell');
+            setActiveSubTab('quick-sale');
+          }}
+          onStartDemo={async () => {
+            await seedDemoData();
+            setShowLanding(false);
+            setActiveTab('home');
+            setActiveSubTab('retail-dashboard');
+          }}
+          onStartFresh={async () => {
+            await initCleanData();
+            setShowLanding(false);
+            setActiveTab('home');
+            setActiveSubTab('retail-dashboard');
+          }}
+          onOpenTour={() => {
+            setShowLanding(false);
+            setActiveTab('home');
+            setIsTourOpen(true);
+          }}
+        />
+      ) : (
+        /* When showLanding is false, display the full workspace with the Left Sidebar Panel and views */
+        <div className="flex h-screen bg-slate-50 text-slate-900 antialiased overflow-hidden font-mono">
+          {/* 1. Left Fixed Navigation Rail */}
+          <aside className="hidden md:block shrink-0">
+            <Sidebar
+              activeTab={activeTab}
+              onTabChange={(tab) => {
+                setActiveTab(tab);
+              }}
+              activeSubTab={activeSubTab}
+              onSubTabChange={setActiveSubTab}
+              businessName={settings.businessName}
+              ownerName={settings.ownerName}
+              onOpenLanding={() => setShowLanding(true)}
+              onOpenTour={() => setIsTourOpen(true)}
+              onOpenDataPolicy={() => setShowDataPolicyNotice(true)}
             />
-            <div className="relative z-10 w-72 max-w-[85vw] h-full bg-neutral-950 border-r border-neutral-800 flex flex-col">
-              <div className="p-4 border-b border-neutral-800 flex items-center justify-between font-mono">
-                <span className="text-xs font-bold text-white uppercase tracking-wider">
-                  System Menu
-                </span>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-1 text-neutral-400 hover:text-white"
-                  aria-label="Close menu"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                <Sidebar
-                  activeTab={activeTab}
-                  onTabChange={(tab) => {
-                    setActiveTab(tab);
-                    setShowLanding(false);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  activeSubTab={activeSubTab}
-                  onSubTabChange={(sub) => {
-                    setActiveSubTab(sub);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  businessName={settings.businessName}
-                  ownerName={settings.ownerName}
-                  onOpenLanding={() => {
-                    setShowLanding(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  onOpenTour={() => {
-                    setIsTourOpen(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  onOpenDataPolicy={() => {
-                    setShowDataPolicyNotice(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
+          </aside>
 
-        {/* 2. Main Application Frame */}
-        <main className="flex-1 min-w-0 flex flex-col min-h-screen overflow-y-auto">
-          {/* Top Header Bar */}
-          <header className="h-16 px-3 sm:px-6 lg:px-8 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur-md sticky top-0 z-20 flex items-center justify-between no-print gap-1.5 sm:gap-4 overflow-hidden">
-            <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-1.5 text-neutral-300 hover:text-white bg-neutral-900 border border-neutral-800 shrink-0"
-                aria-label="Toggle Navigation"
-              >
-                <Menu className="w-4 h-4" />
-              </button>
-
-              {/* Clickable Breadcrumbs Navigation */}
-              <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono">
-                <button
-                  onClick={() => {
-                    setShowLanding(false);
-                    setActiveTab('home');
-                    setActiveSubTab('retail-dashboard');
-                  }}
-                  className="text-neutral-400 hover:text-white uppercase font-bold transition-colors flex items-center gap-1"
-                  title="Return to Main Dashboard"
-                >
-                  <div className="w-1.5 h-1.5 bg-emerald-400 rotate-45 hidden sm:block shrink-0" />
-                  <span>Inventory 360</span>
-                </button>
-                <span className="text-neutral-600 shrink-0">/</span>
-                <button
-                  onClick={() => setShowLanding(false)}
-                  className="text-neutral-400 hover:text-white uppercase tracking-wider truncate"
-                >
-                  {showLanding ? 'Overview' : activeTab}
-                </button>
-                <span className="text-neutral-600 shrink-0">/</span>
-                <span className="text-white font-bold uppercase tracking-wider truncate max-w-[80px] sm:max-w-none bg-neutral-900 px-1.5 py-0.5 border border-neutral-800">
-                  {showLanding ? 'Welcome Hub' : activeSubTab.replace('-', ' ')}
-                </span>
-              </nav>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              {/* Business Badge */}
-              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 bg-neutral-900 border border-neutral-800 text-neutral-300 rounded-none text-[10px] sm:text-[11px] font-mono shrink-0">
-                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shrink-0" />
-                <span className="truncate max-w-[120px] uppercase font-bold text-white">
-                  {settings.businessName}
-                </span>
-              </div>
-
-              {/* Interactive Product Tour Button */}
-              <button
-                onClick={() => setIsTourOpen(true)}
-                className="px-2.5 sm:px-3 py-1.5 bg-white text-black font-bold uppercase tracking-wider text-[10px] sm:text-xs hover:bg-neutral-200 transition-colors flex items-center gap-1.5 shrink-0"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Product Tour</span>
-              </button>
-
-              {/* Demo Mode Badge */}
-              <button
-                onClick={seedDemoData}
-                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white text-[10px] font-mono uppercase tracking-wider transition-colors"
-                title="Reload Demo Store Datasets"
-              >
-                <Layers className="w-3 h-3 text-emerald-400" />
-                <span>Reset Demo</span>
-              </button>
-            </div>
-          </header>
-
-          {/* View Container */}
-          <div className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-            {showLanding ? (
-              <LandingView
-                onStartDemo={seedDemoData}
-                onStartFresh={() => {
-                  initCleanData();
-                  setShowLanding(false);
-                  setActiveTab('home');
-                }}
-                onOpenTour={() => setIsTourOpen(true)}
+          {/* Mobile Drawer Navigation Overlay */}
+          {isMobileMenuOpen && (
+            <div className="fixed inset-0 z-50 flex md:hidden">
+              <div
+                className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
+                onClick={() => setIsMobileMenuOpen(false)}
               />
-            ) : (
-              <>
-                {activeTab === 'home' && (
-                  <DashboardView
-                    products={products}
-                    sales={sales}
-                    purchaseOrders={purchaseOrders}
-                    locations={locations}
-                    selectedLocation={selectedLocation}
-                    onLocationChange={setSelectedLocation}
-                    onNavigate={(tab, subTab) => {
+              <div className="relative z-10 w-72 max-w-[85vw] h-full bg-white border-r border-slate-200 flex flex-col text-slate-900 shadow-2xl">
+                <div className="p-4 border-b border-slate-200 flex items-center justify-between font-mono bg-slate-50">
+                  <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                    System Navigation
+                  </span>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-1 text-slate-500 hover:text-slate-900 hover:bg-slate-200"
+                    aria-label="Close menu"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <Sidebar
+                    activeTab={activeTab}
+                    onTabChange={(tab) => {
                       setActiveTab(tab);
-                      if (subTab) setActiveSubTab(subTab);
+                      setIsMobileMenuOpen(false);
                     }}
-                    currencySymbol={settings.currencySymbol}
-                  />
-                )}
-
-                {activeTab === 'sell' && (
-                  <SellView
-                    products={products}
-                    customers={customers}
-                    locations={locations}
-                    selectedLocation={selectedLocation}
-                    sales={sales}
-                    onCompleteSale={handleCompleteSale}
-                    onRefundSale={handleRefundSale}
-                    currencySymbol={settings.currencySymbol}
-                    taxRate={settings.taxRate}
-                    onPrintReceipt={handlePrintReceipt}
                     activeSubTab={activeSubTab}
-                    onSubTabChange={setActiveSubTab}
+                    onSubTabChange={(sub) => {
+                      setActiveSubTab(sub);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    businessName={settings.businessName}
+                    ownerName={settings.ownerName}
+                    onOpenLanding={() => {
+                      setShowLanding(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    onOpenTour={() => {
+                      setIsTourOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    onOpenDataPolicy={() => {
+                      setShowDataPolicyNotice(true);
+                      setIsMobileMenuOpen(false);
+                    }}
                   />
-                )}
+                </div>
+              </div>
+            </div>
+          )}
 
-                {activeTab === 'fulfillment' && (
-                  <FulfillmentView
-                    channels={salesChannels}
-                    orders={fulfillmentOrders}
-                    products={products}
-                    locations={locations}
-                    onSyncAllChannels={handleSyncAllChannels}
-                    onUpdateOrderStatus={handleUpdateFulfillmentStatus}
-                    currencySymbol={settings.currencySymbol}
-                  />
-                )}
+          {/* 2. Main Application Frame */}
+          <main className="flex-1 min-w-0 flex flex-col min-h-screen overflow-y-auto bg-slate-50">
+            {/* Top Header Bar */}
+            <header className="h-16 px-3 sm:px-6 lg:px-8 border-b border-slate-200 bg-white/95 backdrop-blur-md sticky top-0 z-20 flex items-center justify-between no-print gap-1.5 sm:gap-4 overflow-hidden shadow-2xs">
+              <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="md:hidden p-1.5 text-slate-700 hover:text-slate-900 bg-slate-100 border border-slate-300 shrink-0"
+                  aria-label="Toggle Navigation"
+                >
+                  <Menu className="w-4 h-4" />
+                </button>
 
-                {activeTab === 'catalog' && (
-                  <CatalogView
-                    products={products}
-                    categories={categories}
-                    suppliers={suppliers}
-                    locations={locations}
-                    onAddProduct={handleAddProduct}
-                    onUpdateProduct={handleUpdateProduct}
-                    onDeleteProduct={handleDeleteProduct}
-                    currencySymbol={settings.currencySymbol}
-                    activeSubTab={activeSubTab}
-                    onSubTabChange={setActiveSubTab}
-                  />
-                )}
+                {/* Back to Portal Button */}
+                <button
+                  onClick={() => setShowLanding(true)}
+                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold font-mono uppercase tracking-wider border border-slate-300 transition-colors flex items-center gap-1.5 shrink-0"
+                  title="Return to Main Portal"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Main Portal</span>
+                </button>
 
-                {activeTab === 'inventory' && (
-                  <InventoryView
-                    products={products}
-                    movements={movements}
-                    locations={locations}
-                    suppliers={suppliers}
-                    purchaseOrders={purchaseOrders}
-                    selectedLocation={selectedLocation}
-                    onCreatePO={handleCreatePO}
-                    onReceivePO={handleReceivePO}
-                    onStockAdjustment={handleStockAdjustment}
-                    onStockTransfer={handleStockTransfer}
-                    onBulkAutoGeneratePOs={handleBulkAutoGeneratePOs}
-                    currencySymbol={settings.currencySymbol}
-                    activeSubTab={activeSubTab}
-                    onSubTabChange={setActiveSubTab}
-                  />
-                )}
+                {/* Clickable Breadcrumbs Navigation */}
+                <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono">
+                  <button
+                    onClick={() => {
+                      setActiveTab('home');
+                      setActiveSubTab('retail-dashboard');
+                    }}
+                    className="text-slate-500 hover:text-slate-900 uppercase font-bold transition-colors flex items-center gap-1"
+                    title="Return to Main Dashboard"
+                  >
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rotate-45 hidden sm:block shrink-0" />
+                    <span>Inventory 360</span>
+                  </button>
+                  <span className="text-slate-400 shrink-0">/</span>
+                  <span className="text-slate-600 uppercase tracking-wider truncate">
+                    {activeTab}
+                  </span>
+                  <span className="text-slate-400 shrink-0">/</span>
+                  <span className="text-slate-900 font-bold uppercase tracking-wider truncate max-w-[90px] sm:max-w-none bg-slate-100 px-1.5 py-0.5 border border-slate-200">
+                    {activeSubTab.replace('-', ' ')}
+                  </span>
+                </nav>
+              </div>
 
-                {activeTab === 'customers' && (
-                  <CustomersView
-                    customers={customers}
-                    sales={sales}
-                    onAddCustomer={handleAddCustomer}
-                    currencySymbol={settings.currencySymbol}
-                  />
-                )}
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                {/* Business Badge */}
+                <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 border border-slate-300 text-slate-800 rounded-none text-[10px] sm:text-[11px] font-mono shrink-0">
+                  <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse shrink-0" />
+                  <span className="truncate max-w-[120px] uppercase font-bold text-slate-900">
+                    {settings.businessName}
+                  </span>
+                </div>
 
-                {activeTab === 'reporting' && (
-                  <ReportingView
-                    products={products}
-                    sales={sales}
-                    purchaseOrders={purchaseOrders}
-                    locations={locations}
-                    currencySymbol={settings.currencySymbol}
-                  />
-                )}
+                {/* Interactive Product Tour Button */}
+                <button
+                  onClick={() => setIsTourOpen(true)}
+                  className="px-2.5 sm:px-3 py-1.5 bg-slate-900 text-white font-bold uppercase tracking-wider text-[10px] sm:text-xs hover:bg-black transition-colors flex items-center gap-1.5 shrink-0 shadow-xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Product Tour</span>
+                </button>
 
-                {activeTab === 'setup' && (
-                  <SetupView
-                    settings={settings}
-                    onUpdateSettings={handleUpdateSettings}
-                    locations={locations}
-                    onAddLocation={handleAddLocation}
-                    onResetDemoData={seedDemoData}
-                    onClearAllData={handleClearAllData}
-                    onReloadAllData={loadAllData}
-                    products={products}
-                    sales={sales}
-                    inventory={products}
-                    activeSubTab={activeSubTab}
-                    onSubTabChange={setActiveSubTab}
-                  />
-                )}
-              </>
-            )}
-          </div>
-        </main>
+                {/* Demo Mode Badge */}
+                <button
+                  onClick={async () => {
+                    await seedDemoData();
+                  }}
+                  className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 text-[10px] font-mono uppercase tracking-wider transition-colors shadow-2xs"
+                  title="Reload Demo Store Datasets"
+                >
+                  <Layers className="w-3 h-3 text-emerald-600" />
+                  <span>Reset Demo</span>
+                </button>
+              </div>
+            </header>
 
-        {/* Printable Receipt Hidden Render Target */}
-        <PrintReceipt sale={printableSale} settings={settings} />
+            {/* View Container */}
+            <div className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+              {activeTab === 'home' && (
+                <DashboardView
+                  products={products}
+                  sales={sales}
+                  purchaseOrders={purchaseOrders}
+                  locations={locations}
+                  selectedLocation={selectedLocation}
+                  onLocationChange={setSelectedLocation}
+                  onNavigate={(tab, subTab) => {
+                    setActiveTab(tab);
+                    if (subTab) setActiveSubTab(subTab);
+                  }}
+                  currencySymbol={settings.currencySymbol}
+                />
+              )}
 
-        {/* Data Policy & Backup Notice Modal */}
-        <DataPolicyModal
-          isOpen={showDataPolicyNotice}
-          onClose={() => setShowDataPolicyNotice(false)}
-          onGoToBackup={() => {
-            setShowDataPolicyNotice(false);
-            setShowLanding(false);
-            setActiveTab('setup');
-            setActiveSubTab('data');
-          }}
-        />
+              {activeTab === 'sell' && (
+                <SellView
+                  products={products}
+                  customers={customers}
+                  locations={locations}
+                  selectedLocation={selectedLocation}
+                  sales={sales}
+                  onCompleteSale={handleCompleteSale}
+                  onRefundSale={handleRefundSale}
+                  currencySymbol={settings.currencySymbol}
+                  taxRate={settings.taxRate}
+                  onPrintReceipt={handlePrintReceipt}
+                  activeSubTab={activeSubTab}
+                  onSubTabChange={setActiveSubTab}
+                />
+              )}
 
-        {/* Interactive Product Walkthrough Tour */}
-        <ProductTourModal
-          isOpen={isTourOpen}
-          onClose={() => setIsTourOpen(false)}
-          onNavigateTab={(tab, subTab) => {
-            setShowLanding(false);
-            setActiveTab(tab as NavItemKey);
-            if (subTab) setActiveSubTab(subTab);
-          }}
-        />
-      </div>
+              {activeTab === 'fulfillment' && (
+                <FulfillmentView
+                  channels={salesChannels}
+                  orders={fulfillmentOrders}
+                  products={products}
+                  locations={locations}
+                  onSyncAllChannels={handleSyncAllChannels}
+                  onUpdateOrderStatus={handleUpdateFulfillmentStatus}
+                  currencySymbol={settings.currencySymbol}
+                />
+              )}
+
+              {activeTab === 'catalog' && (
+                <CatalogView
+                  products={products}
+                  categories={categories}
+                  suppliers={suppliers}
+                  locations={locations}
+                  onAddProduct={handleAddProduct}
+                  onUpdateProduct={handleUpdateProduct}
+                  onDeleteProduct={handleDeleteProduct}
+                  currencySymbol={settings.currencySymbol}
+                  activeSubTab={activeSubTab}
+                  onSubTabChange={setActiveSubTab}
+                />
+              )}
+
+              {activeTab === 'inventory' && (
+                <InventoryView
+                  products={products}
+                  movements={movements}
+                  locations={locations}
+                  suppliers={suppliers}
+                  purchaseOrders={purchaseOrders}
+                  selectedLocation={selectedLocation}
+                  onCreatePO={handleCreatePO}
+                  onReceivePO={handleReceivePO}
+                  onStockAdjustment={handleStockAdjustment}
+                  onStockTransfer={handleStockTransfer}
+                  onBulkAutoGeneratePOs={handleBulkAutoGeneratePOs}
+                  currencySymbol={settings.currencySymbol}
+                  activeSubTab={activeSubTab}
+                  onSubTabChange={setActiveSubTab}
+                />
+              )}
+
+              {activeTab === 'customers' && (
+                <CustomersView
+                  customers={customers}
+                  sales={sales}
+                  onAddCustomer={handleAddCustomer}
+                  currencySymbol={settings.currencySymbol}
+                />
+              )}
+
+              {activeTab === 'reporting' && (
+                <ReportingView
+                  products={products}
+                  sales={sales}
+                  purchaseOrders={purchaseOrders}
+                  locations={locations}
+                  currencySymbol={settings.currencySymbol}
+                />
+              )}
+
+              {activeTab === 'setup' && (
+                <SetupView
+                  settings={settings}
+                  onUpdateSettings={handleUpdateSettings}
+                  locations={locations}
+                  onAddLocation={handleAddLocation}
+                  onResetDemoData={seedDemoData}
+                  onClearAllData={handleClearAllData}
+                  onReloadAllData={loadAllData}
+                  products={products}
+                  sales={sales}
+                  inventory={products}
+                  activeSubTab={activeSubTab}
+                  onSubTabChange={setActiveSubTab}
+                />
+              )}
+            </div>
+          </main>
+
+          {/* Printable Receipt Hidden Render Target */}
+          <PrintReceipt sale={printableSale} settings={settings} />
+
+          {/* Data Policy & Backup Notice Modal */}
+          <DataPolicyModal
+            isOpen={showDataPolicyNotice}
+            onClose={() => setShowDataPolicyNotice(false)}
+            onGoToBackup={() => {
+              setShowDataPolicyNotice(false);
+              setShowLanding(false);
+              setActiveTab('setup');
+              setActiveSubTab('data');
+            }}
+          />
+
+          {/* Interactive Product Walkthrough Tour */}
+          <ProductTourModal
+            isOpen={isTourOpen}
+            onClose={() => setIsTourOpen(false)}
+            onNavigateTab={(tab, subTab) => {
+              setShowLanding(false);
+              setActiveTab(tab as NavItemKey);
+              if (subTab) setActiveSubTab(subTab);
+            }}
+          />
+        </div>
+      )}
     </I18nProvider>
   );
 }

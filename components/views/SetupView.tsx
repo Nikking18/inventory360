@@ -6,7 +6,7 @@ import { BusinessSettings, Location } from '../../lib/types';
 import { exportWorkspaceJSON, importWorkspaceJSON, exportToCSV, parseCSV } from '../../lib/exportImport';
 import { CURRENCIES } from '../../lib/currencies';
 import { LANGUAGES, SupportedLanguage } from '../../lib/i18n';
-import { Download, Upload, RefreshCw, Trash2, Sun, Moon, Globe, DollarSign, Palette } from 'lucide-react';
+import { Download, Upload, RefreshCw, Trash2, Globe, DollarSign, Building2, ShieldCheck, Check } from 'lucide-react';
 
 interface SetupViewProps {
   settings: BusinessSettings;
@@ -42,7 +42,6 @@ export const SetupView: React.FC<SetupViewProps> = ({
   const [currencySymbol, setCurrencySymbol] = useState(settings.currencySymbol);
   const [currencyCode, setCurrencyCode] = useState(settings.currencyCode || 'USD');
   const [language, setLanguage] = useState<SupportedLanguage>((settings.language as SupportedLanguage) || 'en');
-  const [theme, setTheme] = useState<'dark' | 'light'>(settings.theme || 'dark');
   const [taxRate, setTaxRate] = useState(settings.taxRate);
   const [address, setAddress] = useState(settings.address);
   const [phone, setPhone] = useState(settings.phone);
@@ -72,7 +71,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
       currencySymbol,
       currencyCode,
       language,
-      theme,
+      theme: 'light',
       taxRate: Number(taxRate),
       address,
       phone,
@@ -102,389 +101,370 @@ export const SetupView: React.FC<SetupViewProps> = ({
     const jsonStr = await exportWorkspaceJSON();
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `inventory360_backup_${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `inventory360_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setNotification('JSON backup snapshot generated and downloaded.');
+    setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleJSONImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportJSON = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = async (evt) => {
-        const text = evt.target?.result as string;
-        if (text) {
-          const success = await importWorkspaceJSON(text);
-          if (success) {
-            await onReloadAllData();
-            setNotification('Database restored from JSON backup file.');
-            setTimeout(() => setNotification(null), 3000);
-          } else {
-            setNotification('Failed to restore: Invalid backup file structure.');
-            setTimeout(() => setNotification(null), 4000);
-          }
-        }
-      };
-      reader.readAsText(file);
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const ok = await importWorkspaceJSON(text);
+      if (ok) {
+        await onReloadAllData();
+        setNotification('Workspace database successfully restored from JSON file.');
+      } else {
+        setNotification('Failed to restore database from selected file.');
+      }
+    } catch {
+      setNotification('Failed to read or parse selected backup file.');
     }
+    setTimeout(() => setNotification(null), 4000);
   };
 
-  const handleCSVProductImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const text = evt.target?.result as string;
-        if (text) {
-          const rows = parseCSV(text);
-          setNotification(`Parsed ${rows.length} CSV catalog records.`);
-          setTimeout(() => setNotification(null), 3000);
-        }
-      };
-      reader.readAsText(file);
-    }
+  const handleExportProductsCSV = () => {
+    exportToCSV('Catalog_Master_Export', products);
+  };
+
+  const handleExportSalesCSV = () => {
+    exportToCSV('Sales_Ledger_Export', sales);
   };
 
   return (
-    <div id="tour-setup-workspace" className="space-y-6 text-neutral-200 font-mono">
-      {/* SubTab Navigation */}
-      <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-        <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap pb-1">
-          <button
-            onClick={() => onSubTabChange && onSubTabChange('profile')}
-            className={`text-xs font-bold uppercase tracking-wider pb-1 transition-all relative ${
-              activeSubTab === 'profile'
-                ? 'text-white font-bold'
-                : 'text-neutral-500 hover:text-white'
-            }`}
-          >
-            {t('setup', 'Business Profile')}
-            {activeSubTab === 'profile' && (
-              <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-white" />
-            )}
-          </button>
-          <button
-            onClick={() => onSubTabChange && onSubTabChange('locations')}
-            className={`text-xs font-bold uppercase tracking-wider pb-1 transition-all relative ${
-              activeSubTab === 'locations'
-                ? 'text-white font-bold'
-                : 'text-neutral-500 hover:text-white'
-            }`}
-          >
-            {t('locations', 'Store Locations')} ({locations.length})
-            {activeSubTab === 'locations' && (
-              <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-white" />
-            )}
-          </button>
-          <button
-            onClick={() => onSubTabChange && onSubTabChange('data')}
-            className={`text-xs font-bold uppercase tracking-wider pb-1 transition-all relative ${
-              activeSubTab === 'data'
-                ? 'text-white font-bold'
-                : 'text-neutral-500 hover:text-white'
-            }`}
-          >
-            {t('export_csv', 'Data & Backup')}
-            {activeSubTab === 'data' && (
-              <span className="absolute bottom-[-13px] left-0 right-0 h-[2px] bg-white" />
-            )}
-          </button>
+    <div id="tour-setup-workspace" className="space-y-6 text-slate-900 font-mono">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 gap-2">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 uppercase tracking-wider font-heading">
+            {t('setup', 'System Settings & Workspace')}
+          </h1>
+          <p className="text-xs text-slate-600">
+            Store profile, currencies, tax rates, multi-location registry, and encrypted backups.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {(['profile', 'locations', 'data'] as const).map((tabId) => (
+            <button
+              key={tabId}
+              onClick={() => onSubTabChange && onSubTabChange(tabId)}
+              className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-colors ${
+                activeSubTab === tabId
+                  ? 'bg-slate-900 text-white font-bold'
+                  : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              {tabId === 'profile' ? 'Profile & Tax' : tabId === 'locations' ? 'Locations' : 'Data & Backup'}
+            </button>
+          ))}
         </div>
       </div>
 
       {notification && (
-        <div className="p-3 bg-neutral-900 border border-emerald-800 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-          {notification}
+        <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center gap-2 shadow-2xs">
+          <Check className="w-4 h-4 text-emerald-700" />
+          <span>{notification}</span>
         </div>
       )}
 
-      {/* PROFILE SUBTAB */}
+      {/* 1. BUSINESS PROFILE TAB */}
       {activeSubTab === 'profile' && (
-        <div className="bg-neutral-900 border border-neutral-800 p-6 max-w-2xl space-y-4">
-          <h3 className="font-bold text-sm uppercase tracking-wider text-white border-b border-neutral-800 pb-3">
-            {t('system_overview', 'Business Profile & Tax Configuration')}
+        <form onSubmit={handleSaveSettings} className="bg-white border border-slate-200 p-6 space-y-5 shadow-sm">
+          <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider border-b border-slate-200 pb-3">
+            Business Profile &amp; General Configuration
           </h3>
 
-          <form onSubmit={handleSaveSettings} className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                  {t('setup', 'Business / Store Name')}
-                </label>
-                <input
-                  required
-                  type="text"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                  {t('owner', 'Owner / Administrator')}
-                </label>
-                <input
-                  required
-                  type="text"
-                  value={ownerName}
-                  onChange={(e) => setOwnerName(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white"
-                />
-              </div>
-            </div>
-
-            {/* Global Preferences: Theme, Language, Currency */}
-            <div className="pt-2 border-t border-neutral-800 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1 flex items-center gap-1.5">
-                    <Globe className="w-3 h-3 text-neutral-400" /> {t('language', 'Global Language')}
-                  </label>
-                  <select
-                    value={language}
-                    onChange={async (e) => {
-                      const newLang = e.target.value as SupportedLanguage;
-                      setLanguage(newLang);
-                      await onUpdateSettings({ ...settings, language: newLang });
-                    }}
-                    className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white font-mono text-xs"
-                  >
-                    {LANGUAGES.map((l) => (
-                      <option key={l.code} value={l.code} className="bg-neutral-900 text-white">
-                        {l.flag} {l.name} ({l.code.toUpperCase()})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1 flex items-center gap-1.5">
-                    <DollarSign className="w-3 h-3 text-neutral-400" /> {t('currency', 'Global Currency')}
-                  </label>
-                  <select
-                    value={currencyCode}
-                    onChange={(e) => handleCurrencySelect(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white font-mono text-xs"
-                  >
-                    {CURRENCIES.map((c) => (
-                      <option key={c.code} value={c.code} className="bg-neutral-900 text-white">
-                        {c.flag} {c.name} ({c.symbol})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                  {t('currency', 'Active Currency Symbol')}
-                </label>
-                <input
-                  required
-                  type="text"
-                  value={currencySymbol}
-                  onChange={(e) => setCurrencySymbol(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                  {t('tax', 'Tax Rate')} (%)
-                </label>
-                <input
-                  required
-                  type="number"
-                  step="0.1"
-                  value={taxRate}
-                  onChange={(e) => setTaxRate(Number(e.target.value))}
-                  className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                  {t('phone', 'Contact Phone')}
-                </label>
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                  {t('email', 'Contact Email')}
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white font-mono"
-                />
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                {t('business_name', 'Business Name')}
+              </label>
+              <input
+                type="text"
+                required
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+              />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                {t('address', 'Store Address')}
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                {t('owner_name', 'Owner / Manager Name')}
               </label>
+              <input
+                type="text"
+                required
+                value={ownerName}
+                onChange={(e) => setOwnerName(e.target.value)}
+                className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1 flex items-center gap-1">
+                <DollarSign className="w-3 h-3 text-slate-500" />
+                <span>Default Currency</span>
+              </label>
+              <select
+                value={currencyCode}
+                onChange={(e) => handleCurrencySelect(e.target.value)}
+                className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.code} ({c.symbol}) — {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1 flex items-center gap-1">
+                <Globe className="w-3 h-3 text-slate-500" />
+                <span>System Language</span>
+              </label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
+                className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+              >
+                {LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.flag} {l.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Default Sales Tax Rate (%)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                value={taxRate}
+                onChange={(e) => setTaxRate(Number(e.target.value))}
+                className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono text-right"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Phone Number</label>
+              <input
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Physical Address</label>
               <input
                 type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white"
+                className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
               />
             </div>
+          </div>
 
+          <div className="pt-3 border-t border-slate-200 flex justify-end">
             <button
               type="submit"
-              className="w-full py-2.5 bg-white text-black font-bold uppercase tracking-wider hover:bg-neutral-200 mt-2"
+              className="px-6 py-2.5 bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors shadow-xs"
             >
-              {t('save_changes', 'Save Configuration Changes')}
+              {t('save_changes', 'Save Settings')}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* 2. STORE LOCATIONS TAB */}
+      {activeSubTab === 'locations' && (
+        <div className="bg-white border border-slate-200 p-6 space-y-6 shadow-sm">
+          <div className="border-b border-slate-200 pb-3">
+            <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+              Store Outlets &amp; Warehouse Locations ({locations.length})
+            </h3>
+            <p className="text-xs text-slate-600">
+              Manage branches for multi-outlet POS sales and stock transfers.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {locations.map((loc) => (
+              <div key={loc.id} className="p-4 bg-slate-50 border border-slate-200 space-y-1.5 text-xs font-mono">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-900 text-sm uppercase">{loc.name}</span>
+                  {loc.isMain && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 border border-emerald-300 text-emerald-800 bg-emerald-50 uppercase">
+                      Primary Hub
+                    </span>
+                  )}
+                </div>
+                <p className="text-slate-600">Code: <strong className="text-slate-900">{loc.code}</strong></p>
+                <p className="text-slate-500 text-[11px]">{loc.address}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Add New Location Form */}
+          <form onSubmit={handleAddLoc} className="p-4 bg-slate-50 border border-slate-200 space-y-3">
+            <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">+ Register New Branch Outlet</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <input
+                type="text"
+                required
+                placeholder="Branch Name (e.g. Northside Mall)"
+                value={newLocName}
+                onChange={(e) => setNewLocName(e.target.value)}
+                className="bg-white border border-slate-300 p-2 text-xs text-slate-900 font-mono"
+              />
+              <input
+                type="text"
+                required
+                placeholder="Outlet Code (e.g. LOC-NORTH)"
+                value={newLocCode}
+                onChange={(e) => setNewLocCode(e.target.value.toUpperCase())}
+                className="bg-white border border-slate-300 p-2 text-xs text-slate-900 font-mono uppercase"
+              />
+              <input
+                type="text"
+                placeholder="Street Address"
+                value={newLocAddress}
+                onChange={(e) => setNewLocAddress(e.target.value)}
+                className="bg-white border border-slate-300 p-2 text-xs text-slate-900 font-mono"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black"
+            >
+              Add Outlet Location
             </button>
           </form>
         </div>
       )}
 
-      {/* LOCATIONS SUBTAB */}
-      {activeSubTab === 'locations' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {locations.map((loc) => (
-              <div key={loc.id} className="bg-neutral-900 border border-neutral-800 p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-white text-sm uppercase">{loc.name}</h4>
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 border border-neutral-700 text-neutral-300">
-                    {loc.code}
-                  </span>
-                </div>
-                <p className="text-xs text-neutral-400">{loc.address}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="bg-neutral-900 border border-neutral-800 p-6 max-w-xl space-y-4">
-            <h4 className="font-bold text-xs uppercase text-white border-b border-neutral-800 pb-2">
-              {t('add_location', 'Add Store Outlet / Warehouse')}
-            </h4>
-            <form onSubmit={handleAddLoc} className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] text-neutral-400 uppercase mb-1">{t('locations', 'Location Name')}</label>
-                  <input
-                    required
-                    type="text"
-                    value={newLocName}
-                    onChange={(e) => setNewLocName(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-neutral-400 uppercase mb-1">{t('code', 'Outlet Code')}</label>
-                  <input
-                    required
-                    type="text"
-                    value={newLocCode}
-                    onChange={(e) => setNewLocCode(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] text-neutral-400 uppercase mb-1">{t('address', 'Address')}</label>
-                <input
-                  type="text"
-                  value={newLocAddress}
-                  onChange={(e) => setNewLocAddress(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 p-2 text-white focus:outline-none focus:border-white"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-2 bg-white text-black font-bold uppercase tracking-wider hover:bg-neutral-200"
-              >
-                {t('add_location', 'Add Store Outlet')}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* DATA & BACKUP SUBTAB */}
+      {/* 3. DATA & BACKUP TAB */}
       {activeSubTab === 'data' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-neutral-900 border border-neutral-800 p-6 space-y-4">
-            <h3 className="font-bold text-sm uppercase tracking-wider text-white border-b border-neutral-800 pb-3">
-              {t('export_csv', 'Backup & Database Export')}
+        <div className="bg-white border border-slate-200 p-6 space-y-6 shadow-sm">
+          <div className="border-b border-slate-200 pb-3">
+            <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+              Data Sovereignty, Backups &amp; Reset Tools
             </h3>
-            <p className="text-xs text-neutral-400">
-              Download your complete IndexedDB state (products, sales, movements, settings) as JSON or export CSV.
+            <p className="text-xs text-slate-600">
+              Export and import full encrypted snapshots of your local browser database.
             </p>
+          </div>
 
-            <div className="space-y-2 pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Backup Snapshot */}
+            <div className="p-5 bg-slate-50 border border-slate-200 space-y-3">
+              <div className="flex items-center gap-2 text-slate-900">
+                <Download className="w-5 h-5 text-emerald-700" />
+                <h4 className="font-bold text-xs uppercase">Full JSON Backup Snapshot</h4>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Download an offline backup file containing all products, sales history, purchase orders, customers, and settings.
+              </p>
               <button
                 onClick={handleExportJSON}
-                className="w-full py-2.5 bg-neutral-950 border border-neutral-800 hover:border-white text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-black flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
-                <span>Export Complete JSON Backup</span>
+                <span>Export Backup (JSON)</span>
               </button>
+            </div>
 
+            {/* Restore Snapshot */}
+            <div className="p-5 bg-slate-50 border border-slate-200 space-y-3">
+              <div className="flex items-center gap-2 text-slate-900">
+                <Upload className="w-5 h-5 text-sky-700" />
+                <h4 className="font-bold text-xs uppercase">Restore from JSON Backup</h4>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Upload a previously saved JSON snapshot to restore your complete store database.
+              </p>
+              <label className="w-full py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+                <Upload className="w-4 h-4" />
+                <span>Select Backup File (JSON)</span>
+                <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
+              </label>
+            </div>
+          </div>
+
+          {/* Quick CSV Export Shortcuts */}
+          <div className="p-4 bg-slate-50 border border-slate-200 space-y-3">
+            <h4 className="font-bold text-xs uppercase text-slate-900">Direct CSV Table Exports</h4>
+            <div className="flex flex-wrap gap-3">
               <button
-                onClick={() => exportToCSV('Catalog_Products_Export', products)}
-                className="w-full py-2.5 bg-neutral-950 border border-neutral-800 hover:border-white text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                onClick={handleExportProductsCSV}
+                className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-bold uppercase"
               >
-                <Download className="w-4 h-4" />
-                <span>{t('export_csv', 'Export Product Catalog CSV')}</span>
+                Export Products (.csv)
+              </button>
+              <button
+                onClick={handleExportSalesCSV}
+                className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-bold uppercase"
+              >
+                Export Sales Transactions (.csv)
               </button>
             </div>
           </div>
 
-          <div className="bg-neutral-900 border border-neutral-800 p-6 space-y-4">
-            <h3 className="font-bold text-sm uppercase tracking-wider text-white border-b border-neutral-800 pb-3">
-              Restore & System Reset
-            </h3>
+          {/* Dangerous Actions: Reset / Clear */}
+          <div className="p-4 bg-rose-50 border border-rose-200 space-y-3">
+            <h4 className="font-bold text-xs uppercase text-rose-900">Maintenance &amp; Reset Workspace</h4>
+            <p className="text-xs text-rose-800">
+              Reset the store with ACME Demo datasets, or clear all data to start fresh.
+            </p>
+            <div className="flex flex-wrap gap-3 pt-1">
+              <button
+                onClick={onResetDemoData}
+                className="px-4 py-2 bg-slate-900 text-white hover:bg-black text-xs font-bold uppercase flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Load ACME Demo Dataset</span>
+              </button>
 
-            <div className="space-y-3 pt-2">
-              <label className="block w-full py-2.5 bg-neutral-950 border border-neutral-800 hover:border-white text-white font-bold text-xs uppercase tracking-wider text-center cursor-pointer">
-                <Upload className="w-4 h-4 inline mr-2" />
-                <span>Restore JSON Backup</span>
-                <input type="file" accept=".json" onChange={handleJSONImport} className="hidden" />
-              </label>
-
-              <label className="block w-full py-2.5 bg-neutral-950 border border-neutral-800 hover:border-white text-white font-bold text-xs uppercase tracking-wider text-center cursor-pointer">
-                <Upload className="w-4 h-4 inline mr-2" />
-                <span>Import Products CSV</span>
-                <input type="file" accept=".csv" onChange={handleCSVProductImport} className="hidden" />
-              </label>
-
-              <div className="pt-4 border-t border-neutral-800 flex gap-2">
-                <button
-                  onClick={onResetDemoData}
-                  className="flex-1 py-2 bg-neutral-950 border border-amber-900/80 text-amber-400 hover:bg-amber-950 font-bold text-xs uppercase"
-                >
-                  <RefreshCw className="w-3.5 h-3.5 inline mr-1" />
-                  Seed Demo Data
-                </button>
-
-                <button
-                  onClick={onClearAllData}
-                  className="flex-1 py-2 bg-neutral-950 border border-rose-900/80 text-rose-400 hover:bg-rose-950 font-bold text-xs uppercase"
-                >
-                  <Trash2 className="w-3.5 h-3.5 inline mr-1" />
-                  Clear All Data
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  if (confirm('Are you sure you want to erase all data and reset to a clean state?')) {
+                    onClearAllData();
+                  }
+                }}
+                className="px-4 py-2 bg-rose-700 text-white hover:bg-rose-800 text-xs font-bold uppercase flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Erase All Data &amp; Reset Clean</span>
+              </button>
             </div>
           </div>
         </div>
