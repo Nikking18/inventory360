@@ -24,6 +24,7 @@ import {
   Truck,
   TrendingUp,
   LayoutDashboard,
+  BookOpen,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -128,8 +129,13 @@ export const LandingView: React.FC<LandingViewProps> = ({
       {/* 1. TOP PORTAL NAVIGATION BAR */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-900 flex items-center justify-center rotate-45 shrink-0 shadow-xs">
+          <Link
+            href="/"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="flex items-center gap-3 group cursor-pointer text-left"
+            title="Inventory 360 Home"
+          >
+            <div className="w-8 h-8 bg-slate-900 flex items-center justify-center rotate-45 shrink-0 shadow-xs group-hover:bg-black transition-colors">
               <div className="w-3.5 h-3.5 bg-emerald-400 -rotate-45" />
             </div>
             <div className="flex flex-col">
@@ -140,7 +146,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 Local-First Enterprise Engine
               </span>
             </div>
-          </div>
+          </Link>
 
           {/* Center Navigation Anchors */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-mono font-semibold text-slate-600">
@@ -148,6 +154,9 @@ export const LandingView: React.FC<LandingViewProps> = ({
             <a href="#preview" className="hover:text-slate-900 transition-colors">POS &amp; Matrix</a>
             <a href="#case-studies" className="hover:text-slate-900 transition-colors">Case Studies</a>
             <a href="#reviews" className="hover:text-slate-900 transition-colors">Reviews</a>
+            <Link href="/blog" className="text-slate-900 font-bold hover:text-emerald-700 transition-colors">
+              Blog &amp; Guides
+            </Link>
             <a href="#faqs" className="hover:text-slate-900 transition-colors">FAQs</a>
           </nav>
 
@@ -621,7 +630,94 @@ export const LandingView: React.FC<LandingViewProps> = ({
           </div>
         </div>
 
-        {/* 9. 5 INTERACTIVE FAQS */}
+        {/* 9. LATEST BLOGS & ENTERPRISE GUIDES */}
+        <div className="space-y-6">
+          <div className="border-b border-slate-200 pb-3 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 font-heading">
+                <BookOpen className="w-4 h-4 text-emerald-600" />
+                <span>Knowledge Base &amp; Retail Guides</span>
+              </h2>
+              <p className="text-xs text-slate-600">
+                Master local-first POS engineering, inventory turnover mathematics, and omnichannel fulfillment.
+              </p>
+            </div>
+            <Link
+              href="/blog"
+              className="text-xs font-bold text-slate-900 hover:text-emerald-700 uppercase flex items-center gap-1 font-mono"
+            >
+              <span>View All 5 Articles</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link
+              href="/blog/local-first-inventory-management-offline-pos"
+              className="bg-white border border-slate-200 p-5 shadow-xs hover:border-slate-400 transition-all space-y-2.5 flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <span className="text-[9px] font-bold uppercase text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5">
+                  POS &amp; Technology
+                </span>
+                <h3 className="font-bold text-xs text-slate-900 hover:text-emerald-700 leading-snug font-heading">
+                  Local-First Inventory Management: Why Offline-Ready POS Systems Outperform Cloud ERPs
+                </h3>
+                <p className="text-[11px] text-slate-600 line-clamp-2">
+                  Explore how local-first architecture using IndexedDB delivers sub-50ms checkout speeds and 100% offline immunity.
+                </p>
+              </div>
+              <span className="text-[10px] font-bold text-slate-900 uppercase flex items-center gap-1 pt-1">
+                <span>Read Guide</span>
+                <ArrowRight className="w-3 h-3" />
+              </span>
+            </Link>
+
+            <Link
+              href="/blog/inventory-turnover-ratio-stock-velocity-guide"
+              className="bg-white border border-slate-200 p-5 shadow-xs hover:border-slate-400 transition-all space-y-2.5 flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <span className="text-[9px] font-bold uppercase text-sky-800 bg-sky-50 border border-sky-300 px-2 py-0.5">
+                  Inventory Strategy
+                </span>
+                <h3 className="font-bold text-xs text-slate-900 hover:text-emerald-700 leading-snug font-heading">
+                  The Master Guide to Inventory Turnover Ratio &amp; Stock Velocity Optimization
+                </h3>
+                <p className="text-[11px] text-slate-600 line-clamp-2">
+                  Master the core formulas of inventory turnover, DSI, and stock velocity to slash carrying costs.
+                </p>
+              </div>
+              <span className="text-[10px] font-bold text-slate-900 uppercase flex items-center gap-1 pt-1">
+                <span>Read Guide</span>
+                <ArrowRight className="w-3 h-3" />
+              </span>
+            </Link>
+
+            <Link
+              href="/blog/omnichannel-retail-inventory-sync-shopify-amazon"
+              className="bg-white border border-slate-200 p-5 shadow-xs hover:border-slate-400 transition-all space-y-2.5 flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <span className="text-[9px] font-bold uppercase text-purple-800 bg-purple-50 border border-purple-300 px-2 py-0.5">
+                  Omnichannel Retail
+                </span>
+                <h3 className="font-bold text-xs text-slate-900 hover:text-emerald-700 leading-snug font-heading">
+                  Omnichannel Retail Fulfillment: Syncing Shopify, Amazon, and In-Store POS
+                </h3>
+                <p className="text-[11px] text-slate-600 line-clamp-2">
+                  Blueprint for syncing physical store registers with online marketplaces without overselling.
+                </p>
+              </div>
+              <span className="text-[10px] font-bold text-slate-900 uppercase flex items-center gap-1 pt-1">
+                <span>Read Guide</span>
+                <ArrowRight className="w-3 h-3" />
+              </span>
+            </Link>
+          </div>
+        </div>
+
+        {/* 10. 5 INTERACTIVE FAQS */}
         <div id="faqs" className="space-y-6">
           <div className="border-b border-slate-200 pb-3 flex items-center justify-between">
             <div>
@@ -694,6 +790,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             <div className="space-y-2">
               <h4 className="font-bold text-slate-900 uppercase text-[11px]">Direct Links</h4>
               <ul className="space-y-1 text-[11px] text-slate-600">
+                <li><Link href="/blog" className="text-slate-900 font-bold hover:text-emerald-700">Knowledge Base &amp; Blog</Link></li>
                 <li>{onOpenTour && <button onClick={onOpenTour} className="hover:text-emerald-700 font-medium">Interactive Tour</button>}</li>
                 <li><button onClick={onStartFresh} className="hover:text-slate-900 font-medium">New Clean Workspace</button></li>
                 <li><button onClick={onStartDemo} className="hover:text-slate-900 font-medium">Reset Demo Store</button></li>

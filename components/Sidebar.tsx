@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useTranslation } from '../context/I18nContext';
 import {
   LayoutDashboard,
@@ -16,6 +17,7 @@ import {
   ChevronRight,
   Globe,
   Home,
+  BookOpen,
 } from 'lucide-react';
 
 export type NavItemKey =
@@ -221,6 +223,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Data Policy Notice & Product Tour Actions */}
       <div className="p-3 mx-3 my-2 bg-slate-50 border border-slate-200 space-y-2 text-[10px] font-mono">
+        <Link
+          href="/blog"
+          className="w-full py-1.5 px-2 bg-white border border-slate-300 text-slate-800 hover:text-black font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:border-slate-400 transition-colors shadow-2xs"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-sky-600" />
+          <span>Knowledge &amp; Blog</span>
+        </Link>
+
         <button
           onClick={onOpenDataPolicy}
           className="w-full py-1.5 px-2 bg-white border border-slate-300 text-slate-800 hover:text-black font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:border-slate-400 transition-colors shadow-2xs"
