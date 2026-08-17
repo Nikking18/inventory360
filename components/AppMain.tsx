@@ -971,6 +971,7 @@ export default function AppMain() {
                 <DashboardView
                   products={products}
                   sales={sales}
+                  customers={customers}
                   purchaseOrders={purchaseOrders}
                   locations={locations}
                   selectedLocation={selectedLocation}
@@ -980,6 +981,7 @@ export default function AppMain() {
                     if (subTab) setActiveSubTab(subTab);
                   }}
                   currencySymbol={settings.currencySymbol}
+                  onPrintReceipt={handlePrintReceipt}
                 />
               )}
 

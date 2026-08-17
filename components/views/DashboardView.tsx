@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../../context/I18nContext';
-import { Product, Sale, PurchaseOrder, Location } from '../../lib/types';
+import { Product, Sale, PurchaseOrder, Location, Customer } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils';
 import {
   Chart as ChartJS,
@@ -27,6 +27,20 @@ import {
   Boxes,
   BarChart3,
   LineChart as LineChartIcon,
+  Users,
+  FileText,
+  CreditCard,
+  Printer,
+  ShoppingBag,
+  Clock,
+  CheckCircle2,
+  DollarSign,
+  ArrowUpRight,
+  ExternalLink,
+  ChevronRight,
+  Store,
+  Globe,
+  Tag,
 } from 'lucide-react';
 
 ChartJS.register(
@@ -44,23 +58,27 @@ ChartJS.register(
 interface DashboardViewProps {
   products: Product[];
   sales: Sale[];
+  customers?: Customer[];
   purchaseOrders: PurchaseOrder[];
   locations: Location[];
   selectedLocation: string;
   onLocationChange: (locId: string) => void;
   onNavigate: (tab: any, subTab?: string) => void;
   currencySymbol: string;
+  onPrintReceipt?: (sale: Sale) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   products,
   sales,
+  customers = [],
   purchaseOrders,
   locations,
   selectedLocation,
   onLocationChange,
   onNavigate,
   currencySymbol,
+  onPrintReceipt,
 }) => {
   const [timeframe, setTimeframe] = useState<'today' | 'week' | 'month'>('month');
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
@@ -88,7 +106,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Timeframe-specific sales filtering for metrics
   const now = useMemo(() => new Date(), []);
-  
+
   const timeframeSales = useMemo(() => {
     return activeLocationSales.filter((s) => {
       const saleDate = new Date(s.createdAt);
@@ -127,6 +145,67 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const deadStockCount = filteredProducts.filter((p) => p.status === 'Dead Stock').length;
 
   const pendingPOs = purchaseOrders.filter((po) => po.status === 'Sent' || po.status === 'Partial');
+
+  // 1. RECENT BUYERS (Grouped/Derived from Sales & Customers)
+  const recentBuyers = useMemo(() => {
+    const buyersMap = new Map<string, {
+      name: string;
+      email?: string;
+      phone?: string;
+      lastPurchaseDate: string;
+      totalSpent: number;
+      ordersCount: number;
+      latestItemName: string;
+      status: string;
+      channel: string;
+    }>();
+
+    // Sort active sales descending
+    const sortedSales = [...activeLocationSales].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    sortedSales.forEach((sale) => {
+      const buyerName = sale.customerName || 'Walk-in Customer';
+      const existing = buyersMap.get(buyerName);
+      const matchedCustomer = customers.find((c) => c.name.toLowerCase() === buyerName.toLowerCase());
+
+      const latestItem = sale.items?.[0]?.productName || 'Assorted Items';
+
+      if (!existing) {
+        buyersMap.set(buyerName, {
+          name: buyerName,
+          email: matchedCustomer?.email,
+          phone: matchedCustomer?.phone,
+          lastPurchaseDate: sale.createdAt,
+          totalSpent: sale.total,
+          ordersCount: 1,
+          latestItemName: latestItem,
+          status: matchedCustomer?.status || (sale.total > 500 ? 'VIP' : 'Active'),
+          channel: sale.channel || 'In-Store POS',
+        });
+      } else {
+        existing.totalSpent += sale.total;
+        existing.ordersCount += 1;
+      }
+    });
+
+    return Array.from(buyersMap.values()).slice(0, 5);
+  }, [activeLocationSales, customers]);
+
+  // 2. RECENT INVOICES
+  const recentInvoices = useMemo(() => {
+    return [...activeLocationSales]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+  }, [activeLocationSales]);
+
+  // 3. RECENT TRANSACTIONS (Financial Ledger Stream)
+  const recentTransactions = useMemo(() => {
+    return [...activeLocationSales]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 6);
+  }, [activeLocationSales]);
 
   // Chart.js dynamic data computation based on timeframe AND location
   const chartData = useMemo(() => {
@@ -208,7 +287,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         ],
       };
     } else {
-      // Month timeframe: 5 chronological intervals
+      // Month timeframe
       const buckets = [
         { label: 'Day 22-30', minDays: 22, maxDays: 30 },
         { label: 'Day 15-21', minDays: 15, maxDays: 21 },
@@ -248,12 +327,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
   }, [timeframe, activeLocationSales, timeframeSales, now]);
 
-  const chartOptions: ChartOptions<'line' | 'bar'> = useMemo(() => {
+  const chartOptions = useMemo(() => {
     return {
       responsive: true,
       maintainAspectRatio: false,
       interaction: {
-        mode: 'index',
+        mode: 'index' as const,
         intersect: false,
       },
       plugins: {
@@ -267,7 +346,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           titleFont: {
             family: 'monospace',
             size: 11,
-            weight: 'bold',
+            weight: 'bold' as const,
           },
           bodyFont: {
             family: 'monospace',
@@ -279,7 +358,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           borderWidth: 1,
           displayColors: false,
           callbacks: {
-            label: function (context) {
+            label: function (context: any) {
               return ` Revenue: ${currencySymbol}${Number(context.raw).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
@@ -314,7 +393,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               family: 'monospace',
               size: 10,
             },
-            callback: function (val) {
+            callback: function (val: any) {
               return `${currencySymbol}${val}`;
             },
           },
@@ -327,7 +406,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   }, [currencySymbol]);
 
   return (
-    <div className="space-y-6 text-slate-900 font-mono">
+    <div className="space-y-8 text-slate-900 font-mono">
       {/* Page Title & Timeframe Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -341,7 +420,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {t('dashboard', 'Store Operations Overview')}
           </h1>
           <p className="text-xs text-slate-600 mt-1 font-mono">
-            {t('welcome', 'Real-time stock telemetry, sales revenue, and supply flow.')}
+            {t('welcome', 'Real-time telemetry across revenue, buyers, billing invoices, and financial transactions.')}
           </p>
         </div>
 
@@ -401,10 +480,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* PRIMARY DASHBOARD CARD */}
+      {/* 1. PRIMARY METRIC & CHART.JS OVERVIEW CARD */}
       <div id="tour-dashboard-metrics" className="bg-white border border-slate-200 p-6 shadow-sm">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-          {/* Left Column: Primary Metric */}
+          {/* Left Column: Primary Revenue Metric */}
           <div className="lg:col-span-3 space-y-2 border-b lg:border-b-0 lg:border-r border-slate-200 pb-4 lg:pb-0 lg:pr-6">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">
@@ -425,7 +504,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   : t('no_sales', 'Ready for sales transactions')}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 font-mono">{t('recent_transactions', 'Verified POS transactions.')}</p>
+            <p className="text-[11px] text-slate-500 font-mono">{t('recent_transactions', 'Verified POS & Online receipts.')}</p>
           </div>
 
           {/* Center Column: Interactive Chart.js View */}
@@ -443,7 +522,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             )}
           </div>
 
-          {/* Right Column: Two Stacked Key Metrics */}
+          {/* Right Column: Key Stacked Metrics */}
           <div className="lg:col-span-3 space-y-4 border-t lg:border-t-0 lg:border-l border-slate-200 pt-4 lg:pt-0 lg:pl-6 font-mono">
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
@@ -463,27 +542,281 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* SECONDARY GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Side: Inventory Valuation & Stock Health Card */}
+      {/* 2. RECENT BUYERS & RECENT INVOICES (2-COLUMN GRID) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 font-mono">
+        {/* A. RECENT BUYERS */}
+        <div className="bg-white border border-slate-200 p-5 shadow-sm space-y-4 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-emerald-600" />
+                <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900">
+                  Recent Buyers
+                </h3>
+              </div>
+              <button
+                onClick={() => onNavigate('customers')}
+                className="text-[11px] font-bold uppercase text-slate-600 hover:text-slate-900 flex items-center gap-1 hover:underline"
+              >
+                <span>View CRM</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {recentBuyers.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-400 italic">
+                No customer purchase records available for this outlet.
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {recentBuyers.map((buyer, idx) => (
+                  <div
+                    key={idx}
+                    className="py-3 flex items-center justify-between gap-3 hover:bg-slate-50/70 px-2 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                        {buyer.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-xs text-slate-900 truncate">{buyer.name}</p>
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.2 uppercase border ${
+                              buyer.status === 'VIP'
+                                ? 'bg-amber-50 text-amber-800 border-amber-300'
+                                : 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}
+                          >
+                            {buyer.status}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                          Latest: <span className="text-slate-700 font-medium">{buyer.latestItemName}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <p className="font-bold text-xs text-slate-900">
+                        {formatCurrency(buyer.totalSpent, currencySymbol)}
+                      </p>
+                      <p className="text-[10px] text-slate-500">
+                        {buyer.ordersCount} {buyer.ordersCount === 1 ? 'order' : 'orders'} • {buyer.channel}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Tracking active buyer history</span>
+            <button
+              onClick={() => onNavigate('customers')}
+              className="font-bold text-slate-900 hover:text-emerald-700 uppercase"
+            >
+              Add New Customer →
+            </button>
+          </div>
+        </div>
+
+        {/* B. RECENT INVOICES */}
+        <div className="bg-white border border-slate-200 p-5 shadow-sm space-y-4 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-sky-600" />
+                <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900">
+                  Recent Invoices
+                </h3>
+              </div>
+              <button
+                onClick={() => onNavigate('sell', 'sales-history')}
+                className="text-[11px] font-bold uppercase text-slate-600 hover:text-slate-900 flex items-center gap-1 hover:underline"
+              >
+                <span>Sales Ledger</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {recentInvoices.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-400 italic">
+                No invoices recorded yet for this location.
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {recentInvoices.map((inv) => (
+                  <div
+                    key={inv.id}
+                    className="py-3 flex items-center justify-between gap-3 hover:bg-slate-50/70 px-2 transition-colors"
+                  >
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs text-slate-900">{inv.saleNumber}</span>
+                        <span className="text-[9px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 uppercase border border-emerald-300">
+                          {inv.status}
+                        </span>
+                        <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.2 border border-slate-200 hidden sm:inline">
+                          {inv.paymentMethod}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 truncate">
+                        {inv.customerName || 'Walk-in Customer'} •{' '}
+                        <span className="text-slate-400">
+                          {new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <p className="font-bold text-xs text-slate-900">
+                          {formatCurrency(inv.total, currencySymbol)}
+                        </p>
+                        <p className="text-[9px] text-slate-500">
+                          {inv.items?.length || 1} item{inv.items?.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+
+                      {onPrintReceipt && (
+                        <button
+                          onClick={() => onPrintReceipt(inv)}
+                          title="Print Thermal Receipt / Invoice"
+                          className="p-1.5 bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 border border-slate-300 transition-colors shadow-2xs"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Instant ESC/POS &amp; Thermal Printing</span>
+            <button
+              onClick={() => onNavigate('sell', 'quick-sale')}
+              className="font-bold text-slate-900 hover:text-sky-700 uppercase"
+            >
+              + Create New Sale
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. RECENT TRANSACTIONS (LIVE FINANCIAL LEDGER STREAM) */}
+      <div className="bg-white border border-slate-200 p-5 shadow-sm space-y-4 font-mono">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-slate-900" />
+            <div>
+              <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900">
+                Recent Transactions &amp; Financial Ledger
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Real-time stream of in-store sales, online marketplace syncs, and profit telemetry.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => onNavigate('reporting', 'sales-report')}
+            className="text-[11px] font-bold uppercase text-slate-600 hover:text-slate-900 flex items-center gap-1 hover:underline"
+          >
+            <span>Full Audit Report</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+
+        {recentTransactions.length === 0 ? (
+          <div className="p-8 text-center text-xs text-slate-400 italic">
+            No transaction records found.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 text-[10px] text-slate-500 uppercase bg-slate-50">
+                  <th className="py-2.5 px-3">Timestamp</th>
+                  <th className="py-2.5 px-3">Transaction ID</th>
+                  <th className="py-2.5 px-3">Customer / Channel</th>
+                  <th className="py-2.5 px-3">Outlet Location</th>
+                  <th className="py-2.5 px-3">Method</th>
+                  <th className="py-2.5 px-3 text-right">Profit Margin</th>
+                  <th className="py-2.5 px-3 text-right">Net Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {recentTransactions.map((tx) => {
+                  const marginPercent = tx.total > 0 ? ((tx.grossProfit || 0) / tx.total) * 100 : 0;
+
+                  return (
+                    <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-3 text-slate-500 whitespace-nowrap text-[11px]">
+                        {new Date(tx.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })},{' '}
+                        {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td className="py-3 px-3 font-bold text-slate-900 whitespace-nowrap">
+                        {tx.saleNumber}
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-slate-900 truncate max-w-[140px]">
+                            {tx.customerName || 'Walk-in'}
+                          </span>
+                          <span className="text-[9px] text-slate-500 bg-slate-100 px-1 py-0.2 border border-slate-200">
+                            {tx.channel || 'POS'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-slate-600 text-[11px] whitespace-nowrap">
+                        {tx.locationName || 'Downtown Flagship'}
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 uppercase border border-slate-200">
+                          {tx.paymentMethod}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right text-emerald-700 font-bold whitespace-nowrap">
+                        +{formatCurrency(tx.grossProfit || 0, currencySymbol)} ({marginPercent.toFixed(0)}%)
+                      </td>
+                      <td className="py-3 px-3 text-right font-bold text-slate-900 whitespace-nowrap text-xs">
+                        {formatCurrency(tx.total, currencySymbol)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* 4. INVENTORY HEALTH & REORDER ALERTS GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 font-mono">
+        {/* Left Side: Inventory Valuation Breakdown */}
         <div className="lg:col-span-8 bg-white border border-slate-200 p-6 space-y-5 shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
             <div>
-              <h3 className="font-mono font-bold text-sm uppercase tracking-wider text-slate-900">
-                {t('inventory-report', 'Stock Valuation & Health Breakdown')}
+              <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900">
+                {t('inventory-report', 'Stock Health & Asset Valuation')}
               </h3>
-              <p className="text-xs text-slate-500 font-mono mt-0.5">{t('stock-levels', 'Real-time inventory asset calculations.')}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{t('stock-levels', 'Real-time inventory valuation breakdown.')}</p>
             </div>
             <button
               onClick={() => onNavigate('inventory', 'stock-levels')}
-              className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 hover:underline flex items-center gap-1"
+              className="text-xs font-bold uppercase tracking-wider text-slate-900 hover:underline flex items-center gap-1"
             >
               <span>{t('view_all', 'View Stock')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="p-3.5 bg-emerald-50/60 border border-emerald-200">
               <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">{t('in_stock', 'Healthy')}</span>
               <p className="text-xl font-bold text-emerald-950 mt-1">{healthyCount}</p>
@@ -502,8 +835,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {/* Total Asset Valuation Summary */}
-          <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono">
+          {/* Valuation Summary */}
+          <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 border border-slate-200 bg-slate-50 flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -530,64 +863,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Right Side: Stacked Operational Cards */}
+        {/* Right Side: Reorder Alerts & Purchase Orders */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Pending Purchase Orders Card */}
-          <div className="bg-white border border-slate-200 p-5 space-y-3 shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <div className="flex items-center gap-2">
-                <Truck className="w-4 h-4 text-slate-900" />
-                <h4 className="font-mono font-bold text-xs uppercase tracking-wider text-slate-900">
-                  {t('purchases', 'Pending POs')}
-                </h4>
-              </div>
-              <button
-                onClick={() => onNavigate('inventory', 'purchases')}
-                className="text-[11px] font-mono font-bold uppercase text-slate-600 hover:text-slate-900 underline"
-              >
-                {t('view_all', 'View POs')}
-              </button>
-            </div>
-
-            {pendingPOs.length === 0 ? (
-              <p className="text-xs text-slate-500 font-mono italic">{t('no_sales', 'No pending purchase orders.')}</p>
-            ) : (
-              <div className="space-y-2 font-mono">
-                {pendingPOs.map((po) => (
-                  <div
-                    key={po.id}
-                    className="p-3 bg-slate-50 border border-slate-200 flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <p className="font-bold text-slate-900">{po.poNumber}</p>
-                      <p className="text-[10px] text-slate-500">{po.supplierName}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-slate-900">
-                        {formatCurrency(po.total, currencySymbol)}
-                      </p>
-                      <span className="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 border border-amber-200 uppercase">
-                        {po.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Urgent Stock Reorder Alerts Card */}
           <div className="bg-white border border-slate-200 p-5 space-y-3 shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600" />
-                <h4 className="font-mono font-bold text-xs uppercase tracking-wider text-slate-900">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900">
                   {t('low_stock_alerts', 'Low Stock Reorder')}
                 </h4>
               </div>
               <button
                 onClick={() => onNavigate('inventory', 'low-stock')}
-                className="text-[11px] font-mono font-bold uppercase text-slate-600 hover:text-slate-900 underline"
+                className="text-[11px] font-bold uppercase text-slate-600 hover:text-slate-900 underline"
               >
                 {t('view_all', 'View All')}
               </button>
@@ -595,9 +884,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             {filteredProducts.filter((p) => p.status === 'Low Stock' || p.status === 'Out of Stock')
               .length === 0 ? (
-              <p className="text-xs text-slate-500 font-mono italic">{t('in_stock', 'All product stock levels healthy.')}</p>
+              <p className="text-xs text-slate-500 italic">{t('in_stock', 'All product stock levels healthy.')}</p>
             ) : (
-              <div className="space-y-2 font-mono">
+              <div className="space-y-2">
                 {filteredProducts
                   .filter((p) => p.status === 'Low Stock' || p.status === 'Out of Stock')
                   .slice(0, 3)
@@ -625,6 +914,50 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </div>
                     </div>
                   ))}
+              </div>
+            )}
+          </div>
+
+          {/* Pending Purchase Orders Card */}
+          <div className="bg-white border border-slate-200 p-5 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2">
+                <Truck className="w-4 h-4 text-slate-900" />
+                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-900">
+                  {t('purchases', 'Pending POs')}
+                </h4>
+              </div>
+              <button
+                onClick={() => onNavigate('inventory', 'purchases')}
+                className="text-[11px] font-bold uppercase text-slate-600 hover:text-slate-900 underline"
+              >
+                {t('view_all', 'View POs')}
+              </button>
+            </div>
+
+            {pendingPOs.length === 0 ? (
+              <p className="text-xs text-slate-500 italic">{t('no_sales', 'No pending purchase orders.')}</p>
+            ) : (
+              <div className="space-y-2">
+                {pendingPOs.map((po) => (
+                  <div
+                    key={po.id}
+                    className="p-3 bg-slate-50 border border-slate-200 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <p className="font-bold text-slate-900">{po.poNumber}</p>
+                      <p className="text-[10px] text-slate-500">{po.supplierName}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-slate-900">
+                        {formatCurrency(po.total, currencySymbol)}
+                      </p>
+                      <span className="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 border border-amber-200 uppercase">
+                        {po.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

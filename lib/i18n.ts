@@ -21,7 +21,7 @@ export const LANGUAGES: LanguageOption[] = [
 export const TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
   en: {
     // Nav & Tabs
-    home: 'Home',
+    home: 'Dashboard',
     sell: 'Sell POS',
     reporting: 'Reporting',
     catalog: 'Catalog',
