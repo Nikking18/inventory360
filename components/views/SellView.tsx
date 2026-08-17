@@ -289,13 +289,6 @@ export const SellView: React.FC<SellViewProps> = ({
     const newSale = await onCompleteSale(saleRecord);
     setCompletedSaleModal(newSale);
     clearCart();
-
-    // Auto-trigger printing to local thermal/connected printer if enabled
-    if (autoPrintEnabled) {
-      setTimeout(() => {
-        onPrintReceipt(newSale, localFormat);
-      }, 200);
-    }
   };
 
   const handleTestPrint = () => {
@@ -1159,45 +1152,166 @@ export const SellView: React.FC<SellViewProps> = ({
         }}
       />
 
-      {/* Completed Sale Notification Modal */}
+      {/* Completed Sale & Multi-Format Printer Dispatch Modal */}
       {completedSaleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn font-mono">
-          <div className="bg-white border border-slate-300 shadow-2xl p-6 max-w-sm w-full space-y-4 text-center">
-            <div className="w-12 h-12 bg-emerald-50 border border-emerald-300 text-emerald-700 flex items-center justify-center mx-auto shadow-2xs">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 px-2 py-0.5 border border-emerald-300">
-                Transaction Completed
-              </span>
-              <h3 className="font-bold text-base text-slate-900 uppercase mt-1">Payment Successful</h3>
-              <p className="text-xs text-slate-600 font-mono">
-                Receipt #{completedSaleModal.saleNumber}
-              </p>
-              <p className="text-2xl font-bold text-slate-900 mt-2 font-mono">
-                {formatCurrency(completedSaleModal.total, currencySymbol)}
-              </p>
-              <p className="text-[10px] text-slate-500 mt-0.5">
-                Paid via {completedSaleModal.paymentMethod} • {completedSaleModal.items.length} item(s) • Format: {localFormat.toUpperCase()}
-              </p>
+          <div className="bg-white border border-slate-300 shadow-2xl p-6 max-w-lg w-full space-y-5">
+            {/* Success Header */}
+            <div className="text-center space-y-2 border-b border-slate-200 pb-4">
+              <div className="w-12 h-12 bg-emerald-50 border border-emerald-300 text-emerald-700 flex items-center justify-center mx-auto shadow-2xs">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 px-2 py-0.5 border border-emerald-300">
+                  Sale Recorded Successfully
+                </span>
+                <h3 className="font-bold text-base text-slate-900 uppercase mt-1">
+                  Receipt #{completedSaleModal.saleNumber}
+                </h3>
+                <p className="text-2xl font-bold text-slate-900 mt-1">
+                  {formatCurrency(completedSaleModal.total, currencySymbol)}
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Paid via {completedSaleModal.paymentMethod} • {completedSaleModal.items.length} line item(s)
+                </p>
+              </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            {/* Select Print Style for Connected Printer */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-widest flex items-center gap-1.5">
+                  <Printer className="w-3.5 h-3.5 text-slate-900" />
+                  <span>Select Printer Format to Print:</span>
+                </label>
+                <span className="text-[10px] text-slate-500">1-Click Dispatch</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {/* 1. 80mm Standard Thermal */}
+                <div
+                  onClick={() => handleFormatSelect('80mm')}
+                  className={`p-3 border text-left cursor-pointer transition-all flex flex-col justify-between space-y-2 ${
+                    localFormat === '80mm'
+                      ? 'border-slate-900 bg-slate-50 ring-1 ring-slate-900 shadow-xs'
+                      : 'border-slate-200 bg-white hover:border-slate-400'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <Printer className="w-4 h-4 text-emerald-600" />
+                      {localFormat === '80mm' && (
+                        <span className="text-[8px] font-bold uppercase bg-slate-900 text-white px-1.5 py-0.2">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-bold text-xs text-slate-900 uppercase mt-1.5">80mm Thermal</p>
+                    <p className="text-[9px] text-slate-500 leading-tight mt-0.5">
+                      Standard POS roll for Epson, Star, Munbyn
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFormatSelect('80mm');
+                      onPrintReceipt(completedSaleModal, '80mm');
+                    }}
+                    className="w-full py-1.5 bg-slate-900 hover:bg-black text-white text-[10px] font-bold uppercase tracking-wider transition-colors shadow-2xs"
+                  >
+                    Print 80mm
+                  </button>
+                </div>
+
+                {/* 2. 58mm Mobile Thermal */}
+                <div
+                  onClick={() => handleFormatSelect('58mm')}
+                  className={`p-3 border text-left cursor-pointer transition-all flex flex-col justify-between space-y-2 ${
+                    localFormat === '58mm'
+                      ? 'border-slate-900 bg-slate-50 ring-1 ring-slate-900 shadow-xs'
+                      : 'border-slate-200 bg-white hover:border-slate-400'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <Smartphone className="w-4 h-4 text-blue-600" />
+                      {localFormat === '58mm' && (
+                        <span className="text-[8px] font-bold uppercase bg-slate-900 text-white px-1.5 py-0.2">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-bold text-xs text-slate-900 uppercase mt-1.5">58mm Compact</p>
+                    <p className="text-[9px] text-slate-500 leading-tight mt-0.5">
+                      Narrow slip for Mobile Bluetooth &amp; Handheld
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFormatSelect('58mm');
+                      onPrintReceipt(completedSaleModal, '58mm');
+                    }}
+                    className="w-full py-1.5 bg-slate-900 hover:bg-black text-white text-[10px] font-bold uppercase tracking-wider transition-colors shadow-2xs"
+                  >
+                    Print 58mm
+                  </button>
+                </div>
+
+                {/* 3. A4 Full Tax Invoice */}
+                <div
+                  onClick={() => handleFormatSelect('A4')}
+                  className={`p-3 border text-left cursor-pointer transition-all flex flex-col justify-between space-y-2 ${
+                    localFormat === 'A4'
+                      ? 'border-slate-900 bg-slate-50 ring-1 ring-slate-900 shadow-xs'
+                      : 'border-slate-200 bg-white hover:border-slate-400'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <FileText className="w-4 h-4 text-amber-600" />
+                      {localFormat === 'A4' && (
+                        <span className="text-[8px] font-bold uppercase bg-slate-900 text-white px-1.5 py-0.2">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-bold text-xs text-slate-900 uppercase mt-1.5">A4 / Letter</p>
+                    <p className="text-[9px] text-slate-500 leading-tight mt-0.5">
+                      Full page tax invoice bill for Laser/Inkjet
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFormatSelect('A4');
+                      onPrintReceipt(completedSaleModal, 'A4');
+                    }}
+                    className="w-full py-1.5 bg-slate-900 hover:bg-black text-white text-[10px] font-bold uppercase tracking-wider transition-colors shadow-2xs"
+                  >
+                    Print A4 Bill
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Bottom Actions */}
+            <div className="flex gap-2 pt-2 border-t border-slate-200">
+              <button
+                onClick={() => setCompletedSaleModal(null)}
+                className="flex-1 py-2.5 bg-slate-100 text-slate-800 font-bold text-xs uppercase hover:bg-slate-200 border border-slate-300 transition-colors"
+              >
+                Start New Sale
+              </button>
               <button
                 onClick={() => {
                   onPrintReceipt(completedSaleModal, localFormat);
                   setCompletedSaleModal(null);
                 }}
-                className="flex-1 py-2.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black flex items-center justify-center gap-1.5 shadow-sm"
+                className="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition-colors shadow-sm"
               >
-                <Printer className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Print Bill ({localFormat})</span>
-              </button>
-              <button
-                onClick={() => setCompletedSaleModal(null)}
-                className="flex-1 py-2.5 bg-slate-100 text-slate-800 font-bold text-xs uppercase hover:bg-slate-200 border border-slate-300"
-              >
-                New Sale
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print ({localFormat}) &amp; Done</span>
               </button>
             </div>
           </div>
