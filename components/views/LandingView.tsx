@@ -212,36 +212,22 @@ export const LandingView: React.FC<LandingViewProps> = ({
           </p>
 
           {/* MAIN CTAs */}
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
+          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-3">
             <button
-              onClick={onOpenDashboard}
-              className="px-6 py-3.5 bg-slate-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2.5 shadow-md group"
+              onClick={onStartDemo}
+              className="px-7 py-3.5 bg-slate-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2.5 shadow-md group"
             >
               <LayoutDashboard className="w-4 h-4 text-emerald-400" />
-              <span>Enter Full Dashboard</span>
+              <span>Explore Demo</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
 
             <button
-              onClick={onOpenPOS}
-              className="px-6 py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-md"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              <span>Launch Quick Sale POS</span>
-            </button>
-
-            <button
-              onClick={onStartDemo}
-              className="px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-slate-300 hover:border-slate-800 uppercase tracking-wider transition-all shadow-xs"
-            >
-              Explore Demo (ACME Store)
-            </button>
-
-            <button
               onClick={onStartFresh}
-              className="px-5 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 uppercase tracking-wider transition-all"
+              className="px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-slate-300 hover:border-slate-800 uppercase tracking-wider transition-all shadow-2xs flex items-center gap-2"
             >
-              Start Fresh
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>Start Fresh</span>
             </button>
           </div>
 
