@@ -1086,6 +1086,8 @@ export default function AppMain() {
                   onSyncAllChannels={handleSyncAllChannels}
                   onUpdateOrderStatus={handleUpdateFulfillmentStatus}
                   currencySymbol={settings.currencySymbol}
+                  activeSubTab={activeSubTab}
+                  onSubTabChange={setActiveSubTab}
                 />
               )}
 
