@@ -53,13 +53,34 @@ export const SetupView: React.FC<SetupViewProps> = ({
 
   const [notification, setNotification] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    setBusinessName(settings.businessName);
+    setOwnerName(settings.ownerName);
+    setCurrencySymbol(settings.currencySymbol || '$');
+    setCurrencyCode(settings.currencyCode || 'USD');
+    setLanguage((settings.language as SupportedLanguage) || 'en');
+    setTaxRate(settings.taxRate);
+    setAddress(settings.address);
+    setPhone(settings.phone);
+    setEmail(settings.email);
+  }, [settings]);
+
   const handleCurrencySelect = async (code: string) => {
     const found = CURRENCIES.find((c) => c.code === code);
     if (found) {
       setCurrencyCode(found.code);
       setCurrencySymbol(found.symbol);
       await onUpdateSettings({ ...settings, currencyCode: found.code, currencySymbol: found.symbol });
+      setNotification(`Store currency updated to ${found.code} (${found.symbol}).`);
+      setTimeout(() => setNotification(null), 2500);
     }
+  };
+
+  const handleLanguageSelect = async (newLang: SupportedLanguage) => {
+    setLanguage(newLang);
+    await onUpdateSettings({ ...settings, language: newLang });
+    setNotification(`System language updated to ${newLang.toUpperCase()}.`);
+    setTimeout(() => setNotification(null), 2500);
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -235,7 +256,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
               </label>
               <select
                 value={language}
-                onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
+                onChange={(e) => handleLanguageSelect(e.target.value as SupportedLanguage)}
                 className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
               >
                 {LANGUAGES.map((l) => (

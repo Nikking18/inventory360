@@ -25,8 +25,12 @@ import {
   TrendingUp,
   LayoutDashboard,
   BookOpen,
+  DollarSign,
 } from 'lucide-react';
 import Link from 'next/link';
+import { BusinessSettings } from '../../lib/types';
+import { CURRENCIES } from '../../lib/currencies';
+import { LANGUAGES, SupportedLanguage } from '../../lib/i18n';
 
 interface LandingViewProps {
   onOpenDashboard: () => void;
@@ -34,6 +38,8 @@ interface LandingViewProps {
   onStartDemo: () => void;
   onStartFresh: () => void;
   onOpenTour?: () => void;
+  settings?: BusinessSettings;
+  onUpdateSettings?: (settings: BusinessSettings) => Promise<void>;
 }
 
 export const LandingView: React.FC<LandingViewProps> = ({
@@ -42,6 +48,8 @@ export const LandingView: React.FC<LandingViewProps> = ({
   onStartDemo,
   onStartFresh,
   onOpenTour,
+  settings,
+  onUpdateSettings,
 }) => {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
@@ -161,11 +169,63 @@ export const LandingView: React.FC<LandingViewProps> = ({
           </nav>
 
           {/* Right Action CTAs */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
+            {settings && onUpdateSettings && (
+              <>
+                {/* Instant Currency Selector */}
+                <div className="hidden sm:flex items-center gap-1 bg-white border border-slate-300 px-2 py-1 text-xs font-mono shadow-2xs">
+                  <DollarSign className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <select
+                    value={settings.currencyCode || 'USD'}
+                    onChange={async (e) => {
+                      const found = CURRENCIES.find((c) => c.code === e.target.value);
+                      if (found) {
+                        await onUpdateSettings({
+                          ...settings,
+                          currencyCode: found.code,
+                          currencySymbol: found.symbol,
+                        });
+                      }
+                    }}
+                    className="bg-transparent text-slate-900 font-bold focus:outline-none cursor-pointer text-[11px]"
+                    title="Change Global Currency"
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.symbol} {c.code}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Instant Language Selector */}
+                <div className="hidden sm:flex items-center gap-1 bg-white border border-slate-300 px-2 py-1 text-xs font-mono shadow-2xs">
+                  <Globe className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <select
+                    value={settings.language || 'en'}
+                    onChange={async (e) => {
+                      await onUpdateSettings({
+                        ...settings,
+                        language: e.target.value as SupportedLanguage,
+                      });
+                    }}
+                    className="bg-transparent text-slate-900 font-bold focus:outline-none cursor-pointer text-[11px]"
+                    title="Change Global Language"
+                  >
+                    {LANGUAGES.map((l) => (
+                      <option key={l.code} value={l.code}>
+                        {l.flag} {l.code.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
             {onOpenTour && (
               <button
                 onClick={onOpenTour}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider border border-slate-300 transition-colors"
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider border border-slate-300 transition-colors"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                 <span>Tour</span>
@@ -182,7 +242,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             {/* PRIMARY CTA: OPEN DASHBOARD */}
             <button
               onClick={onOpenDashboard}
-              className="px-4 sm:px-5 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm"
+              className="px-3 sm:px-5 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm shrink-0"
             >
               <LayoutDashboard className="w-4 h-4 text-emerald-400" />
               <span>Open Dashboard</span>
