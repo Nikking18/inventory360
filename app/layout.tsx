@@ -1,5 +1,12 @@
 import type { Metadata } from 'next';
+import { Merriweather } from 'next/font/google';
 import './globals.css'; // Global styles
+
+const merriweather = Merriweather({
+  weight: ['300', '400', '700', '900'],
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://inventory360-five.vercel.app'),
@@ -216,7 +223,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body suppressHydrationWarning>{children}</body>
+      <body className={merriweather.className} suppressHydrationWarning>{children}</body>
     </html>
   );
 }
