@@ -227,10 +227,18 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   };
 
   const filtered = products.filter((p) => {
+    const searchLower = search.trim().toLowerCase();
     const matchesSearch =
-      (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.sku || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.barcode || '').toLowerCase().includes(search.toLowerCase());
+      !searchLower ||
+      (p.name || '').toLowerCase().includes(searchLower) ||
+      (p.sku || '').toLowerCase().includes(searchLower) ||
+      (p.barcode || '').toLowerCase().includes(searchLower) ||
+      (p.variants || []).some(
+        (v) =>
+          (v.sku && v.sku.toLowerCase().includes(searchLower)) ||
+          (v.name && v.name.toLowerCase().includes(searchLower)) ||
+          (v.barcode && v.barcode.toLowerCase().includes(searchLower))
+      );
     const matchesCategory = selectedCategory === 'all' || p.categoryId === selectedCategory;
     return matchesSearch && matchesCategory;
   });

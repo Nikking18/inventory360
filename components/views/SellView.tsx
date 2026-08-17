@@ -24,8 +24,11 @@ import {
   Tag,
   Check,
   Package,
+  FileText,
+  Smartphone,
 } from 'lucide-react';
 import { BarcodeModal } from '../BarcodeModal';
+import { ReceiptPaperFormat } from '../PrintReceipt';
 
 interface SellViewProps {
   products: Product[];
@@ -37,9 +40,28 @@ interface SellViewProps {
   onRefundSale: (saleId: string) => Promise<void>;
   currencySymbol: string;
   taxRate: number;
-  onPrintReceipt: (sale: Sale) => void;
+  onPrintReceipt: (sale: Sale, format?: ReceiptPaperFormat) => void;
+  receiptFormat?: ReceiptPaperFormat;
+  onUpdateReceiptFormat?: (fmt: ReceiptPaperFormat) => void;
   activeSubTab?: string;
   onSubTabChange?: (sub: string) => void;
+}
+
+interface DisplayGridItem {
+  id: string;
+  type: 'product' | 'variant';
+  product: Product;
+  variant?: ProductVariant;
+  title: string;
+  subtitle?: string;
+  sku: string;
+  barcode?: string;
+  retailPrice: number;
+  costPrice: number;
+  stockQuantity: number;
+  reorderPoint: number;
+  imageUrl?: string;
+  variantsCount?: number;
 }
 
 export const SellView: React.FC<SellViewProps> = ({
@@ -53,6 +75,8 @@ export const SellView: React.FC<SellViewProps> = ({
   currencySymbol,
   taxRate,
   onPrintReceipt,
+  receiptFormat = '80mm',
+  onUpdateReceiptFormat,
   activeSubTab = 'quick-sale',
   onSubTabChange,
 }) => {
@@ -66,7 +90,7 @@ export const SellView: React.FC<SellViewProps> = ({
   const [isBarcodeOpen, setIsBarcodeOpen] = useState(false);
   const [completedSaleModal, setCompletedSaleModal] = useState<Sale | null>(null);
 
-  // Variant Selection State
+  // Variant Selection Modal State
   const [variantModalProduct, setVariantModalProduct] = useState<Product | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState<string>('');
   const [variantQty, setVariantQty] = useState<number>(1);
@@ -74,17 +98,17 @@ export const SellView: React.FC<SellViewProps> = ({
   // Local Printer Settings State
   const [isPrinterModalOpen, setIsPrinterModalOpen] = useState(false);
   const [autoPrintEnabled, setAutoPrintEnabled] = useState<boolean>(true);
-  const [receiptFormat, setReceiptFormat] = useState<'80mm' | '58mm' | 'A4'>('80mm');
+  const [localFormat, setLocalFormat] = useState<ReceiptPaperFormat>(receiptFormat);
+
+  useEffect(() => {
+    setLocalFormat(receiptFormat);
+  }, [receiptFormat]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedAutoPrint = localStorage.getItem('inventory360_autoprint');
       if (savedAutoPrint !== null) {
         setAutoPrintEnabled(savedAutoPrint === 'true');
-      }
-      const savedFormat = localStorage.getItem('inventory360_receipt_format');
-      if (savedFormat) {
-        setReceiptFormat(savedFormat as any);
       }
     }
   }, []);
@@ -96,8 +120,11 @@ export const SellView: React.FC<SellViewProps> = ({
     }
   };
 
-  const saveReceiptFormat = (fmt: '80mm' | '58mm' | 'A4') => {
-    setReceiptFormat(fmt);
+  const handleFormatSelect = (fmt: ReceiptPaperFormat) => {
+    setLocalFormat(fmt);
+    if (onUpdateReceiptFormat) {
+      onUpdateReceiptFormat(fmt);
+    }
     if (typeof window !== 'undefined') {
       localStorage.setItem('inventory360_receipt_format', fmt);
     }
@@ -113,6 +140,40 @@ export const SellView: React.FC<SellViewProps> = ({
     });
     return Array.from(set);
   }, [products]);
+
+  // Handle direct addition of a specific variant to cart
+  const handleDirectAddVariantToCart = (product: Product, variant: ProductVariant, quantity = 1) => {
+    const maxStock = variant.stockQuantity > 0 ? variant.stockQuantity : product.stockQuantity;
+    if (maxStock <= 0) return;
+
+    const uniqueItemKey = `${product.id}__var_${variant.id}`;
+    const variantFullName = `${product.name} (${variant.name})`;
+
+    setCart((prev) => {
+      const existing = prev.find((item) => item.productId === uniqueItemKey);
+      if (existing) {
+        const newQty = Math.min(maxStock, existing.quantity + quantity);
+        return prev.map((item) =>
+          item.productId === uniqueItemKey
+            ? { ...item, quantity: newQty, total: newQty * item.unitPrice }
+            : item
+        );
+      } else {
+        return [
+          ...prev,
+          {
+            productId: uniqueItemKey,
+            productName: variantFullName,
+            sku: variant.sku || product.sku,
+            unitPrice: variant.retailPrice || product.retailPrice,
+            unitCost: variant.costPrice || product.costPrice,
+            quantity: Math.min(maxStock, quantity),
+            total: (variant.retailPrice || product.retailPrice) * Math.min(maxStock, quantity),
+          },
+        ];
+      }
+    });
+  };
 
   // Primary Add to Cart handler with Variant Interception
   const handleProductSelect = (product: Product) => {
@@ -159,43 +220,13 @@ export const SellView: React.FC<SellViewProps> = ({
     });
   };
 
-  // Add chosen variant to cart
-  const handleAddVariantToCart = () => {
+  // Add chosen variant from modal to cart
+  const handleAddVariantFromModal = () => {
     if (!variantModalProduct) return;
     const variant = variantModalProduct.variants?.find((v) => v.id === selectedVariantId);
     if (!variant) return;
 
-    const maxStock = variant.stockQuantity > 0 ? variant.stockQuantity : variantModalProduct.stockQuantity;
-    if (maxStock <= 0) return;
-
-    const uniqueItemKey = `${variantModalProduct.id}__var_${variant.id}`;
-    const variantFullName = `${variantModalProduct.name} (${variant.name})`;
-
-    setCart((prev) => {
-      const existing = prev.find((item) => item.productId === uniqueItemKey);
-      if (existing) {
-        const newQty = Math.min(maxStock, existing.quantity + variantQty);
-        return prev.map((item) =>
-          item.productId === uniqueItemKey
-            ? { ...item, quantity: newQty, total: newQty * item.unitPrice }
-            : item
-        );
-      } else {
-        return [
-          ...prev,
-          {
-            productId: uniqueItemKey,
-            productName: variantFullName,
-            sku: variant.sku || variantModalProduct.sku,
-            unitPrice: variant.retailPrice || variantModalProduct.retailPrice,
-            unitCost: variant.costPrice || variantModalProduct.costPrice,
-            quantity: Math.min(maxStock, variantQty),
-            total: (variant.retailPrice || variantModalProduct.retailPrice) * Math.min(maxStock, variantQty),
-          },
-        ];
-      }
-    });
-
+    handleDirectAddVariantToCart(variantModalProduct, variant, variantQty);
     setVariantModalProduct(null);
   };
 
@@ -262,7 +293,7 @@ export const SellView: React.FC<SellViewProps> = ({
     // Auto-trigger printing to local thermal/connected printer if enabled
     if (autoPrintEnabled) {
       setTimeout(() => {
-        onPrintReceipt(newSale);
+        onPrintReceipt(newSale, localFormat);
       }, 200);
     }
   };
@@ -272,40 +303,113 @@ export const SellView: React.FC<SellViewProps> = ({
       id: 'test_print',
       saleNumber: `TEST-${Date.now().toString().slice(-4)}`,
       items: [
-        { productId: 'test_1', productName: 'Sample Retail Item (80mm Test)', sku: 'TEST-SKU-01', unitPrice: 29.99, unitCost: 15.00, quantity: 2, total: 59.98 },
+        { productId: 'test_1', productName: 'Pro Wireless Mouse (Mac Edition)', sku: 'LOG-MX3S-MAC', unitPrice: 109.99, unitCost: 62.00, quantity: 1, total: 109.99 },
+        { productId: 'test_2', productName: 'Thermal Receipt Paper Roll 80mm', sku: 'THM-80MM-05', unitPrice: 4.50, unitCost: 1.20, quantity: 3, total: 13.50 },
       ],
-      subtotal: 59.98,
-      tax: 5.10,
-      discount: 0,
-      total: 65.08,
-      costOfGoodsSold: 30.00,
-      grossProfit: 35.08,
+      subtotal: 123.49,
+      tax: 10.50,
+      discount: 5.00,
+      total: 128.99,
+      costOfGoodsSold: 65.60,
+      grossProfit: 63.39,
       paymentMethod: 'Card',
       status: 'Completed',
       locationId: currentLocation?.id || 'loc_1',
       locationName: currentLocation?.name || 'Main Flagship',
+      customerName: 'Sample VIP Buyer',
       channel: 'In-Store POS',
       createdAt: new Date().toISOString(),
     };
-    onPrintReceipt(dummySale);
+    onPrintReceipt(dummySale, localFormat);
   };
 
-  const filteredProducts = products.filter((p) => {
-    const matchesSearch =
-      (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.sku || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.barcode || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.variants || []).some(
-        (v) =>
-          v.name.toLowerCase().includes(search.toLowerCase()) ||
-          v.sku.toLowerCase().includes(search.toLowerCase()) ||
-          v.barcode.toLowerCase().includes(search.toLowerCase())
-      );
+  // SMART SEARCH & GRID ITEM GENERATION (Handles Parent Products AND Variant SKUs)
+  const displayItems = useMemo<DisplayGridItem[]>(() => {
+    const searchLower = search.trim().toLowerCase();
+    const items: DisplayGridItem[] = [];
 
-    const matchesCategory = selectedCategory === 'all' || p.categoryName === selectedCategory;
+    products.forEach((p) => {
+      const matchesCategory = selectedCategory === 'all' || p.categoryName === selectedCategory;
+      if (!matchesCategory) return;
 
-    return matchesSearch && matchesCategory;
-  });
+      const hasVariants = p.variants && p.variants.length > 0;
+
+      if (!searchLower) {
+        // When no search query, display the standard product cards (with variant counts)
+        items.push({
+          id: p.id,
+          type: 'product',
+          product: p,
+          title: p.name,
+          sku: p.sku,
+          barcode: p.barcode,
+          retailPrice: p.retailPrice,
+          costPrice: p.costPrice,
+          stockQuantity: p.stockQuantity,
+          reorderPoint: p.reorderPoint,
+          imageUrl: p.imageUrl,
+          variantsCount: hasVariants ? p.variants?.length : 0,
+        });
+      } else {
+        // When searching, check if specific variants match SKU, Barcode, or Name
+        let matchedSpecificVariant = false;
+
+        if (hasVariants && p.variants) {
+          p.variants.forEach((v) => {
+            const variantSkuMatch = v.sku && v.sku.toLowerCase().includes(searchLower);
+            const variantBarcodeMatch = v.barcode && v.barcode.toLowerCase().includes(searchLower);
+            const variantNameMatch = v.name && v.name.toLowerCase().includes(searchLower);
+
+            if (variantSkuMatch || variantBarcodeMatch || variantNameMatch) {
+              matchedSpecificVariant = true;
+              items.push({
+                id: `${p.id}_var_${v.id}`,
+                type: 'variant',
+                product: p,
+                variant: v,
+                title: `${p.name}`,
+                subtitle: v.name,
+                sku: v.sku,
+                barcode: v.barcode,
+                retailPrice: v.retailPrice || p.retailPrice,
+                costPrice: v.costPrice || p.costPrice,
+                stockQuantity: v.stockQuantity,
+                reorderPoint: p.reorderPoint,
+                imageUrl: p.imageUrl,
+              });
+            }
+          });
+        }
+
+        // Check if the parent product name, main SKU, or main barcode matches
+        const parentNameMatch = (p.name || '').toLowerCase().includes(searchLower);
+        const parentSkuMatch = (p.sku || '').toLowerCase().includes(searchLower);
+        const parentBarcodeMatch = (p.barcode || '').toLowerCase().includes(searchLower);
+
+        if (parentNameMatch || parentSkuMatch || parentBarcodeMatch) {
+          // If we haven't already emitted specific variants or if the parent product was specifically searched
+          if (!matchedSpecificVariant || parentNameMatch) {
+            items.push({
+              id: p.id,
+              type: 'product',
+              product: p,
+              title: p.name,
+              sku: p.sku,
+              barcode: p.barcode,
+              retailPrice: p.retailPrice,
+              costPrice: p.costPrice,
+              stockQuantity: p.stockQuantity,
+              reorderPoint: p.reorderPoint,
+              imageUrl: p.imageUrl,
+              variantsCount: hasVariants ? p.variants?.length : 0,
+            });
+          }
+        }
+      }
+    });
+
+    return items;
+  }, [products, search, selectedCategory]);
 
   return (
     <div className="space-y-6 font-mono text-slate-900">
@@ -336,7 +440,7 @@ export const SellView: React.FC<SellViewProps> = ({
           })}
         </div>
 
-        {/* Local Printer Connection & Actions */}
+        {/* Local Printer Connection & Barcode Scanner */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             onClick={() => setIsPrinterModalOpen(true)}
@@ -344,16 +448,16 @@ export const SellView: React.FC<SellViewProps> = ({
             title="Configure Local POS Thermal & Bill Printer"
           >
             <Printer className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Local Printer</span>
+            <span>Printer ({localFormat.toUpperCase()})</span>
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
           </button>
 
           <button
             onClick={() => setIsBarcodeOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider border border-slate-300 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-xs"
           >
-            <Barcode className="w-3.5 h-3.5 text-slate-700" />
-            <span className="hidden md:inline">Barcode Scan</span>
+            <Barcode className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Camera Scanner</span>
           </button>
         </div>
       </div>
@@ -363,15 +467,15 @@ export const SellView: React.FC<SellViewProps> = ({
         <div id="tour-pos-terminal" className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Product Search, Category Tabs & Grid */}
           <div className="lg:col-span-7 space-y-4">
-            {/* Search Bar */}
+            {/* Search Bar with Variant SKU detection */}
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder={t('search_placeholder', 'Search products or variants by name, SKU, or barcode...')}
+                placeholder={t('search_placeholder', 'Search products, single variant SKUs (e.g. LOG-MX3S-MAC, KEY-K2-RED)...')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono shadow-2xs"
+                className="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono shadow-2xs"
               />
               {search && (
                 <button
@@ -383,7 +487,7 @@ export const SellView: React.FC<SellViewProps> = ({
               )}
             </div>
 
-            {/* Category Pills */}
+            {/* Category Filter Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
               <button
                 onClick={() => setSelectedCategory('all')}
@@ -412,62 +516,90 @@ export const SellView: React.FC<SellViewProps> = ({
 
             {/* Product Catalog Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[560px] overflow-y-auto pr-1">
-              {filteredProducts.map((p) => {
-                const isOutOfStock = p.stockQuantity <= 0;
-                const hasVariants = p.variants && p.variants.length > 0;
+              {displayItems.length === 0 ? (
+                <div className="col-span-3 p-10 text-center border border-dashed border-slate-300 space-y-2 bg-white">
+                  <Search className="w-8 h-8 text-slate-400 mx-auto" />
+                  <p className="text-xs font-bold text-slate-700 uppercase">No Matching Products or Variant SKUs</p>
+                  <p className="text-[11px] text-slate-500">Try searching with a different product name, base SKU, or specific variant code.</p>
+                </div>
+              ) : (
+                displayItems.map((item) => {
+                  const isOutOfStock = item.stockQuantity <= 0;
+                  const isVariantCard = item.type === 'variant';
 
-                return (
-                  <button
-                    key={p.id}
-                    disabled={isOutOfStock}
-                    onClick={() => handleProductSelect(p)}
-                    className={`p-3 bg-white border text-left flex flex-col justify-between space-y-2 transition-all group rounded-none shadow-xs relative ${
-                      isOutOfStock
-                        ? 'opacity-40 border-slate-200 cursor-not-allowed bg-slate-50'
-                        : 'border-slate-200 hover:border-slate-900 hover:shadow-sm'
-                    }`}
-                  >
-                    {/* Variant Count Badge */}
-                    {hasVariants && (
-                      <span className="absolute top-2 right-2 bg-slate-900 text-white text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wider shadow-xs flex items-center gap-1 z-10">
-                        <Layers className="w-2.5 h-2.5 text-emerald-400" />
-                        <span>{p.variants?.length} Variants</span>
-                      </span>
-                    )}
-
-                    <div className="space-y-1">
-                      {p.imageUrl && (
-                        <img
-                          src={p.imageUrl}
-                          alt={p.name}
-                          className="w-full h-20 object-cover border border-slate-200 mb-1"
-                        />
+                  return (
+                    <button
+                      key={item.id}
+                      disabled={isOutOfStock}
+                      onClick={() => {
+                        if (isVariantCard && item.variant) {
+                          handleDirectAddVariantToCart(item.product, item.variant);
+                        } else {
+                          handleProductSelect(item.product);
+                        }
+                      }}
+                      className={`p-3 bg-white border text-left flex flex-col justify-between space-y-2 transition-all group rounded-none shadow-xs relative ${
+                        isOutOfStock
+                          ? 'opacity-40 border-slate-200 cursor-not-allowed bg-slate-50'
+                          : isVariantCard
+                          ? 'border-emerald-300 hover:border-slate-900 bg-emerald-50/20 hover:shadow-sm'
+                          : 'border-slate-200 hover:border-slate-900 hover:shadow-sm'
+                      }`}
+                    >
+                      {/* Top Badges */}
+                      {isVariantCard && (
+                        <span className="absolute top-2 right-2 bg-emerald-800 text-white text-[8px] font-bold px-1.5 py-0.2 uppercase tracking-wider shadow-xs flex items-center gap-1 z-10">
+                          <Tag className="w-2.5 h-2.5" />
+                          <span>Variant</span>
+                        </span>
                       )}
-                      <p className="font-bold text-slate-900 text-xs line-clamp-2 leading-tight">
-                        {p.name}
-                      </p>
-                      <p className="text-[10px] text-slate-500 font-mono">
-                        SKU: {p.sku}
-                      </p>
-                    </div>
 
-                    <div className="flex items-center justify-between pt-1 border-t border-slate-100 w-full text-xs">
-                      <span className="font-bold text-slate-900">
-                        {formatCurrency(p.retailPrice, currencySymbol)}
-                      </span>
-                      <span
-                        className={`text-[9px] font-bold px-1.5 py-0.5 border uppercase ${
-                          p.stockQuantity <= p.reorderPoint
-                            ? 'text-amber-800 border-amber-300 bg-amber-50'
-                            : 'text-slate-600 border-slate-200 bg-slate-50'
-                        }`}
-                      >
-                        {p.stockQuantity} Left
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
+                      {!isVariantCard && (item.variantsCount || 0) > 0 && (
+                        <span className="absolute top-2 right-2 bg-slate-900 text-white text-[8.5px] font-bold px-1.5 py-0.5 uppercase tracking-wider shadow-xs flex items-center gap-1 z-10">
+                          <Layers className="w-2.5 h-2.5 text-emerald-400" />
+                          <span>{item.variantsCount} Variants</span>
+                        </span>
+                      )}
+
+                      <div className="space-y-1">
+                        {item.imageUrl && (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title}
+                            className="w-full h-20 object-cover border border-slate-200 mb-1"
+                          />
+                        )}
+                        <p className="font-bold text-slate-900 text-xs line-clamp-2 leading-tight">
+                          {item.title}
+                        </p>
+                        {item.subtitle && (
+                          <p className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1 py-0.2 border border-emerald-200 inline-block">
+                            {item.subtitle}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-slate-500 font-mono">
+                          SKU: {item.sku}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-100 w-full text-xs">
+                        <span className="font-bold text-slate-900">
+                          {formatCurrency(item.retailPrice, currencySymbol)}
+                        </span>
+                        <span
+                          className={`text-[9px] font-bold px-1.5 py-0.5 border uppercase ${
+                            item.stockQuantity <= item.reorderPoint
+                              ? 'text-amber-800 border-amber-300 bg-amber-50'
+                              : 'text-slate-600 border-slate-200 bg-slate-50'
+                          }`}
+                        >
+                          {item.stockQuantity} Left
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -516,7 +648,7 @@ export const SellView: React.FC<SellViewProps> = ({
                 <div className="p-8 text-center border border-dashed border-slate-200 space-y-2">
                   <ShoppingBag className="w-6 h-6 text-slate-400 mx-auto" />
                   <p className="text-xs text-slate-500 font-mono">
-                    Cart is currently empty. Click products or scan barcodes to begin checkout.
+                    Cart is currently empty. Click products, variants, or scan barcodes to begin checkout.
                   </p>
                 </div>
               ) : (
@@ -689,11 +821,11 @@ export const SellView: React.FC<SellViewProps> = ({
                       </td>
                       <td className="p-2.5 text-center">
                         <button
-                          onClick={() => onPrintReceipt(s)}
+                          onClick={() => onPrintReceipt(s, localFormat)}
                           className="px-2.5 py-1 bg-slate-100 border border-slate-300 text-slate-800 hover:bg-slate-900 hover:text-white text-[10px] font-bold uppercase transition-colors shadow-2xs flex items-center gap-1 mx-auto"
                         >
                           <Printer className="w-3 h-3" />
-                          <span>Print</span>
+                          <span>Print ({localFormat})</span>
                         </button>
                       </td>
                     </tr>
@@ -883,7 +1015,7 @@ export const SellView: React.FC<SellViewProps> = ({
                 Cancel
               </button>
               <button
-                onClick={handleAddVariantToCart}
+                onClick={handleAddVariantFromModal}
                 className="flex-2 py-2.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black flex items-center justify-center gap-1.5 shadow-xs"
               >
                 <ShoppingBag className="w-4 h-4 text-emerald-400" />
@@ -905,7 +1037,7 @@ export const SellView: React.FC<SellViewProps> = ({
                   <h3 className="font-bold text-sm text-slate-900 uppercase">
                     Local Printer &amp; Bill Dispatch
                   </h3>
-                  <p className="text-[10px] text-slate-500">Thermal POS / USB / Network Printer Configuration</p>
+                  <p className="text-[10px] text-slate-500">Receipt Paper Formats &amp; Thermal Output</p>
                 </div>
               </div>
               <button
@@ -923,7 +1055,7 @@ export const SellView: React.FC<SellViewProps> = ({
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
                   <div>
                     <p className="font-bold text-emerald-950 uppercase text-[11px]">Printer Interface Ready</p>
-                    <p className="text-[10px] text-emerald-800">Connected to System Spooler / ESC-POS Output</p>
+                    <p className="text-[10px] text-emerald-800">Direct Browser &amp; Local Hardware Spooler</p>
                   </div>
                 </div>
                 <span className="text-[9px] font-bold uppercase bg-emerald-200 text-emerald-900 px-2 py-0.5">
@@ -931,30 +1063,43 @@ export const SellView: React.FC<SellViewProps> = ({
                 </span>
               </div>
 
-              {/* Receipt Paper Format */}
-              <div className="space-y-1.5">
+              {/* 3 Supported Receipt Paper Formats */}
+              <div className="space-y-2">
                 <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                  Receipt Paper Format
+                  Select Receipt Paper Format
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: '80mm', label: '80mm Thermal', desc: 'Standard POS' },
-                    { id: '58mm', label: '58mm Compact', desc: 'Mobile Thermal' },
-                    { id: 'A4', label: 'A4 / Letter', desc: 'Full Invoice' },
-                  ].map((fmt) => (
-                    <button
-                      key={fmt.id}
-                      onClick={() => saveReceiptFormat(fmt.id as any)}
-                      className={`p-2.5 text-center border transition-all ${
-                        receiptFormat === fmt.id
-                          ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
-                          : 'border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100'
-                      }`}
-                    >
-                      <p className="font-bold text-xs uppercase">{fmt.label}</p>
-                      <p className="text-[9px] opacity-75">{fmt.desc}</p>
-                    </button>
-                  ))}
+                    { id: '80mm' as const, label: '80mm Thermal', desc: 'Standard POS', icon: Printer },
+                    { id: '58mm' as const, label: '58mm Compact', desc: 'Mobile Thermal', icon: Smartphone },
+                    { id: 'A4' as const, label: 'A4 / Letter', desc: 'Full Invoice', icon: FileText },
+                  ].map((fmt) => {
+                    const Icon = fmt.icon;
+                    const isSelected = localFormat === fmt.id;
+                    return (
+                      <button
+                        key={fmt.id}
+                        onClick={() => handleFormatSelect(fmt.id)}
+                        className={`p-3 text-center border transition-all flex flex-col items-center justify-between min-h-[90px] ${
+                          isSelected
+                            ? 'border-slate-900 bg-slate-900 text-white shadow-xs ring-1 ring-slate-900'
+                            : 'border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 mb-1 ${isSelected ? 'text-emerald-400' : 'text-slate-600'}`} />
+                        <div>
+                          <p className="font-bold text-[11px] uppercase leading-tight">{fmt.label}</p>
+                          <p className="text-[8.5px] opacity-75 mt-0.5">{fmt.desc}</p>
+                        </div>
+                        {isSelected && (
+                          <div className="mt-1 flex items-center gap-0.5 text-[8px] font-bold text-emerald-400 uppercase">
+                            <Check className="w-2.5 h-2.5" />
+                            <span>Active</span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -986,7 +1131,7 @@ export const SellView: React.FC<SellViewProps> = ({
                 className="flex-1 py-2.5 bg-white border border-slate-300 hover:border-slate-900 text-slate-800 font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
               >
                 <Printer className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Print Test Bill</span>
+                <span>Print Test ({localFormat})</span>
               </button>
               <button
                 onClick={() => setIsPrinterModalOpen(false)}
@@ -999,13 +1144,17 @@ export const SellView: React.FC<SellViewProps> = ({
         </div>
       )}
 
-      {/* Barcode Scanner Modal */}
+      {/* Barcode Scanner Modal with Direct Variant & Product Support */}
       <BarcodeModal
         isOpen={isBarcodeOpen}
         onClose={() => setIsBarcodeOpen(false)}
         products={products}
-        onSelectProduct={(p) => {
-          handleProductSelect(p);
+        onSelectProduct={(product, variant) => {
+          if (variant) {
+            handleDirectAddVariantToCart(product, variant);
+          } else {
+            handleProductSelect(product);
+          }
           setIsBarcodeOpen(false);
         }}
       />
@@ -1029,20 +1178,20 @@ export const SellView: React.FC<SellViewProps> = ({
                 {formatCurrency(completedSaleModal.total, currencySymbol)}
               </p>
               <p className="text-[10px] text-slate-500 mt-0.5">
-                Paid via {completedSaleModal.paymentMethod} • {completedSaleModal.items.length} item(s)
+                Paid via {completedSaleModal.paymentMethod} • {completedSaleModal.items.length} item(s) • Format: {localFormat.toUpperCase()}
               </p>
             </div>
 
             <div className="flex gap-2 pt-2">
               <button
                 onClick={() => {
-                  onPrintReceipt(completedSaleModal);
+                  onPrintReceipt(completedSaleModal, localFormat);
                   setCompletedSaleModal(null);
                 }}
                 className="flex-1 py-2.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black flex items-center justify-center gap-1.5 shadow-sm"
               >
                 <Printer className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Print Bill</span>
+                <span>Print Bill ({localFormat})</span>
               </button>
               <button
                 onClick={() => setCompletedSaleModal(null)}

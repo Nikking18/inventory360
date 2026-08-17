@@ -96,6 +96,16 @@ export default function AppMain() {
 
   const [selectedLocation, setSelectedLocation] = useState<string>('all');
   const [printableSale, setPrintableSale] = useState<Sale | null>(null);
+  const [receiptFormat, setReceiptFormat] = useState<'80mm' | '58mm' | 'A4'>('80mm');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedFormat = localStorage.getItem('inventory360_receipt_format');
+      if (savedFormat === '80mm' || savedFormat === '58mm' || savedFormat === 'A4') {
+        setReceiptFormat(savedFormat);
+      }
+    }
+  }, []);
 
   const initCleanData = async () => {
     await clearAllStores();
@@ -790,7 +800,17 @@ export default function AppMain() {
     setLocations((prev) => [...prev, newLoc]);
   };
 
-  const handlePrintReceipt = (sale: Sale) => {
+  const handleUpdateReceiptFormat = (fmt: '80mm' | '58mm' | 'A4') => {
+    setReceiptFormat(fmt);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('inventory360_receipt_format', fmt);
+    }
+  };
+
+  const handlePrintReceipt = (sale: Sale, format?: '80mm' | '58mm' | 'A4') => {
+    if (format) {
+      handleUpdateReceiptFormat(format);
+    }
     setPrintableSale(sale);
     setTimeout(() => {
       window.print();
@@ -1050,6 +1070,8 @@ export default function AppMain() {
                   currencySymbol={settings.currencySymbol}
                   taxRate={settings.taxRate}
                   onPrintReceipt={handlePrintReceipt}
+                  receiptFormat={receiptFormat}
+                  onUpdateReceiptFormat={handleUpdateReceiptFormat}
                   activeSubTab={activeSubTab}
                   onSubTabChange={setActiveSubTab}
                 />
@@ -1140,7 +1162,7 @@ export default function AppMain() {
           </main>
 
           {/* Printable Receipt Hidden Render Target */}
-          <PrintReceipt sale={printableSale} settings={settings} />
+          <PrintReceipt sale={printableSale} settings={settings} receiptFormat={receiptFormat} />
 
           {/* Data Policy & Backup Notice Modal */}
           <DataPolicyModal
