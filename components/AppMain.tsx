@@ -58,6 +58,7 @@ import { PrintReceipt } from './PrintReceipt';
 import { DataPolicyModal } from './common/DataPolicyModal';
 import { ProductTourModal } from './common/ProductTourModal';
 import { calculateStockStatus } from '../lib/utils';
+import { performAutoSave } from '../lib/autoSaveService';
 import {
   Layers,
   Sparkles,
@@ -336,6 +337,36 @@ export default function AppMain() {
       active = false;
     };
   }, []);
+
+  // Background Auto-Save Engine (Checks every 30s and runs silent scheduled backups)
+  useEffect(() => {
+    if (!settings.autoSaveConfig?.enabled) return;
+
+    const checkAndRunAutoSave = async () => {
+      const config = settings.autoSaveConfig;
+      if (!config || !config.enabled) return;
+
+      const now = Date.now();
+      const nextDue = config.nextAutoSaveDueAt ? new Date(config.nextAutoSaveDueAt).getTime() : 0;
+
+      if (now >= nextDue) {
+        try {
+          const { record, updatedConfig } = await performAutoSave(config, 'Scheduled Background Timer');
+          const updatedSettings = { ...settings, autoSaveConfig: updatedConfig };
+          await putToStore('settings', updatedSettings);
+          setSettings(updatedSettings);
+          console.log(`[AutoSave] Silent backup saved to ${record.folderName}: ${record.filename}`);
+        } catch (err) {
+          console.error('[AutoSave] Background auto-save failed:', err);
+        }
+      }
+    };
+
+    checkAndRunAutoSave();
+    const intervalId = setInterval(checkAndRunAutoSave, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [settings]);
 
   const openWorkspace = (tab: NavItemKey = 'home', subTab: string = 'retail-dashboard') => {
     setShowLanding(false);

@@ -259,6 +259,28 @@ export interface StockAudit {
   createdAt: string;
 }
 
+export type AutoSaveInterval = '30m' | '1h' | '6h' | '12h' | '24h' | '7d' | '30d';
+
+export interface AutoSaveConfig {
+  enabled: boolean;
+  interval: AutoSaveInterval;
+  folderName?: string; // Local destination folder selected by user
+  destinationPath?: string; // Custom path or directory descriptor
+  lastAutoSavedAt?: string;
+  nextAutoSaveDueAt?: string;
+}
+
+export interface AutoSaveRecord {
+  id: string;
+  timestamp: string;
+  filename: string;
+  sizeBytes: number;
+  recordCount: number;
+  status: 'Saved to Local Folder' | 'Saved to Storage Snapshot' | 'Failed';
+  folderName?: string;
+  jsonData?: string; // Full JSON snapshot for 1-click restore or download
+}
+
 export interface BusinessSettings {
   id?: string;
   businessName: string;
@@ -275,4 +297,5 @@ export interface BusinessSettings {
   phone: string;
   email: string;
   demoMode: boolean;
+  autoSaveConfig?: AutoSaveConfig;
 }

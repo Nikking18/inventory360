@@ -17,7 +17,7 @@ import {
 } from './types';
 
 const DB_NAME = 'inventory360_db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
 
@@ -67,6 +67,12 @@ export function getDB() {
         }
         if (!db.objectStoreNames.contains('salesChannels')) {
           db.createObjectStore('salesChannels', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('autosave_history')) {
+          db.createObjectStore('autosave_history', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('autosave_handles')) {
+          db.createObjectStore('autosave_handles', { keyPath: 'id' });
         }
       },
     });
