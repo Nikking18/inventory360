@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from '../../context/I18nContext';
 import {
   FulfillmentOrder,
   SalesChannel,
@@ -72,6 +73,8 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
   activeSubTab = 'channels',
   onSubTabChange,
 }) => {
+  const { t } = useTranslation();
+
   // Filters & State
   const [selectedStatusTab, setSelectedStatusTab] = useState<string>('all');
   const [selectedChannelFilter, setSelectedChannelFilter] = useState<string>('all');
@@ -288,20 +291,20 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
           {[
             {
               id: 'all-orders',
-              label: 'All Fulfillment Orders',
+              label: t('all-orders', 'All Fulfillment Orders'),
               icon: Layers,
               count: orders.length,
             },
             {
               id: 'pending-dispatch',
-              label: 'Pending Dispatch',
+              label: t('pending-dispatch', 'Pending Dispatch'),
               icon: Clock,
               count: pendingOrders.length,
               badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
             },
             {
               id: 'shipped-orders',
-              label: 'Shipped & Tracking',
+              label: t('shipped-orders', 'Shipped & Tracking'),
               icon: Truck,
               count: shippedOrders.length,
               badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',

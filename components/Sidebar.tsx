@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useTranslation } from '../context/I18nContext';
+import { LANGUAGES } from '../lib/i18n';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -303,14 +304,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="bg-transparent text-slate-900 font-bold focus:outline-none cursor-pointer text-[10px] w-full"
             title="Change Language"
           >
-            <option value="en">🇺🇸 EN</option>
-            <option value="es">🇪🇸 ES</option>
-            <option value="fr">🇫🇷 FR</option>
-            <option value="de">🇩🇪 DE</option>
-            <option value="hi">🇮🇳 HI</option>
-            <option value="ja">🇯🇵 JA</option>
-            <option value="pt">🇧🇷 PT</option>
-            <option value="ar">🇦🇪 AR</option>
+            {LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.flag} {l.code.toUpperCase()}
+              </option>
+            ))}
           </select>
         </div>
       </div>

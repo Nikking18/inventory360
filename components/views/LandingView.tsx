@@ -31,6 +31,7 @@ import Link from 'next/link';
 import { BusinessSettings } from '../../lib/types';
 import { CURRENCIES } from '../../lib/currencies';
 import { LANGUAGES, SupportedLanguage } from '../../lib/i18n';
+import { useTranslation } from '../../context/I18nContext';
 
 interface LandingViewProps {
   onOpenDashboard: () => void;
@@ -51,6 +52,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
   settings,
   onUpdateSettings,
 }) => {
+  const { t } = useTranslation();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   const faqs = [
@@ -228,7 +230,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider border border-slate-300 transition-colors"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                <span>Tour</span>
+                <span>{t('interactive_tour', 'Tour')}</span>
               </button>
             )}
 
@@ -236,7 +238,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               onClick={onStartDemo}
               className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider border border-slate-300 transition-colors"
             >
-              Demo Store
+              {t('demo_mode', 'Demo Store')}
             </button>
 
             {/* PRIMARY CTA: OPEN DASHBOARD */}
@@ -245,7 +247,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               className="px-3 sm:px-5 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm shrink-0"
             >
               <LayoutDashboard className="w-4 h-4 text-emerald-400" />
-              <span>Open Dashboard</span>
+              <span>{t('home', 'Open Dashboard')}</span>
               <ArrowRight className="w-3.5 h-3.5 hidden sm:inline" />
             </button>
           </div>
@@ -278,7 +280,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               className="px-7 py-3.5 bg-slate-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2.5 shadow-md group"
             >
               <LayoutDashboard className="w-4 h-4 text-emerald-400" />
-              <span>Explore Demo</span>
+              <span>{t('explore_demo', 'Explore Demo')}</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
 
@@ -287,7 +289,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               className="px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-slate-300 hover:border-slate-800 uppercase tracking-wider transition-all shadow-2xs flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>Start Fresh</span>
+              <span>{t('reset_clean', 'Start Fresh')}</span>
             </button>
           </div>
 
