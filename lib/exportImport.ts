@@ -3,6 +3,8 @@ import {
   putManyToStore,
   clearAllStores,
 } from './db';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 function escapeHtml(str: any): string {
   if (str === null || str === undefined) return '';
@@ -158,89 +160,52 @@ export function exportToExcel<T extends Record<string, any>>(filename: string, r
 export function exportToPDF<T extends Record<string, any>>(filename: string, title: string, rows: T[]): void {
   if (!rows || !rows.length) return;
   const keys = Object.keys(rows[0]);
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
 
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) return;
+  // Header Title
+  doc.setFontSize(15);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text(title.toUpperCase(), 40, 40);
 
-  const escapedTitle = escapeHtml(title);
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Official Inventory Record | Generated: ${new Date().toLocaleString()} | Total Records: ${rows.length}`, 40, 55);
 
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>${escapedTitle}</title>
-        <style>
-          @page { size: landscape; margin: 12mm; }
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 24px; color: #0f172a; background: #ffffff; }
-          .header { border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end; }
-          .brand { font-size: 11px; font-weight: bold; color: #059669; text-transform: uppercase; letter-spacing: 1px; }
-          .title { font-size: 20px; font-weight: 800; text-transform: uppercase; margin: 4px 0 0 0; color: #0f172a; }
-          .subtitle { font-size: 11px; color: #64748b; margin-top: 2px; }
-          .timestamp { font-size: 10px; color: #475569; text-align: right; line-height: 1.4; }
-          table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 11px; }
-          th { background: #0f172a; color: #ffffff; font-weight: bold; text-align: left; padding: 8px 10px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
-          td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; }
-          tr:nth-child(even) { background: #f8fafc; }
-          .footer { margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 8px; font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div>
-            <div class="brand">Inventory 360 Enterprise Management</div>
-            <h1 class="title">${escapedTitle}</h1>
-            <div class="subtitle">Official Real-Time Operational Inventory Audit Record</div>
-          </div>
-          <div class="timestamp">
-            <strong>Generated:</strong> ${escapeHtml(new Date().toLocaleString())}<br/>
-            <strong>Total Records:</strong> ${rows.length}
-          </div>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              ${keys.map((k) => `<th>${escapeHtml(k)}</th>`).join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${rows
-              .map(
-                (row) => `
-              <tr>
-                ${keys
-                  .map((k) => {
-                    let val = row[k];
-                    if (typeof val === 'object') val = JSON.stringify(val);
-                    return `<td>${escapeHtml(val)}</td>`;
-                  })
-                  .join('')}
-              </tr>
-            `
-              )
-              .join('')}
-          </tbody>
-        </table>
-        <div class="footer">
-          <span>Confidential Internal Document</span>
-          <span>Page 1 of 1</span>
-        </div>
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.print();
-            }, 250);
-          };
-        </script>
-      </body>
-    </html>
-  `;
+  const tableData = rows.map((r) =>
+    keys.map((k) => {
+      let val = r[k];
+      if (typeof val === 'object') val = JSON.stringify(val);
+      return String(val ?? '');
+    })
+  );
 
-  printWindow.document.write(html);
-  printWindow.document.close();
+  autoTable(doc, {
+    startY: 70,
+    head: [keys.map((k) => k.toUpperCase())],
+    body: tableData,
+    theme: 'grid',
+    headStyles: {
+      fillColor: [15, 23, 42],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 8,
+    },
+    bodyStyles: {
+      fontSize: 8,
+      textColor: [30, 41, 59],
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252],
+    },
+    margin: { left: 40, right: 40 },
+  });
+
+  doc.save(`${filename}.pdf`);
 }
 
-export function printPOSlipDocument(
+export function downloadPOSlipPDF(
   po: {
     poNumber: string;
     supplierName: string;
@@ -263,136 +228,168 @@ export function printPOSlipDocument(
   currencySymbol: string,
   businessName: string = 'Inventory 360 Enterprise'
 ): void {
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) return;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
 
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Purchase Order Slip - ${escapeHtml(po.poNumber)}</title>
-        <style>
-          @page { size: portrait; margin: 15mm; }
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif; padding: 24px; color: #0f172a; background: #ffffff; line-height: 1.4; }
-          .header { display: flex; justify-content: space-between; border-bottom: 3px solid #0f172a; padding-bottom: 14px; margin-bottom: 20px; }
-          .company-name { font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #0f172a; }
-          .doc-type { font-size: 13px; font-weight: bold; color: #059669; text-transform: uppercase; margin-top: 2px; }
-          .po-meta { text-align: right; }
-          .po-number { font-size: 18px; font-weight: 900; color: #0f172a; font-family: monospace; }
-          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-          .card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 14px; }
-          .card-title { font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
-          .card-text { font-size: 12px; font-weight: bold; color: #0f172a; }
-          .card-sub { font-size: 11px; color: #475569; margin-top: 2px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
-          th { background: #0f172a; color: #ffffff; font-weight: bold; text-align: left; padding: 9px 12px; text-transform: uppercase; font-size: 10px; }
-          td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; }
-          tr:nth-child(even) { background: #f8fafc; }
-          .text-right { text-align: right; }
-          .totals-section { display: flex; justify-content: flex-end; margin-top: 16px; }
-          .totals-box { width: 260px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; }
-          .totals-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #475569; }
-          .totals-grand { display: flex; justify-content: space-between; font-size: 14px; font-weight: 900; border-top: 2px solid #0f172a; padding-top: 8px; margin-top: 6px; color: #0f172a; }
-          .signature-section { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 40px; padding-top: 20px; border-top: 1px dashed #cbd5e1; }
-          .sig-box { border-top: 1px solid #0f172a; padding-top: 6px; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #475569; }
-          .status-badge { display: inline-block; padding: 3px 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; margin-top: 4px; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div>
-            <div class="company-name">${escapeHtml(businessName)}</div>
-            <div class="doc-type">Official Purchase Order & Goods Requisition Slip</div>
-          </div>
-          <div class="po-meta">
-            <div class="po-number">${escapeHtml(po.poNumber)}</div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Issued: ${escapeHtml(new Date(po.createdAt).toLocaleDateString())}</div>
-            <div class="status-badge">${escapeHtml(po.status)}</div>
-          </div>
-        </div>
+  // Top Dark Accent Header Bar
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.rect(0, 0, 595.28, 70, 'F');
 
-        <div class="grid">
-          <div class="card">
-            <div class="card-title">Vendor / Supplier Information</div>
-            <div class="card-text">${escapeHtml(po.supplierName)}</div>
-            <div class="card-sub">Approved Procurement Partner</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Receiving Destination Node</div>
-            <div class="card-text">${escapeHtml(po.locationName || 'Downtown Flagship')}</div>
-            <div class="card-sub">Expected Delivery Date: <strong>${escapeHtml(po.expectedDate || 'ASAP')}</strong></div>
-          </div>
-        </div>
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text(businessName.toUpperCase(), 40, 35);
 
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 40px;">#</th>
-              <th>Product Description & SKU</th>
-              <th class="text-right">Unit Cost</th>
-              <th class="text-right">Ordered Qty</th>
-              <th class="text-right">Line Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${po.items
-              .map(
-                (item, idx) => `
-              <tr>
-                <td>${idx + 1}</td>
-                <td>
-                  <strong>${escapeHtml(item.productName)}</strong><br/>
-                  <span style="font-family: monospace; font-size: 10px; color: #64748b;">SKU: ${escapeHtml(item.sku)}</span>
-                </td>
-                <td class="text-right" style="font-family: monospace;">${escapeHtml(currencySymbol)}${item.unitCost.toFixed(2)}</td>
-                <td class="text-right" style="font-weight: bold; font-family: monospace;">${item.orderedQuantity}</td>
-                <td class="text-right" style="font-weight: bold; font-family: monospace;">${escapeHtml(currencySymbol)}${item.total.toFixed(2)}</td>
-              </tr>
-            `
-              )
-              .join('')}
-          </tbody>
-        </table>
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(52, 211, 153); // emerald-400
+  doc.text('OFFICIAL PURCHASE ORDER & REQUISITION SLIP', 40, 52);
 
-        ${po.notes ? `<div style="margin-top: 14px; font-size: 11px; color: #475569; background: #f8fafc; padding: 8px 12px; border: 1px solid #e2e8f0;"><strong>Notes / Delivery Instructions:</strong> ${escapeHtml(po.notes)}</div>` : ''}
+  // PO Meta Right Aligned
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text(po.poNumber, 555, 35, { align: 'right' });
 
-        <div class="totals-section">
-          <div class="totals-box">
-            <div class="totals-row">
-              <span>Subtotal:</span>
-              <span>${escapeHtml(currencySymbol)}${po.subtotal.toFixed(2)}</span>
-            </div>
-            <div class="totals-row">
-              <span>Estimated Tax (8.5%):</span>
-              <span>${escapeHtml(currencySymbol)}${(po.tax || 0).toFixed(2)}</span>
-            </div>
-            <div class="totals-grand">
-              <span>Total Payable:</span>
-              <span>${escapeHtml(currencySymbol)}${po.total.toFixed(2)}</span>
-            </div>
-          </div>
-        </div>
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(203, 213, 225);
+  doc.text(`Issued: ${new Date(po.createdAt).toLocaleDateString()}`, 555, 52, { align: 'right' });
 
-        <div class="signature-section">
-          <div class="sig-box">Authorized Purchasing Officer Signature & Date</div>
-          <div class="sig-box">Receiving Warehouse Inspection & Stamp</div>
-        </div>
+  // Info Cards Section
+  const cardY = 90;
+  // Card 1: Vendor
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(40, cardY, 245, 60, 'FD');
 
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.print();
-            }, 250);
-          };
-        </script>
-      </body>
-    </html>
-  `;
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(100, 116, 139);
+  doc.text('VENDOR / SUPPLIER INFORMATION', 50, cardY + 16);
 
-  printWindow.document.write(html);
-  printWindow.document.close();
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text(po.supplierName, 50, cardY + 34);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
+  doc.text('Approved Procurement Partner', 50, cardY + 48);
+
+  // Card 2: Destination
+  doc.setFillColor(248, 250, 252);
+  doc.rect(310, cardY, 245, 60, 'FD');
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(100, 116, 139);
+  doc.text('RECEIVING DESTINATION NODE', 320, cardY + 16);
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text(po.locationName || 'Downtown Flagship', 320, cardY + 34);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
+  doc.text(`Expected Date: ${po.expectedDate || 'ASAP'} | Status: ${po.status}`, 320, cardY + 48);
+
+  // Items Table
+  const tableData = po.items.map((item, idx) => [
+    idx + 1,
+    `${item.productName}\nSKU: ${item.sku}`,
+    `${currencySymbol}${item.unitCost.toFixed(2)}`,
+    item.orderedQuantity,
+    `${currencySymbol}${item.total.toFixed(2)}`,
+  ]);
+
+  autoTable(doc, {
+    startY: 165,
+    head: [['#', 'PRODUCT DESCRIPTION & SKU', 'UNIT COST', 'ORDERED QTY', 'LINE TOTAL']],
+    body: tableData,
+    theme: 'grid',
+    headStyles: {
+      fillColor: [15, 23, 42],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 8,
+    },
+    columnStyles: {
+      0: { cellWidth: 25, halign: 'center' },
+      1: { cellWidth: 260 },
+      2: { cellWidth: 70, halign: 'right' },
+      3: { cellWidth: 70, halign: 'right' },
+      4: { cellWidth: 90, halign: 'right' },
+    },
+    bodyStyles: {
+      fontSize: 8.5,
+      textColor: [30, 41, 59],
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252],
+    },
+    margin: { left: 40, right: 40 },
+  });
+
+  // Totals Summary Box
+  const finalY = (doc as any).lastAutoTable.finalY + 15;
+
+  if (po.notes) {
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.rect(40, finalY, 300, 50, 'FD');
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('Notes / Delivery Instructions:', 48, finalY + 15);
+    doc.setFont('helvetica', 'normal');
+    doc.text(po.notes, 48, finalY + 30, { maxWidth: 285 });
+  }
+
+  // Financial summary box
+  const totalsX = 360;
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(totalsX, finalY, 195, 65, 'FD');
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
+  doc.text('Subtotal:', totalsX + 12, finalY + 18);
+  doc.text(`${currencySymbol}${po.subtotal.toFixed(2)}`, totalsX + 183, finalY + 18, { align: 'right' });
+
+  doc.text('Est. Tax (8.5%):', totalsX + 12, finalY + 34);
+  doc.text(`${currencySymbol}${(po.tax || 0).toFixed(2)}`, totalsX + 183, finalY + 34, { align: 'right' });
+
+  doc.setDrawColor(15, 23, 42);
+  doc.line(totalsX + 12, finalY + 42, totalsX + 183, finalY + 42);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text('Total Payable:', totalsX + 12, finalY + 56);
+  doc.text(`${currencySymbol}${po.total.toFixed(2)}`, totalsX + 183, finalY + 56, { align: 'right' });
+
+  // Signatures
+  const sigY = Math.max(finalY + 95, 720);
+  doc.setDrawColor(15, 23, 42);
+  doc.line(40, sigY, 240, sigY);
+  doc.line(355, sigY, 555, sigY);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(100, 116, 139);
+  doc.text('AUTHORIZED PURCHASING OFFICER SIGNATURE', 40, sigY + 14);
+  doc.text('RECEIVING WAREHOUSE INSPECTION & STAMP', 355, sigY + 14);
+
+  // Directly prompt download
+  doc.save(`PO_Slip_${po.poNumber}.pdf`);
 }
+
+// Keep printPOSlipDocument as an alias if needed
+export const printPOSlipDocument = downloadPOSlipPDF;
 
 export function parseCSV(csvText: string): Record<string, string>[] {
   const lines = csvText.split(/\r\n|\n/).filter((l) => l.trim().length > 0);
@@ -401,42 +398,44 @@ export function parseCSV(csvText: string): Record<string, string>[] {
   // Helper to parse a single CSV row following RFC 4180
   const parseRow = (line: string): string[] => {
     const fields: string[] = [];
-    let current = '';
+    let currentField = '';
     let inQuotes = false;
 
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
+      const nextChar = line[i + 1];
+
       if (char === '"') {
-        if (inQuotes && line[i + 1] === '"') {
-          current += '"';
-          i++; // skip escaped quote
+        if (inQuotes && nextChar === '"') {
+          currentField += '"';
+          i++; // Skip escaped quote
         } else {
           inQuotes = !inQuotes;
         }
       } else if (char === ',' && !inQuotes) {
-        fields.push(current.trim());
-        current = '';
+        fields.push(currentField.trim());
+        currentField = '';
       } else {
-        current += char;
+        currentField += char;
       }
     }
-    fields.push(current.trim());
+    fields.push(currentField.trim());
     return fields;
   };
 
-  const headers = parseRow(lines[0]).map((h) => h.replace(/^"|"$/g, '').trim());
-  const results: Record<string, string>[] = [];
+  const headers = parseRow(lines[0]);
+  const rows: Record<string, string>[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const values = parseRow(lines[i]).map((cell) => cell.replace(/^"|"$/g, '').trim());
-    if (values.length === headers.length) {
+    const row = parseRow(lines[i]);
+    if (row.length === headers.length) {
       const obj: Record<string, string> = {};
-      for (let j = 0; j < headers.length; j++) {
-        obj[headers[j]] = values[j];
-      }
-      results.push(obj);
+      headers.forEach((h, idx) => {
+        obj[h] = row[idx];
+      });
+      rows.push(obj);
     }
   }
 
-  return results;
+  return rows;
 }

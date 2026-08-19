@@ -41,12 +41,14 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   Filter,
+  Sliders,
+  Edit3,
 } from 'lucide-react';
 import {
   exportToCSV,
   exportToExcel,
   exportToPDF,
-  printPOSlipDocument,
+  downloadPOSlipPDF,
 } from '../../lib/exportImport';
 
 interface InventoryViewProps {
@@ -62,6 +64,7 @@ interface InventoryViewProps {
   onStockTransfer: (transfer: Omit<StockTransfer, 'id' | 'transferNumber' | 'createdAt'>) => Promise<void>;
   onBulkAutoGeneratePOs?: () => Promise<void>;
   onQuarantineProduct?: (productId: string, isQuarantine: boolean) => Promise<void>;
+  onUpdateProductReorderPoint?: (productId: string, newPoint: number) => Promise<void>;
   currencySymbol: string;
   activeSubTab?: string;
   onSubTabChange?: (sub: string) => void;
@@ -80,6 +83,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   onStockTransfer,
   onBulkAutoGeneratePOs,
   onQuarantineProduct,
+  onUpdateProductReorderPoint,
   currencySymbol,
   activeSubTab = 'stock-levels',
   onSubTabChange,
@@ -90,8 +94,15 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const [movementTypeFilter, setMovementTypeFilter] = useState('all');
   const [poStatusFilter, setPoStatusFilter] = useState('all');
 
+  // Low Stock Custom Threshold Limit
+  const [customLowStockLimit, setCustomLowStockLimit] = useState<number | ''>('');
+  const [isDuplicatePOModalOpen, setIsDuplicatePOModalOpen] = useState(false);
+  const [editingReorderProduct, setEditingReorderProduct] = useState<Product | null>(null);
+  const [newReorderPointInput, setNewReorderPointInput] = useState<number>(10);
+
   // Transfer Modal Form States
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [isRowTransferMode, setIsRowTransferMode] = useState(false);
   const [sourceLocId, setSourceLocId] = useState(locations[0]?.id || '');
   const [targetLocId, setTargetLocId] = useState(locations[1]?.id || locations[0]?.id || '');
   const [transferProductId, setTransferProductId] = useState(products[0]?.id || '');
@@ -124,7 +135,6 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
   // Batch Recall & Expiry Quarantine States
   const [recallSearchQuery, setRecallSearchQuery] = useState('');
-  const [bulkPOSuccess, setBulkPOSuccess] = useState(false);
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
 
   // Expanded PO Cards
@@ -140,9 +150,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   };
 
   // Calculations & Aggregates
-  const lowStockItems = products.filter(
-    (p) => p.stockQuantity <= p.reorderPoint && p.status !== 'Dead Stock'
-  );
+  const lowStockItems = products.filter((p) => {
+    if (p.status === 'Dead Stock' || p.status === 'Quarantined') return false;
+    const effectiveLimit = customLowStockLimit !== '' ? Number(customLowStockLimit) : p.reorderPoint;
+    return p.stockQuantity <= effectiveLimit;
+  });
+
   const outOfStockItems = products.filter((p) => p.stockQuantity === 0);
   const totalStockUnits = products.reduce((acc, p) => acc + (p.stockQuantity || 0), 0);
   const totalCostValuation = products.reduce(
@@ -197,7 +210,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         }
       }
 
-      const isQuarantined = p.status === 'Dead Stock';
+      const isQuarantined = p.status === 'Quarantined' || p.status === 'Dead Stock';
 
       return {
         ...p,
@@ -324,13 +337,29 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     showToast(`Purchase Order issued successfully for ${prod.name}!`);
   };
 
+  // Auto-PO duplicate validation & creation
   const handleBulkAutoReorders = async () => {
-    if (onBulkAutoGeneratePOs) {
-      await onBulkAutoGeneratePOs();
-      setBulkPOSuccess(true);
-      showToast('Automated Purchase Orders generated for all low stock items!');
-      setTimeout(() => setBulkPOSuccess(false), 5000);
+    if (!onBulkAutoGeneratePOs) return;
+
+    // Check if all low stock items already have active/pending auto POs
+    const activeAutoPOs = purchaseOrders.filter(
+      (po) => (po.status === 'Sent' || po.status === 'Partial') && po.poNumber.includes('AUTO')
+    );
+
+    const pendingItemIds = new Set(
+      activeAutoPOs.flatMap((po) => po.items.map((i) => i.productId))
+    );
+
+    const unrequestedLowStock = lowStockItems.filter((p) => !pendingItemIds.has(p.id));
+
+    if (unrequestedLowStock.length === 0 && lowStockItems.length > 0) {
+      // All items already have open purchase orders created!
+      setIsDuplicatePOModalOpen(true);
+      return;
     }
+
+    await onBulkAutoGeneratePOs();
+    showToast('Automated Purchase Orders generated for low stock queue!');
   };
 
   const openAdjustModal = (p: Product) => {
@@ -361,6 +390,37 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     showToast(`Stock level adjusted for ${selectedProductForAdjust.name} (${delta > 0 ? `+${delta}` : delta} units)`);
   };
 
+  // Multi-Outlet Row-Specific Transfer Trigger
+  const openRowTransferModal = (p: Product, preferredSourceLocId?: string) => {
+    setTransferProductId(p.id);
+    setIsRowTransferMode(true);
+
+    // Pick source location where this product has stock
+    let srcId = preferredSourceLocId || locations[0]?.id || '';
+    if (!preferredSourceLocId) {
+      const locWithStock = locations.find((l) => (p.locationQuantities?.[l.id] || 0) > 0);
+      if (locWithStock) srcId = locWithStock.id;
+    }
+    setSourceLocId(srcId);
+
+    // Pick first different location as default destination
+    const dst = locations.find((l) => l.id !== srcId) || locations[0];
+    setTargetLocId(dst?.id || '');
+    setTransferQty(Math.min(5, Math.max(1, p.locationQuantities?.[srcId] || p.stockQuantity)));
+    setTransferNotes('');
+    setIsTransferModalOpen(true);
+  };
+
+  const openGeneralTransferModal = () => {
+    setIsRowTransferMode(false);
+    setTransferProductId(products[0]?.id || '');
+    setSourceLocId(locations[0]?.id || '');
+    setTargetLocId(locations[1]?.id || locations[0]?.id || '');
+    setTransferQty(5);
+    setTransferNotes('');
+    setIsTransferModalOpen(true);
+  };
+
   const handleTransferSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (sourceLocId === targetLocId) return;
@@ -388,7 +448,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     });
 
     setIsTransferModalOpen(false);
-    showToast(`Successfully transferred ${transferQty} units of ${prod.name} to ${dst.name}!`);
+    showToast(`Transferred ${transferQty} units of ${prod.name} from ${src.name} to ${dst.name}!`);
   };
 
   const openReceiveModal = (po: PurchaseOrder) => {
@@ -412,13 +472,21 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       await onQuarantineProduct(p.id, shouldQuarantine);
       showToast(
         shouldQuarantine
-          ? `Lot #${p.lotNumber || p.name} placed under quarantine.`
-          : `Lot #${p.lotNumber || p.name} released from quarantine.`
+          ? `Lot #${p.lotNumber || p.name} quarantined.`
+          : `Lot #${p.lotNumber || p.name} released back to healthy inventory.`
       );
     }
   };
 
-  // Export handlers
+  const handleSaveReorderPoint = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingReorderProduct || !onUpdateProductReorderPoint) return;
+    await onUpdateProductReorderPoint(editingReorderProduct.id, newReorderPointInput);
+    showToast(`Minimum reorder par updated for ${editingReorderProduct.name} to ${newReorderPointInput} units.`);
+    setEditingReorderProduct(null);
+  };
+
+  // Direct PDF & Spreadsheet Export Handlers
   const handleExportStockCSV = () => {
     const data = filteredProducts.map((p) => ({
       SKU: p.sku,
@@ -458,16 +526,17 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const handleExportStockPDF = () => {
     const data = filteredProducts.map((p) => ({
       SKU: p.sku,
-      'Product Name': p.name,
+      Product: p.name,
       Category: p.categoryName,
       Supplier: p.supplierName,
       Cost: `${currencySymbol}${p.costPrice.toFixed(2)}`,
       Retail: `${currencySymbol}${p.retailPrice.toFixed(2)}`,
       Stock: p.stockQuantity,
-      'Total Value': `${currencySymbol}${(p.costPrice * p.stockQuantity).toFixed(2)}`,
+      'Total Valuation': `${currencySymbol}${(p.costPrice * p.stockQuantity).toFixed(2)}`,
       Status: p.status,
     }));
     exportToPDF('Stock_Levels_Report', 'Master Stock Levels Valuation Report', data);
+    showToast('Stock Valuation Report PDF downloaded!');
   };
 
   const handleExportMovementsCSV = () => {
@@ -487,13 +556,14 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     showToast('Movements ledger exported to CSV!');
   };
 
-  const handlePrintSlip = (po: PurchaseOrder) => {
-    printPOSlipDocument(po, currencySymbol, 'Inventory 360 Enterprise');
+  const handleDownloadSlip = (po: PurchaseOrder) => {
+    downloadPOSlipPDF(po, currencySymbol, 'Inventory 360 Enterprise');
+    showToast(`Purchase Order Slip PDF downloaded for ${po.poNumber}!`);
   };
 
   return (
     <div id="tour-inventory-hub" className="space-y-6 text-slate-900 font-mono">
-      {/* Toast Banner */}
+      {/* Toast Notification Banner */}
       {actionSuccessMsg && (
         <div className="p-3 bg-emerald-900 text-white text-xs font-bold font-mono flex items-center justify-between shadow-lg animate-fade-in">
           <div className="flex items-center gap-2">
@@ -513,7 +583,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             {t('inventory', 'Enterprise Inventory Control & Operations')}
           </h1>
           <p className="text-xs text-slate-600">
-            Real-time stock valuation, multi-outlet transfer dispatch, low-stock PO automation, lot recalls, and audit ledgers.
+            Real-time stock valuation, multi-outlet transfer dispatch, low-stock threshold management, lot recalls, and procurement orders.
           </p>
         </div>
 
@@ -564,7 +634,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           })}
 
           <button
-            onClick={() => setIsTransferModalOpen(true)}
+            onClick={openGeneralTransferModal}
             className="px-3.5 py-1.5 bg-slate-900 text-white hover:bg-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs shrink-0"
           >
             <ArrowRightLeft className="w-3.5 h-3.5 text-emerald-400" />
@@ -649,7 +719,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button
                   onClick={handleExportStockCSV}
-                  className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase flex items-center gap-1 shadow-2xs"
+                  className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase flex items-center gap-1 shadow-2xs cursor-pointer"
                   title="Export Stock Levels to CSV"
                 >
                   <Download className="w-3.5 h-3.5 text-slate-500" />
@@ -657,7 +727,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 </button>
                 <button
                   onClick={handleExportStockExcel}
-                  className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase flex items-center gap-1 shadow-2xs"
+                  className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase flex items-center gap-1 shadow-2xs cursor-pointer"
                   title="Export Stock Levels to Excel Spreadsheet"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
@@ -665,8 +735,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 </button>
                 <button
                   onClick={handleExportStockPDF}
-                  className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase flex items-center gap-1 shadow-2xs"
-                  title="Export Stock Levels to Formatted PDF"
+                  className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase flex items-center gap-1 shadow-2xs cursor-pointer"
+                  title="Download Stock Levels PDF Document"
                 >
                   <FileText className="w-3.5 h-3.5 text-rose-600" />
                   <span>PDF</span>
@@ -748,6 +818,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                                   ? 'text-emerald-800 border-emerald-300 bg-emerald-50'
                                   : p.status === 'Low Stock'
                                   ? 'text-amber-800 border-amber-300 bg-amber-50'
+                                  : p.status === 'Quarantined'
+                                  ? 'text-rose-900 border-rose-400 bg-rose-100'
                                   : 'text-rose-800 border-rose-300 bg-rose-50'
                               }`}
                             >
@@ -800,10 +872,14 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
             <div className="p-4 bg-white border border-amber-200 shadow-2xs">
               <p className="text-[10px] text-amber-700 uppercase font-bold tracking-wider">
-                Below Minimum Reorder Buffer
+                Below Active Low Stock Limit
               </p>
               <h3 className="text-2xl font-bold text-amber-800 mt-1">{lowStockItems.length}</h3>
-              <p className="text-[11px] text-amber-700 mt-0.5">Restock orders recommended</p>
+              <p className="text-[11px] text-amber-700 mt-0.5">
+                {customLowStockLimit !== ''
+                  ? `Custom threshold limit: ≤ ${customLowStockLimit} units`
+                  : 'Based on each product’s safety buffer'}
+              </p>
             </div>
 
             <div className="p-4 bg-white border border-slate-200 shadow-2xs">
@@ -818,49 +894,63 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           </div>
 
           <div className="bg-white border border-slate-200 p-6 space-y-4 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 gap-3">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-slate-200 pb-3 gap-3">
               <div>
                 <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-600" />
-                  <span>Restock Priority Queue ({lowStockItems.length})</span>
+                  <span>Low Stock Replenishment Queue ({lowStockItems.length})</span>
                 </h3>
                 <p className="text-xs text-slate-600">
-                  Products requiring procurement PO issuance to avoid stockouts.
+                  Products requiring procurement PO issuance to prevent stockouts.
                 </p>
               </div>
 
-              {lowStockItems.length > 0 && (
-                <button
-                  onClick={handleBulkAutoReorders}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Auto-Generate All Restock POs</span>
-                </button>
-              )}
-            </div>
-
-            {bulkPOSuccess && (
-              <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-700" />
-                  <span>Automated purchase orders generated! Check the Purchase Orders tab to review &amp; receive them.</span>
+              {/* User Adjustable Low Stock Limit Filter & Auto PO Button */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 px-3 py-1.5">
+                  <Sliders className="w-3.5 h-3.5 text-slate-500" />
+                  <label className="text-[10px] font-bold uppercase text-slate-600">
+                    Low Stock Limit (&le; units):
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Product Par"
+                    value={customLowStockLimit}
+                    onChange={(e) =>
+                      setCustomLowStockLimit(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))
+                    }
+                    className="w-20 bg-white border border-slate-300 px-2 py-0.5 text-xs text-right font-mono font-bold text-slate-900 focus:outline-none focus:border-slate-900"
+                    title="Set custom low stock limit for this view"
+                  />
+                  {customLowStockLimit !== '' && (
+                    <button
+                      onClick={() => setCustomLowStockLimit('')}
+                      className="text-[10px] text-slate-400 hover:text-slate-700 underline cursor-pointer"
+                    >
+                      Reset
+                    </button>
+                  )}
                 </div>
-                <button
-                  onClick={() => onSubTabChange && onSubTabChange('purchases')}
-                  className="px-3 py-1 bg-emerald-800 text-white text-[10px] font-bold uppercase hover:bg-emerald-900"
-                >
-                  View POs &rarr;
-                </button>
+
+                {lowStockItems.length > 0 && (
+                  <button
+                    onClick={handleBulkAutoReorders}
+                    className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Auto-Generate All Restock POs</span>
+                  </button>
+                )}
               </div>
-            )}
+            </div>
 
             {lowStockItems.length === 0 ? (
               <div className="p-12 text-center bg-slate-50 border border-dashed border-slate-200 space-y-2">
                 <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
                 <h4 className="font-bold text-slate-900 uppercase text-xs">All Inventory Healthy</h4>
                 <p className="text-xs text-slate-500 font-mono">
-                  No catalog items currently breach minimum reorder levels.
+                  No catalog items currently breach the active low stock limit ({customLowStockLimit !== '' ? customLowStockLimit : 'Default Par'}).
                 </p>
               </div>
             ) : (
@@ -889,7 +979,19 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                         <div className="space-y-1">
                           <div className="flex justify-between text-[10px] text-slate-600">
                             <span>Current: {p.stockQuantity}</span>
-                            <span>Min Buffer: {p.reorderPoint}</span>
+                            <span className="flex items-center gap-1">
+                              Min Par: {p.reorderPoint}
+                              <button
+                                onClick={() => {
+                                  setEditingReorderProduct(p);
+                                  setNewReorderPointInput(p.reorderPoint);
+                                }}
+                                className="text-slate-400 hover:text-slate-800"
+                                title="Edit Reorder Par Point"
+                              >
+                                <Edit3 className="w-2.5 h-2.5" />
+                              </button>
+                            </span>
                           </div>
                           <div className="w-full bg-slate-200 h-2 overflow-hidden">
                             <div
@@ -1031,7 +1133,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       return (
                         <tr
                           key={p.id}
-                          className={`hover:bg-slate-50 transition-colors ${p.isQuarantined ? 'bg-rose-50/70' : ''}`}
+                          className={`hover:bg-slate-50 transition-colors ${p.isQuarantined ? 'bg-rose-50/80' : ''}`}
                         >
                           <td className="p-2.5">
                             <p className="font-bold text-slate-900">{p.name}</p>
@@ -1072,7 +1174,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                             <span
                               className={`text-[9px] font-bold px-1.5 py-0.5 border uppercase ${
                                 p.isQuarantined
-                                  ? 'text-rose-900 border-rose-400 bg-rose-100'
+                                  ? 'text-rose-900 border-rose-400 bg-rose-100 font-extrabold'
                                   : p.expiryStatus === 'Expired'
                                   ? 'text-rose-800 border-rose-300 bg-rose-50'
                                   : p.expiryStatus === 'Critical'
@@ -1089,7 +1191,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                             <button
                               type="button"
                               onClick={() => handleQuarantineToggle(p, !p.isQuarantined)}
-                              className={`px-2.5 py-1 text-[10px] uppercase font-bold border transition-colors cursor-pointer ${
+                              className={`px-3 py-1 text-[10px] uppercase font-bold border transition-colors cursor-pointer ${
                                 p.isQuarantined
                                   ? 'bg-slate-900 text-white border-slate-900 hover:bg-black'
                                   : 'bg-white text-rose-700 border-rose-300 hover:bg-rose-50'
@@ -1158,10 +1260,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               </div>
 
               <button
-                onClick={() => {
-                  setTransferProductId(products[0]?.id || '');
-                  setIsTransferModalOpen(true);
-                }}
+                onClick={openGeneralTransferModal}
                 className="px-3.5 py-1.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
               >
                 <ArrowRightLeft className="w-3.5 h-3.5 text-emerald-400" />
@@ -1207,10 +1306,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       <td className="p-2.5 text-right text-slate-500 font-mono">{p.reorderPoint}</td>
                       <td className="p-2.5 text-center">
                         <button
-                          onClick={() => {
-                            setTransferProductId(p.id);
-                            setIsTransferModalOpen(true);
-                          }}
+                          onClick={() => openRowTransferModal(p)}
                           className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-[10px] uppercase font-bold transition-colors cursor-pointer"
                         >
                           Transfer
@@ -1496,12 +1592,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
                           <div className="flex items-center gap-1.5">
                             <button
-                              onClick={() => handlePrintSlip(po)}
+                              onClick={() => handleDownloadSlip(po)}
                               className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-bold uppercase flex items-center gap-1 transition-colors cursor-pointer"
-                              title="Generate Official Purchase Order Voucher Slip"
+                              title="Download Official Purchase Order Slip (PDF)"
                             >
-                              <Printer className="w-3.5 h-3.5" />
-                              <span>Slip</span>
+                              <Download className="w-3.5 h-3.5 text-slate-700" />
+                              <span>Slip (PDF)</span>
                             </button>
                             {po.status !== 'Received' && (
                               <button
@@ -1565,6 +1661,104 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: DUPLICATE AUTO PO ALREADY GENERATED WARNING                        */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={isDuplicatePOModalOpen}
+        onClose={() => setIsDuplicatePOModalOpen(false)}
+        title="RESTOCK ORDERS ALREADY GENERATED"
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 font-mono text-xs">
+          <div className="p-3.5 bg-amber-50 border border-amber-300 text-amber-900 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-xs uppercase">Purchase Orders Already Active</p>
+              <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
+                Replenishment purchase order requests have already been issued for all items currently in this low stock queue.
+              </p>
+              <p className="text-[11px] text-amber-800 mt-1">
+                Please check the <strong>Purchase Orders</strong> section to inspect, download slips, or confirm dock receipts.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              onClick={() => setIsDuplicatePOModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-bold uppercase text-xs cursor-pointer"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => {
+                setIsDuplicatePOModalOpen(false);
+                if (onSubTabChange) onSubTabChange('purchases');
+              }}
+              className="px-5 py-2 bg-slate-900 hover:bg-black text-white font-bold uppercase text-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Go to Purchase Orders &rarr;</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL: EDIT PRODUCT REORDER PAR POINT                                     */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={!!editingReorderProduct}
+        onClose={() => setEditingReorderProduct(null)}
+        title="EDIT MINIMUM REORDER PAR POINT"
+        maxWidth="max-w-sm"
+      >
+        {editingReorderProduct && (
+          <form onSubmit={handleSaveReorderPoint} className="space-y-4 font-mono text-xs">
+            <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
+              <p className="font-bold text-slate-900 text-xs">{editingReorderProduct.name}</p>
+              <p className="text-[10px] text-slate-500">SKU: {editingReorderProduct.sku}</p>
+              <p className="text-[11px] text-slate-700">
+                Current Stock On Hand: <strong>{editingReorderProduct.stockQuantity} units</strong>
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Minimum Safety Par Buffer (units) *
+              </label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={newReorderPointInput}
+                onChange={(e) => setNewReorderPointInput(Number(e.target.value))}
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono text-right font-bold text-sm"
+              />
+              <p className="text-[10px] text-slate-500 mt-1">
+                When stock falls &le; this number, low-stock alerts and auto-reorder recommendations will trigger.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => setEditingReorderProduct(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold uppercase text-xs cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-slate-900 hover:bg-black text-white font-bold uppercase text-xs cursor-pointer"
+              >
+                Save Par Point
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
 
       {/* ========================================================================= */}
       {/* MODAL: STOCK ADJUSTMENT                                                   */}
@@ -1712,23 +1906,57 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         maxWidth="max-w-lg"
       >
         <form onSubmit={handleTransferSubmit} className="space-y-4 font-mono text-xs">
+          {/* Selected Product info */}
+          {(() => {
+            const currentProd = products.find((p) => p.id === transferProductId);
+            const currentSrcLoc = locations.find((l) => l.id === sourceLocId);
+            const availableUnits =
+              currentProd?.locationQuantities?.[sourceLocId] ??
+              (currentProd ? Math.floor(currentProd.stockQuantity / locations.length) : 0);
+
+            return (
+              <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
+                <p className="font-bold text-slate-900 text-xs">
+                  {currentProd?.name || 'Product'} (SKU: {currentProd?.sku})
+                </p>
+                <p className="text-[11px] text-slate-600">
+                  Current Branch Location:{' '}
+                  <strong className="text-slate-900">{currentSrcLoc?.name}</strong> &bull; Available:{' '}
+                  <strong className="text-emerald-700">{availableUnits} units</strong>
+                </p>
+              </div>
+            );
+          })()}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                Source Outlet *
-              </label>
-              <select
-                value={sourceLocId}
-                onChange={(e) => setSourceLocId(e.target.value)}
-                className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
-              >
-                {locations.map((loc) => (
-                  <option key={loc.id} value={loc.id}>
-                    {loc.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* If rowTransferMode is true, Source is locked/fixed */}
+            {isRowTransferMode ? (
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                  Source Outlet (Current Location)
+                </label>
+                <div className="p-2 bg-slate-100 border border-slate-300 text-slate-900 font-bold font-mono text-xs">
+                  {locations.find((l) => l.id === sourceLocId)?.name || 'Downtown Flagship'}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                  Source Outlet *
+                </label>
+                <select
+                  value={sourceLocId}
+                  onChange={(e) => setSourceLocId(e.target.value)}
+                  className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
+                >
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
@@ -1736,37 +1964,42 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               </label>
               <select
                 value={targetLocId}
+                required
                 onChange={(e) => setTargetLocId(e.target.value)}
                 className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
               >
-                {locations.map((loc) => (
-                  <option key={loc.id} value={loc.id} disabled={loc.id === sourceLocId}>
-                    {loc.name} {loc.id === sourceLocId ? '(Source)' : ''}
-                  </option>
-                ))}
+                {locations
+                  .filter((loc) => loc.id !== sourceLocId)
+                  .map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
               </select>
             </div>
           </div>
 
-          <div>
-            <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-              Select Product to Transfer *
-            </label>
-            <select
-              value={transferProductId}
-              onChange={(e) => setTransferProductId(e.target.value)}
-              className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
-            >
-              {products.map((p) => {
-                const srcQty = p.locationQuantities?.[sourceLocId] ?? Math.floor(p.stockQuantity / locations.length);
-                return (
-                  <option key={p.id} value={p.id}>
-                    {p.name} (SKU: {p.sku}) &mdash; {srcQty} units on hand
-                  </option>
-                );
-              })}
-            </select>
-          </div>
+          {!isRowTransferMode && (
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Select Product to Transfer *
+              </label>
+              <select
+                value={transferProductId}
+                onChange={(e) => setTransferProductId(e.target.value)}
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
+              >
+                {products.map((p) => {
+                  const srcQty = p.locationQuantities?.[sourceLocId] ?? Math.floor(p.stockQuantity / locations.length);
+                  return (
+                    <option key={p.id} value={p.id}>
+                      {p.name} (SKU: {p.sku}) &mdash; {srcQty} units available
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
@@ -1790,7 +2023,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               rows={2}
               value={transferNotes}
               onChange={(e) => setTransferNotes(e.target.value)}
-              placeholder="e.g. Replenishment for weekend rush..."
+              placeholder="e.g. Stock replenishment for branch demand..."
               className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono resize-none"
             />
           </div>

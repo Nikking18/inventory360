@@ -987,6 +987,22 @@ export default function AppMain() {
     setMovements((prev) => [mov, ...prev]);
   };
 
+  // HANDLER FOR UPDATING PRODUCT REORDER POINT
+  const handleUpdateProductReorderPoint = async (productId: string, newReorderPoint: number) => {
+    const p = products.find((prod) => prod.id === productId);
+    if (!p) return;
+
+    const updatedProd: Product = {
+      ...p,
+      reorderPoint: Math.max(0, newReorderPoint),
+      status: calculateStockStatus({ ...p, reorderPoint: Math.max(0, newReorderPoint) }),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await putToStore('products', updatedProd);
+    setProducts((prev) => prev.map((prod) => (prod.id === productId ? updatedProd : prod)));
+  };
+
   // HANDLERS FOR SETTINGS & LOCATIONS
   const handleUpdateSettings = async (newSettings: BusinessSettings) => {
     await putToStore('settings', newSettings);
@@ -1265,6 +1281,7 @@ export default function AppMain() {
                   onStockTransfer={handleStockTransfer}
                   onBulkAutoGeneratePOs={handleBulkAutoGeneratePOs}
                   onQuarantineProduct={handleQuarantineProduct}
+                  onUpdateProductReorderPoint={handleUpdateProductReorderPoint}
                   currencySymbol={settings.currencySymbol}
                   activeSubTab={activeSubTab}
                   onSubTabChange={setActiveSubTab}
