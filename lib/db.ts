@@ -109,6 +109,16 @@ export async function deleteFromStore(storeName: string, id: string): Promise<vo
   await db.delete(storeName, id);
 }
 
+export async function deleteManyFromStore(storeName: string, ids: string[]): Promise<void> {
+  const db = await getDB();
+  if (!db) return;
+  const tx = db.transaction(storeName, 'readwrite');
+  for (const id of ids) {
+    await tx.store.delete(id);
+  }
+  await tx.done;
+}
+
 export async function clearStore(storeName: string): Promise<void> {
   const db = await getDB();
   if (!db) return;

@@ -23,6 +23,10 @@ import {
   MapPin,
   Tag,
   Boxes,
+  AlertTriangle,
+  CheckSquare,
+  Square,
+  X,
 } from 'lucide-react';
 
 interface CatalogViewProps {
@@ -33,12 +37,15 @@ interface CatalogViewProps {
   onAddProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   onUpdateProduct: (product: Product) => Promise<void>;
   onDeleteProduct: (id: string) => Promise<void>;
+  onBulkDeleteProducts?: (ids: string[]) => Promise<void>;
   onAddCategory?: (category: Omit<Category, 'id'>) => Promise<void>;
   onUpdateCategory?: (category: Category) => Promise<void>;
   onDeleteCategory?: (id: string) => Promise<void>;
+  onBulkDeleteCategories?: (ids: string[]) => Promise<void>;
   onAddSupplier?: (supplier: Omit<Supplier, 'id'>) => Promise<void>;
   onUpdateSupplier?: (supplier: Supplier) => Promise<void>;
   onDeleteSupplier?: (id: string) => Promise<void>;
+  onBulkDeleteSuppliers?: (ids: string[]) => Promise<void>;
   currencySymbol: string;
   activeSubTab?: string;
   onSubTabChange?: (sub: string) => void;
@@ -52,12 +59,15 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,
+  onBulkDeleteProducts,
   onAddCategory,
   onUpdateCategory,
   onDeleteCategory,
+  onBulkDeleteCategories,
   onAddSupplier,
   onUpdateSupplier,
   onDeleteSupplier,
+  onBulkDeleteSuppliers,
   currencySymbol,
   activeSubTab = 'products',
   onSubTabChange,
@@ -65,6 +75,21 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Product Selection & Delete Confirmation States
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isBulkDeleteProductModalOpen, setIsBulkDeleteProductModalOpen] = useState(false);
+
+  // Category Selection & Delete Confirmation States
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [isBulkDeleteCategoryModalOpen, setIsBulkDeleteCategoryModalOpen] = useState(false);
+
+  // Supplier Selection & Delete Confirmation States
+  const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>([]);
+  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
+  const [isBulkDeleteSupplierModalOpen, setIsBulkDeleteSupplierModalOpen] = useState(false);
 
   // Product Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -468,6 +493,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     setIsSupplierModalOpen(false);
   };
 
+  // Filtered dataset calculations
   const filteredProducts = products.filter((p) => {
     const searchLower = search.trim().toLowerCase();
     const matchesSearch =
@@ -500,6 +526,118 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       (sup.phone || '').toLowerCase().includes(s)
     );
   });
+
+  // Bulk Product selection helpers
+  const handleSelectAllProducts = () => {
+    if (selectedProductIds.length === filteredProducts.length) {
+      setSelectedProductIds([]);
+    } else {
+      setSelectedProductIds(filteredProducts.map((p) => p.id));
+    }
+  };
+
+  const handleToggleProductSelection = (id: string) => {
+    setSelectedProductIds((prev) =>
+      prev.includes(id) ? prev.filter((pId) => pId !== id) : [...prev, id]
+    );
+  };
+
+  // Bulk Category selection helpers
+  const handleSelectAllCategories = () => {
+    if (selectedCategoryIds.length === filteredCategories.length) {
+      setSelectedCategoryIds([]);
+    } else {
+      setSelectedCategoryIds(filteredCategories.map((c) => c.id));
+    }
+  };
+
+  const handleToggleCategorySelection = (id: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((cId) => cId !== id) : [...prev, id]
+    );
+  };
+
+  // Bulk Supplier selection helpers
+  const handleSelectAllSuppliers = () => {
+    if (selectedSupplierIds.length === filteredSuppliers.length) {
+      setSelectedSupplierIds([]);
+    } else {
+      setSelectedSupplierIds(filteredSuppliers.map((s) => s.id));
+    }
+  };
+
+  const handleToggleSupplierSelection = (id: string) => {
+    setSelectedSupplierIds((prev) =>
+      prev.includes(id) ? prev.filter((sId) => sId !== id) : [...prev, id]
+    );
+  };
+
+  // Single & Bulk Deletion Executions
+  const executeSingleProductDelete = async () => {
+    if (productToDelete) {
+      await onDeleteProduct(productToDelete.id);
+      setSelectedProductIds((prev) => prev.filter((id) => id !== productToDelete.id));
+      setProductToDelete(null);
+    }
+  };
+
+  const executeBulkProductDelete = async () => {
+    if (selectedProductIds.length > 0) {
+      if (onBulkDeleteProducts) {
+        await onBulkDeleteProducts(selectedProductIds);
+      } else {
+        for (const id of selectedProductIds) {
+          await onDeleteProduct(id);
+        }
+      }
+      setSelectedProductIds([]);
+      setIsBulkDeleteProductModalOpen(false);
+    }
+  };
+
+  const executeSingleCategoryDelete = async () => {
+    if (categoryToDelete && onDeleteCategory) {
+      await onDeleteCategory(categoryToDelete.id);
+      setSelectedCategoryIds((prev) => prev.filter((id) => id !== categoryToDelete.id));
+      setCategoryToDelete(null);
+    }
+  };
+
+  const executeBulkCategoryDelete = async () => {
+    if (selectedCategoryIds.length > 0) {
+      if (onBulkDeleteCategories) {
+        await onBulkDeleteCategories(selectedCategoryIds);
+      } else if (onDeleteCategory) {
+        for (const id of selectedCategoryIds) {
+          await onDeleteCategory(id);
+        }
+      }
+      setSelectedCategoryIds([]);
+      setIsBulkDeleteCategoryModalOpen(false);
+    }
+  };
+
+  const executeSingleSupplierDelete = async () => {
+    if (supplierToDelete && onDeleteSupplier) {
+      await onDeleteSupplier(supplierToDelete.id);
+      setSelectedSupplierIds((prev) => prev.filter((id) => id !== supplierToDelete.id));
+      setSupplierToDelete(null);
+    }
+  };
+
+  const executeBulkSupplierDelete = async () => {
+    if (selectedSupplierIds.length > 0) {
+      if (onBulkDeleteSuppliers) {
+        await onBulkDeleteSuppliers(selectedSupplierIds);
+      } else if (onDeleteSupplier) {
+        for (const id of selectedSupplierIds) {
+          await onDeleteSupplier(id);
+        }
+      }
+      setSelectedSupplierIds([]);
+      setIsBulkDeleteSupplierModalOpen(false);
+    }
+  };
 
   return (
     <div id="tour-catalog-table" className="space-y-6 text-slate-900 font-mono">
@@ -545,6 +683,32 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       {/* ========================================================================= */}
       {activeSubTab === 'products' && (
         <div className="bg-white border border-slate-200 p-5 space-y-4 shadow-sm">
+          {/* Bulk Action Banner for Products */}
+          {selectedProductIds.length > 0 && (
+            <div className="p-3 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                <CheckSquare className="w-4 h-4 text-emerald-400" />
+                <span>{selectedProductIds.length} Products Selected</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedProductIds([])}
+                  className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs uppercase font-bold tracking-wider"
+                >
+                  Deselect All
+                </button>
+                <button
+                  onClick={() => setIsBulkDeleteProductModalOpen(true)}
+                  className="px-3.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs uppercase font-bold tracking-wider flex items-center gap-1.5 shadow-xs"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Bulk Delete ({selectedProductIds.length})</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Filter Bar */}
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
             <div className="relative w-full sm:max-w-md">
@@ -579,6 +743,20 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
+                  <th className="p-2.5 w-10 text-center">
+                    <button
+                      type="button"
+                      onClick={handleSelectAllProducts}
+                      className="text-slate-600 hover:text-slate-900"
+                      title="Select all products"
+                    >
+                      {filteredProducts.length > 0 && selectedProductIds.length === filteredProducts.length ? (
+                        <CheckSquare className="w-4 h-4 text-slate-900" />
+                      ) : (
+                        <Square className="w-4 h-4" />
+                      )}
+                    </button>
+                  </th>
                   <th className="p-2.5">Product &amp; SKU</th>
                   <th className="p-2.5">Category</th>
                   <th className="p-2.5">Supplier</th>
@@ -592,7 +770,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               <tbody className="divide-y divide-slate-100">
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-slate-500 text-xs">
+                    <td colSpan={9} className="p-8 text-center text-slate-500 text-xs">
                       No products found matching active filters.
                     </td>
                   </tr>
@@ -600,9 +778,23 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   filteredProducts.map((p) => {
                     const hasVariants = p.variants && p.variants.length > 0;
                     const isExpanded = expandedProductIds[p.id];
+                    const isSelected = selectedProductIds.includes(p.id);
+
                     return (
                       <React.Fragment key={p.id}>
-                        <tr className="hover:bg-slate-50 transition-colors">
+                        <tr
+                          className={`transition-colors ${
+                            isSelected ? 'bg-slate-100/80' : 'hover:bg-slate-50'
+                          }`}
+                        >
+                          <td className="p-2.5 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleProductSelection(p.id)}
+                              className="cursor-pointer accent-slate-900 rounded-none w-3.5 h-3.5"
+                            />
+                          </td>
                           <td className="p-2.5">
                             <div className="flex items-center gap-2.5">
                               {hasVariants && (
@@ -676,7 +868,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => onDeleteProduct(p.id)}
+                                onClick={() => setProductToDelete(p)}
                                 className="p-1.5 text-slate-400 hover:text-rose-700 hover:bg-slate-100 transition-colors"
                                 title="Delete Product"
                               >
@@ -691,6 +883,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           isExpanded &&
                           p.variants?.map((v) => (
                             <tr key={v.id} className="bg-slate-50/80 text-[11px]">
+                              <td className="p-2 text-center text-slate-400">—</td>
                               <td className="py-2 pl-12 pr-2 font-mono text-slate-700">
                                 ↳ <span className="font-bold text-slate-900">{v.name}</span> (SKU: {v.sku})
                               </td>
@@ -728,16 +921,58 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 2. PRODUCT CATEGORIES SUB-TAB (FULL CRUD & SEARCH)                        */}
+      {/* 2. PRODUCT CATEGORIES SUB-TAB (FULL CRUD & BULK DELETE)                    */}
       {/* ========================================================================= */}
       {activeSubTab === 'categories' && (
         <div className="bg-white border border-slate-200 p-6 space-y-5 shadow-sm">
+          {/* Bulk Action Banner for Categories */}
+          {selectedCategoryIds.length > 0 && (
+            <div className="p-3 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                <CheckSquare className="w-4 h-4 text-emerald-400" />
+                <span>{selectedCategoryIds.length} Categories Selected</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedCategoryIds([])}
+                  className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs uppercase font-bold tracking-wider"
+                >
+                  Deselect All
+                </button>
+                <button
+                  onClick={() => setIsBulkDeleteCategoryModalOpen(true)}
+                  className="px-3.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs uppercase font-bold tracking-wider flex items-center gap-1.5 shadow-xs"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Bulk Delete ({selectedCategoryIds.length})</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-            <div>
-              <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
-                Product Categories ({categories.length})
-              </h3>
-              <p className="text-[11px] text-slate-500">Organize and group catalog items for fast POS filtering and reporting.</p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSelectAllCategories}
+                className="text-slate-600 hover:text-slate-900 flex items-center gap-1.5 text-xs uppercase font-bold tracking-wider bg-slate-100 px-2.5 py-1.5 border border-slate-300"
+                title="Select all categories"
+              >
+                {filteredCategories.length > 0 && selectedCategoryIds.length === filteredCategories.length ? (
+                  <CheckSquare className="w-3.5 h-3.5 text-slate-900" />
+                ) : (
+                  <Square className="w-3.5 h-3.5" />
+                )}
+                <span>Select All</span>
+              </button>
+
+              <div>
+                <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                  Product Categories ({categories.length})
+                </h3>
+                <p className="text-[11px] text-slate-500">Organize and group catalog items for fast POS filtering and reporting.</p>
+              </div>
             </div>
 
             <div className="relative w-full sm:w-64">
@@ -760,15 +995,26 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             ) : (
               filteredCategories.map((c) => {
                 const productCount = products.filter((p) => p.categoryId === c.id).length;
+                const isSelected = selectedCategoryIds.includes(c.id);
 
                 return (
                   <div
                     key={c.id}
-                    className="p-4 bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors flex flex-col justify-between space-y-3"
+                    className={`p-4 border transition-colors flex flex-col justify-between space-y-3 ${
+                      isSelected
+                        ? 'bg-slate-100 border-slate-900 shadow-xs'
+                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                    }`}
                   >
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleCategorySelection(c.id)}
+                            className="cursor-pointer accent-slate-900 rounded-none w-3.5 h-3.5"
+                          />
                           <Tag className="w-4 h-4 text-emerald-600 shrink-0" />
                           <h4 className="font-bold text-slate-900 text-xs uppercase">{c.name}</h4>
                         </div>
@@ -791,7 +1037,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                       </button>
                       {onDeleteCategory && (
                         <button
-                          onClick={() => onDeleteCategory(c.id)}
+                          onClick={() => setCategoryToDelete(c)}
                           className="px-2.5 py-1 bg-white border border-slate-300 hover:bg-rose-50 text-rose-700 text-[10px] font-bold uppercase flex items-center gap-1"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -808,16 +1054,58 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 3. VENDORS & SUPPLIERS SUB-TAB (FULL CRUD & SEARCH)                       */}
+      {/* 3. VENDORS & SUPPLIERS SUB-TAB (FULL CRUD & BULK DELETE)                  */}
       {/* ========================================================================= */}
       {activeSubTab === 'suppliers' && (
         <div className="bg-white border border-slate-200 p-6 space-y-5 shadow-sm">
+          {/* Bulk Action Banner for Suppliers */}
+          {selectedSupplierIds.length > 0 && (
+            <div className="p-3 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                <CheckSquare className="w-4 h-4 text-emerald-400" />
+                <span>{selectedSupplierIds.length} Suppliers Selected</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedSupplierIds([])}
+                  className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs uppercase font-bold tracking-wider"
+                >
+                  Deselect All
+                </button>
+                <button
+                  onClick={() => setIsBulkDeleteSupplierModalOpen(true)}
+                  className="px-3.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs uppercase font-bold tracking-wider flex items-center gap-1.5 shadow-xs"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Bulk Delete ({selectedSupplierIds.length})</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-            <div>
-              <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
-                Approved Vendors &amp; Suppliers ({suppliers.length})
-              </h3>
-              <p className="text-[11px] text-slate-500">Manage procurement partner profiles, lead times, and contact points.</p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSelectAllSuppliers}
+                className="text-slate-600 hover:text-slate-900 flex items-center gap-1.5 text-xs uppercase font-bold tracking-wider bg-slate-100 px-2.5 py-1.5 border border-slate-300"
+                title="Select all suppliers"
+              >
+                {filteredSuppliers.length > 0 && selectedSupplierIds.length === filteredSuppliers.length ? (
+                  <CheckSquare className="w-3.5 h-3.5 text-slate-900" />
+                ) : (
+                  <Square className="w-3.5 h-3.5" />
+                )}
+                <span>Select All</span>
+              </button>
+
+              <div>
+                <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                  Approved Vendors &amp; Suppliers ({suppliers.length})
+                </h3>
+                <p className="text-[11px] text-slate-500">Manage procurement partner profiles, lead times, and contact points.</p>
+              </div>
             </div>
 
             <div className="relative w-full sm:w-64">
@@ -840,15 +1128,26 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             ) : (
               filteredSuppliers.map((s) => {
                 const suppliedProductsCount = products.filter((p) => p.supplierId === s.id).length;
+                const isSelected = selectedSupplierIds.includes(s.id);
 
                 return (
                   <div
                     key={s.id}
-                    className="p-4 bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors flex flex-col justify-between space-y-3 text-xs font-mono"
+                    className={`p-4 border transition-colors flex flex-col justify-between space-y-3 text-xs font-mono ${
+                      isSelected
+                        ? 'bg-slate-100 border-slate-900 shadow-xs'
+                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                    }`}
                   >
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleSupplierSelection(s.id)}
+                            className="cursor-pointer accent-slate-900 rounded-none w-3.5 h-3.5"
+                          />
                           <Building2 className="w-4 h-4 text-sky-600 shrink-0" />
                           <h4 className="font-bold text-slate-900 text-sm">{s.name}</h4>
                         </div>
@@ -900,7 +1199,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                       </button>
                       {onDeleteSupplier && (
                         <button
-                          onClick={() => onDeleteSupplier(s.id)}
+                          onClick={() => setSupplierToDelete(s)}
                           className="px-2.5 py-1 bg-white border border-slate-300 hover:bg-rose-50 text-rose-700 text-[10px] font-bold uppercase flex items-center gap-1"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -915,6 +1214,266 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* SINGLE PRODUCT DELETE CONFIRMATION MODAL                                  */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={!!productToDelete}
+        onClose={() => setProductToDelete(null)}
+        title="CONFIRM PRODUCT DELETION"
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 font-mono text-xs">
+          <div className="p-3 bg-rose-50 border border-rose-200 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-bold text-rose-900 uppercase">Warning: Permanent Deletion</p>
+              <p className="text-rose-700 leading-relaxed">
+                Are you sure you want to delete <strong className="font-bold text-slate-900">{productToDelete?.name}</strong> (SKU: <span className="font-mono">{productToDelete?.sku}</span>)?
+              </p>
+            </div>
+          </div>
+          <p className="text-slate-600">
+            This will permanently remove the item, its variants, and associated barcode metadata from your local store.
+          </p>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setProductToDelete(null)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold uppercase text-xs border border-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={executeSingleProductDelete}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold uppercase text-xs flex items-center gap-1.5 shadow-xs"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Product</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* BULK PRODUCT DELETE CONFIRMATION MODAL                                    */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={isBulkDeleteProductModalOpen}
+        onClose={() => setIsBulkDeleteProductModalOpen(false)}
+        title={`CONFIRM BULK DELETE (${selectedProductIds.length} PRODUCTS)`}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 font-mono text-xs">
+          <div className="p-3 bg-rose-50 border border-rose-200 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-bold text-rose-900 uppercase">Bulk Action Warning</p>
+              <p className="text-rose-700 leading-relaxed">
+                You are about to permanently delete <strong className="font-bold text-slate-900">{selectedProductIds.length} selected products</strong> from your master catalog.
+              </p>
+            </div>
+          </div>
+
+          <div className="max-h-36 overflow-y-auto border border-slate-200 p-2 bg-slate-50 divide-y divide-slate-200 text-[11px]">
+            {products
+              .filter((p) => selectedProductIds.includes(p.id))
+              .map((p) => (
+                <div key={p.id} className="py-1 flex justify-between">
+                  <span className="font-bold text-slate-800 truncate max-w-[220px]">{p.name}</span>
+                  <span className="text-slate-500 font-mono">{p.sku}</span>
+                </div>
+              ))}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsBulkDeleteProductModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold uppercase text-xs border border-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={executeBulkProductDelete}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold uppercase text-xs flex items-center gap-1.5 shadow-xs"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Confirm &amp; Delete All</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* SINGLE CATEGORY DELETE CONFIRMATION MODAL                                 */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={!!categoryToDelete}
+        onClose={() => setCategoryToDelete(null)}
+        title="CONFIRM CATEGORY DELETION"
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 font-mono text-xs">
+          <div className="p-3 bg-rose-50 border border-rose-200 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-bold text-rose-900 uppercase">Delete Category</p>
+              <p className="text-rose-700 leading-relaxed">
+                Are you sure you want to delete category <strong className="font-bold text-slate-900">{categoryToDelete?.name}</strong>?
+              </p>
+            </div>
+          </div>
+          <p className="text-slate-600 text-[11px]">
+            Note: Catalog products linked to this category will not be removed, but their category association will default to &quot;Uncategorized&quot;.
+          </p>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setCategoryToDelete(null)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold uppercase text-xs border border-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={executeSingleCategoryDelete}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold uppercase text-xs flex items-center gap-1.5 shadow-xs"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Category</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* BULK CATEGORY DELETE CONFIRMATION MODAL                                   */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={isBulkDeleteCategoryModalOpen}
+        onClose={() => setIsBulkDeleteCategoryModalOpen(false)}
+        title={`CONFIRM BULK DELETE (${selectedCategoryIds.length} CATEGORIES)`}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 font-mono text-xs">
+          <div className="p-3 bg-rose-50 border border-rose-200 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-bold text-rose-900 uppercase">Bulk Category Deletion</p>
+              <p className="text-rose-700 leading-relaxed">
+                You are about to delete <strong className="font-bold text-slate-900">{selectedCategoryIds.length} categories</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsBulkDeleteCategoryModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold uppercase text-xs border border-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={executeBulkCategoryDelete}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold uppercase text-xs flex items-center gap-1.5 shadow-xs"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Confirm &amp; Delete Categories</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* SINGLE SUPPLIER DELETE CONFIRMATION MODAL                                 */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={!!supplierToDelete}
+        onClose={() => setSupplierToDelete(null)}
+        title="CONFIRM VENDOR / SUPPLIER DELETION"
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 font-mono text-xs">
+          <div className="p-3 bg-rose-50 border border-rose-200 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-bold text-rose-900 uppercase">Delete Supplier Record</p>
+              <p className="text-rose-700 leading-relaxed">
+                Are you sure you want to delete vendor <strong className="font-bold text-slate-900">{supplierToDelete?.name}</strong>?
+              </p>
+            </div>
+          </div>
+          <p className="text-slate-600 text-[11px]">
+            Past purchase order history will remain preserved in your reporting and accounting ledgers.
+          </p>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setSupplierToDelete(null)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold uppercase text-xs border border-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={executeSingleSupplierDelete}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold uppercase text-xs flex items-center gap-1.5 shadow-xs"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Supplier</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* BULK SUPPLIER DELETE CONFIRMATION MODAL                                   */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={isBulkDeleteSupplierModalOpen}
+        onClose={() => setIsBulkDeleteSupplierModalOpen(false)}
+        title={`CONFIRM BULK DELETE (${selectedSupplierIds.length} SUPPLIERS)`}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 font-mono text-xs">
+          <div className="p-3 bg-rose-50 border border-rose-200 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-bold text-rose-900 uppercase">Bulk Vendor Deletion</p>
+              <p className="text-rose-700 leading-relaxed">
+                You are about to delete <strong className="font-bold text-slate-900">{selectedSupplierIds.length} vendor profiles</strong> from your supplier registry.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsBulkDeleteSupplierModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold uppercase text-xs border border-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={executeBulkSupplierDelete}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold uppercase text-xs flex items-center gap-1.5 shadow-xs"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Confirm &amp; Delete Suppliers</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* ========================================================================= */}
       {/* ADD / EDIT PRODUCT MODAL                                                  */}

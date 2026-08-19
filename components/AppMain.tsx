@@ -22,6 +22,7 @@ import {
   putToStore,
   putManyToStore,
   deleteFromStore,
+  deleteManyFromStore,
   clearAllStores,
 } from '../lib/db';
 import {
@@ -371,6 +372,12 @@ export default function AppMain() {
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const handleBulkDeleteProducts = async (ids: string[]) => {
+    if (!ids || ids.length === 0) return;
+    await deleteManyFromStore('products', ids);
+    setProducts((prev) => prev.filter((p) => !ids.includes(p.id)));
+  };
+
   // HANDLERS FOR CATEGORIES
   const handleAddCategory = async (catData: Omit<Category, 'id'>) => {
     const newCat: Category = {
@@ -391,6 +398,12 @@ export default function AppMain() {
     setCategories((prev) => prev.filter((c) => c.id !== id));
   };
 
+  const handleBulkDeleteCategories = async (ids: string[]) => {
+    if (!ids || ids.length === 0) return;
+    await deleteManyFromStore('categories', ids);
+    setCategories((prev) => prev.filter((c) => !ids.includes(c.id)));
+  };
+
   // HANDLERS FOR SUPPLIERS
   const handleAddSupplier = async (supData: Omit<Supplier, 'id'>) => {
     const newSup: Supplier = {
@@ -409,6 +422,12 @@ export default function AppMain() {
   const handleDeleteSupplier = async (id: string) => {
     await deleteFromStore('suppliers', id);
     setSuppliers((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const handleBulkDeleteSuppliers = async (ids: string[]) => {
+    if (!ids || ids.length === 0) return;
+    await deleteManyFromStore('suppliers', ids);
+    setSuppliers((prev) => prev.filter((s) => !ids.includes(s.id)));
   };
 
   // HANDLERS FOR CUSTOMERS
@@ -1140,12 +1159,15 @@ export default function AppMain() {
                   onAddProduct={handleAddProduct}
                   onUpdateProduct={handleUpdateProduct}
                   onDeleteProduct={handleDeleteProduct}
+                  onBulkDeleteProducts={handleBulkDeleteProducts}
                   onAddCategory={handleAddCategory}
                   onUpdateCategory={handleUpdateCategory}
                   onDeleteCategory={handleDeleteCategory}
+                  onBulkDeleteCategories={handleBulkDeleteCategories}
                   onAddSupplier={handleAddSupplier}
                   onUpdateSupplier={handleUpdateSupplier}
                   onDeleteSupplier={handleDeleteSupplier}
+                  onBulkDeleteSuppliers={handleBulkDeleteSuppliers}
                   currencySymbol={settings.currencySymbol}
                   activeSubTab={activeSubTab}
                   onSubTabChange={setActiveSubTab}
