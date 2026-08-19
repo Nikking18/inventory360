@@ -85,7 +85,8 @@ export const SellView: React.FC<SellViewProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [discountMode, setDiscountMode] = useState<'percent' | 'fixed'>('percent');
+  const [discountInput, setDiscountInput] = useState<number | string>('');
   const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'Card' | 'Bank Transfer'>('Card');
   const [isBarcodeOpen, setIsBarcodeOpen] = useState(false);
   const [completedSaleModal, setCompletedSaleModal] = useState<Sale | null>(null);
@@ -261,18 +262,41 @@ export const SellView: React.FC<SellViewProps> = ({
 
   const clearCart = () => {
     setCart([]);
-    setDiscountAmount(0);
+    setDiscountInput('');
   };
 
-  // Calculations (Respecting Individual Item Tax Rates)
+  // Calculations (Respecting Individual Item Tax Rates and Custom Discounts)
   const subtotal = cart.reduce((acc, item) => acc + item.total, 0);
-  const discountRatio = subtotal > 0 ? Math.max(0, (subtotal - discountAmount) / subtotal) : 1;
+
+  const effectiveDiscount = React.useMemo(() => {
+    if (discountInput === '' || isNaN(Number(discountInput))) return 0;
+    const val = Math.max(0, Number(discountInput));
+    if (discountMode === 'percent') {
+      return (subtotal * Math.min(100, val)) / 100;
+    }
+    return Math.min(subtotal, val);
+  }, [discountInput, discountMode, subtotal]);
+
+  const discountRatio = subtotal > 0 ? Math.max(0, (subtotal - effectiveDiscount) / subtotal) : 1;
+
   const calculatedTax = cart.reduce((acc, item) => {
     const rate = item.taxRate !== undefined ? item.taxRate : taxRate;
     const discountedItemTotal = item.total * discountRatio;
     return acc + discountedItemTotal * (rate / 100);
   }, 0);
-  const total = Math.max(0, subtotal - discountAmount + calculatedTax);
+
+  const taxBreakdown = React.useMemo(() => {
+    const slabs = new Map<number, number>();
+    cart.forEach((item) => {
+      const rate = item.taxRate !== undefined ? item.taxRate : taxRate;
+      const discountedItemTotal = item.total * discountRatio;
+      const taxVal = discountedItemTotal * (rate / 100);
+      slabs.set(rate, (slabs.get(rate) || 0) + taxVal);
+    });
+    return Array.from(slabs.entries()).map(([rate, amount]) => ({ rate, amount }));
+  }, [cart, discountRatio, taxRate]);
+
+  const total = Math.max(0, subtotal - effectiveDiscount + calculatedTax);
   const totalCOGS = cart.reduce((acc, item) => acc + item.quantity * item.unitCost, 0);
   const grossProfit = total - totalCOGS;
 
@@ -284,7 +308,7 @@ export const SellView: React.FC<SellViewProps> = ({
     const saleRecord: Omit<Sale, 'id' | 'saleNumber' | 'createdAt'> = {
       items: cart,
       subtotal,
-      discount: discountAmount,
+      discount: effectiveDiscount,
       tax: calculatedTax,
       total,
       paymentMethod,
@@ -656,74 +680,180 @@ export const SellView: React.FC<SellViewProps> = ({
                   </p>
                 </div>
               ) : (
-                cart.map((item) => (
-                  <div
-                    key={item.productId}
-                    className="p-2.5 bg-slate-50 border border-slate-200 flex items-center justify-between text-xs"
-                  >
-                    <div className="min-w-0 flex-1 pr-2">
-                      <p className="font-bold text-slate-900 truncate">{item.productName}</p>
-                      <p className="text-[10px] text-slate-500">
-                        {formatCurrency(item.unitPrice, currencySymbol)} × {item.quantity} • {item.sku}
-                      </p>
-                    </div>
+                cart.map((item) => {
+                  const effectiveItemTaxRate = item.taxRate !== undefined ? item.taxRate : taxRate;
+                  const itemDiscountedTotal = item.total * discountRatio;
+                  const itemTaxAmount = itemDiscountedTotal * (effectiveItemTaxRate / 100);
 
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center border border-slate-300 bg-white">
-                        <button
-                          onClick={() => updateCartQty(item.productId, -1)}
-                          className="p-1 text-slate-600 hover:text-slate-900"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="px-2 text-xs font-bold text-slate-900">{item.quantity}</span>
-                        <button
-                          onClick={() => updateCartQty(item.productId, 1)}
-                          className="p-1 text-slate-600 hover:text-slate-900"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
+                  return (
+                    <div
+                      key={item.productId}
+                      className="p-2.5 bg-slate-50 border border-slate-200 flex items-center justify-between text-xs"
+                    >
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-bold text-slate-900 truncate">{item.productName}</p>
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.2 border uppercase ${
+                              item.taxRate !== undefined
+                                ? item.taxRate === 0
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                  : 'bg-indigo-50 text-indigo-800 border-indigo-300'
+                                : 'bg-slate-100 text-slate-700 border-slate-300'
+                            }`}
+                          >
+                            {item.taxRate !== undefined ? `${item.taxRate}% Tax` : `${taxRate}% Std`}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500">
+                          {formatCurrency(item.unitPrice, currencySymbol)} × {item.quantity} • {item.sku}
+                          <span className="ml-1 text-slate-600 font-semibold">
+                            (Tax: {formatCurrency(itemTaxAmount, currencySymbol)})
+                          </span>
+                        </p>
                       </div>
 
-                      <span className="font-bold text-slate-900 min-w-[50px] text-right">
-                        {formatCurrency(item.total, currencySymbol)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center border border-slate-300 bg-white">
+                          <button
+                            onClick={() => updateCartQty(item.productId, -1)}
+                            className="p-1 text-slate-600 hover:text-slate-900"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="px-2 text-xs font-bold text-slate-900">{item.quantity}</span>
+                          <button
+                            onClick={() => updateCartQty(item.productId, 1)}
+                            className="p-1 text-slate-600 hover:text-slate-900"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
 
-                      <button
-                        onClick={() => removeFromCart(item.productId)}
-                        className="p-1 text-slate-400 hover:text-rose-700"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                        <span className="font-bold text-slate-900 min-w-[50px] text-right">
+                          {formatCurrency(item.total, currencySymbol)}
+                        </span>
+
+                        <button
+                          onClick={() => removeFromCart(item.productId)}
+                          className="p-1 text-slate-400 hover:text-rose-700"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
             {/* Calculations Summary */}
-            <div className="border-t border-slate-200 pt-3 space-y-1.5 text-xs font-mono">
+            <div className="border-t border-slate-200 pt-3 space-y-2 text-xs font-mono">
               <div className="flex justify-between text-slate-600">
                 <span>Subtotal:</span>
                 <span>{formatCurrency(subtotal, currencySymbol)}</span>
               </div>
 
-              <div className="flex items-center justify-between text-slate-600">
-                <span>Discount ({currencySymbol}):</span>
-                <input
-                  type="number"
-                  min="0"
-                  max={subtotal}
-                  value={discountAmount || ''}
-                  onChange={(e) => setDiscountAmount(Math.max(0, Number(e.target.value)))}
-                  placeholder="0.00"
-                  className="w-20 text-right bg-white border border-slate-300 p-1 text-xs text-slate-900"
-                />
+              {/* Cashier Custom Discounts Control */}
+              <div className="p-2 bg-slate-50 border border-slate-200 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold uppercase text-[10px] text-slate-700">Cashier Discount:</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setDiscountMode('percent')}
+                      className={`px-1.5 py-0.5 text-[9px] font-bold uppercase border ${
+                        discountMode === 'percent'
+                          ? 'bg-slate-900 text-white border-slate-900'
+                          : 'bg-white text-slate-700 border-slate-300'
+                      }`}
+                    >
+                      % Percent
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDiscountMode('fixed')}
+                      className={`px-1.5 py-0.5 text-[9px] font-bold uppercase border ${
+                        discountMode === 'fixed'
+                          ? 'bg-slate-900 text-white border-slate-900'
+                          : 'bg-white text-slate-700 border-slate-300'
+                      }`}
+                    >
+                      {currencySymbol} Flat
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      min="0"
+                      max={discountMode === 'percent' ? 100 : subtotal}
+                      step={discountMode === 'percent' ? '1' : '0.5'}
+                      value={discountInput}
+                      onChange={(e) => setDiscountInput(e.target.value)}
+                      placeholder={discountMode === 'percent' ? 'Enter % (e.g. 10)' : `Enter ${currencySymbol} (e.g. 5.00)`}
+                      className="w-full text-right bg-white border border-slate-300 p-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900"
+                    />
+                  </div>
+                  {effectiveDiscount > 0 && (
+                    <span className="font-bold text-emerald-700 shrink-0 text-[11px]">
+                      -{formatCurrency(effectiveDiscount, currencySymbol)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Preset Chips */}
+                <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                  {[5, 10, 15, 20].map((pct) => (
+                    <button
+                      key={pct}
+                      type="button"
+                      onClick={() => {
+                        setDiscountMode('percent');
+                        setDiscountInput(pct);
+                      }}
+                      className={`px-1.5 py-0.5 text-[9px] font-bold uppercase border transition-colors ${
+                        discountMode === 'percent' && (discountInput === pct || discountInput === String(pct))
+                          ? 'bg-slate-900 text-white border-slate-900'
+                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                      }`}
+                    >
+                      {pct}% Off
+                    </button>
+                  ))}
+                  {discountInput !== '' && (
+                    <button
+                      type="button"
+                      onClick={() => setDiscountInput('')}
+                      className="px-1.5 py-0.5 text-[9px] font-bold uppercase text-rose-600 hover:underline"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="flex justify-between text-slate-600">
-                <span>Tax ({taxRate}%):</span>
-                <span>{formatCurrency(calculatedTax, currencySymbol)}</span>
+              {/* Taxes Summary & Slab Breakdown */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-slate-600">
+                  <span>Taxes &amp; GST:</span>
+                  <span>{formatCurrency(calculatedTax, currencySymbol)}</span>
+                </div>
+
+                {taxBreakdown.length > 1 && (
+                  <div className="flex flex-wrap items-center gap-1 justify-end">
+                    {taxBreakdown.map((t) => (
+                      <span
+                        key={t.rate}
+                        className="text-[9px] bg-slate-100 border border-slate-200 px-1 py-0.2 text-slate-600 font-mono"
+                      >
+                        {t.rate}%: {formatCurrency(t.amount, currencySymbol)}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between text-base font-bold text-slate-900 border-t border-slate-200 pt-2">

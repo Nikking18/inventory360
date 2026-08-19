@@ -27,6 +27,8 @@ import {
   CheckSquare,
   Square,
   X,
+  CheckCircle2,
+  Check,
 } from 'lucide-react';
 
 interface CatalogViewProps {
@@ -112,6 +114,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [supAddress, setSupAddress] = useState('');
   const [supLeadTime, setSupLeadTime] = useState<number>(5);
   const [supplierError, setSupplierError] = useState<string | null>(null);
+
+  // Toast & Quick Tax States
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [editingTaxProduct, setEditingTaxProduct] = useState<Product | null>(null);
+  const [quickTaxInput, setQuickTaxInput] = useState<number | string>('');
 
   // Print Label Modal State
   const [labelModalProduct, setLabelModalProduct] = useState<Product | null>(null);
@@ -395,6 +402,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     const cat = categories.find((c) => c.id === categoryId);
     const sup = suppliers.find((s) => s.id === supplierId);
 
+    const finalTaxRate = taxRate !== '' && !isNaN(Number(taxRate)) ? Number(taxRate) : undefined;
+
     const productPayload = {
       name: trimmedName,
       sku: trimmedSku,
@@ -408,7 +417,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       retailPrice: numRetailPrice,
       stockQuantity: numStock,
       reorderPoint: numReorderPoint,
-      taxRate: taxRate !== '' && !isNaN(Number(taxRate)) ? Number(taxRate) : undefined,
+      taxRate: finalTaxRate,
       locationQuantities: editingProduct?.locationQuantities || {
         [locations[0]?.id || 'loc_downtown']: numStock,
       },
@@ -423,14 +432,29 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     };
 
     if (editingProduct) {
-      await onUpdateProduct({
+      const updatedProductObj: Product = {
         ...editingProduct,
         ...productPayload,
-      });
+        taxRate: finalTaxRate,
+      };
+      if (finalTaxRate === undefined) {
+        delete (updatedProductObj as any).taxRate;
+      }
+      await onUpdateProduct(updatedProductObj);
+      setToastMessage(`Product "${trimmedName}" updated successfully (Tax Rate: ${finalTaxRate !== undefined ? `${finalTaxRate}%` : 'Default Store Tax'}).`);
     } else {
-      await onAddProduct(productPayload);
+      const newProductObj = {
+        ...productPayload,
+        taxRate: finalTaxRate,
+      };
+      if (finalTaxRate === undefined) {
+        delete (newProductObj as any).taxRate;
+      }
+      await onAddProduct(newProductObj);
+      setToastMessage(`New product "${trimmedName}" created successfully!`);
     }
 
+    setTimeout(() => setToastMessage(null), 3500);
     setIsModalOpen(false);
   };
 
@@ -495,6 +519,28 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       }
     }
     setIsSupplierModalOpen(false);
+  };
+
+  const handleOpenQuickTax = (p: Product) => {
+    setEditingTaxProduct(p);
+    setQuickTaxInput(p.taxRate !== undefined ? p.taxRate : '');
+  };
+
+  const handleSaveQuickTax = async () => {
+    if (!editingTaxProduct) return;
+    const finalTax = quickTaxInput !== '' && !isNaN(Number(quickTaxInput)) ? Number(quickTaxInput) : undefined;
+    const updated: Product = {
+      ...editingTaxProduct,
+      taxRate: finalTax,
+      updatedAt: new Date().toISOString(),
+    };
+    if (finalTax === undefined) {
+      delete (updated as any).taxRate;
+    }
+    await onUpdateProduct(updated);
+    setToastMessage(`Tax rate for "${editingTaxProduct.name}" updated to ${finalTax !== undefined ? `${finalTax}%` : 'Store Default'}!`);
+    setTimeout(() => setToastMessage(null), 3500);
+    setEditingTaxProduct(null);
   };
 
   // Filtered dataset calculations
@@ -645,6 +691,22 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
   return (
     <div id="tour-catalog-table" className="space-y-6 text-slate-900 font-mono">
+      {/* Toast Notification Banner */}
+      {toastMessage && (
+        <div className="bg-emerald-900 text-white p-3 border border-emerald-700 shadow-md flex items-center justify-between transition-all">
+          <div className="flex items-center gap-2 text-xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-bold">{toastMessage}</span>
+          </div>
+          <button
+            onClick={() => setToastMessage(null)}
+            className="text-emerald-300 hover:text-white text-xs font-bold px-2 py-0.5 uppercase"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Top Header & Subtabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 gap-3">
         <div>
@@ -835,9 +897,20 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           </td>
                           <td className="p-2.5 text-right font-mono font-bold text-slate-900">
                             <div>{formatCurrency(p.retailPrice, currencySymbol)}</div>
-                            <div className="text-[9px] font-normal text-slate-500 font-mono">
-                              {p.taxRate !== undefined ? `${p.taxRate}% Tax` : 'Std Tax'}
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenQuickTax(p)}
+                              className={`text-[9px] font-bold px-1.5 py-0.5 border uppercase transition-colors inline-block mt-0.5 cursor-pointer ${
+                                p.taxRate !== undefined
+                                  ? p.taxRate === 0
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                                    : 'bg-indigo-50 text-indigo-800 border-indigo-300 hover:bg-indigo-100'
+                                  : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
+                              }`}
+                              title="Click to edit Tax / GST Rate"
+                            >
+                              {p.taxRate !== undefined ? `${p.taxRate}% Tax ✎` : 'Std Tax ✎'}
+                            </button>
                           </td>
                           <td className="p-2.5 text-right font-mono font-bold text-slate-900">
                             {p.stockQuantity}
@@ -2023,6 +2096,88 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           </div>
         </form>
       </Modal>
+
+      {/* Quick Tax Rate Edit Modal */}
+      {editingTaxProduct && (
+        <Modal
+          isOpen={!!editingTaxProduct}
+          onClose={() => setEditingTaxProduct(null)}
+          title={`ADJUST ITEM TAX RATE: ${editingTaxProduct.name.toUpperCase()}`}
+        >
+          <div className="space-y-4 font-mono text-xs text-slate-900">
+            <div className="p-3 bg-slate-50 border border-slate-200">
+              <p className="font-bold text-slate-900">{editingTaxProduct.name}</p>
+              <p className="text-[11px] text-slate-600">
+                SKU: {editingTaxProduct.sku} • Retail Price: {formatCurrency(editingTaxProduct.retailPrice, currencySymbol)}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-1">
+                Current Applied Rate: {editingTaxProduct.taxRate !== undefined ? `${editingTaxProduct.taxRate}% (Custom Rate)` : 'Store Default Tax Rate'}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[10px] font-bold uppercase text-slate-700">
+                Specific Item Tax / GST Percentage (%)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  placeholder="Store Default Rate"
+                  value={quickTaxInput}
+                  onChange={(e) => setQuickTaxInput(e.target.value)}
+                  className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono text-right"
+                  autoFocus
+                />
+                <span className="font-bold text-slate-700">%</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                {[0, 5, 12, 18, 28].map((rate) => (
+                  <button
+                    key={rate}
+                    type="button"
+                    onClick={() => setQuickTaxInput(rate)}
+                    className={`px-2 py-1 text-[10px] font-bold uppercase border transition-colors ${
+                      quickTaxInput === rate || quickTaxInput === String(rate)
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                    }`}
+                  >
+                    {rate === 0 ? '0% (Exempt)' : `${rate}%`}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setQuickTaxInput('')}
+                  className="px-2 py-1 text-[10px] font-bold uppercase text-rose-600 hover:underline"
+                >
+                  Reset Default
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => setEditingTaxProduct(null)}
+                className="px-4 py-2 bg-slate-100 border border-slate-300 text-slate-700 font-bold uppercase hover:bg-slate-200 text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveQuickTax}
+                className="px-5 py-2 bg-slate-900 text-white font-bold uppercase hover:bg-black shadow-xs text-xs flex items-center gap-1.5"
+              >
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Save Tax Rate</span>
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Printable Labels Modal */}
       <LabelPrintModal

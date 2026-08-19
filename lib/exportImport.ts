@@ -494,6 +494,162 @@ export function downloadPOSlipPDF(
   doc.save(`PO_Slip_${po.poNumber}.pdf`);
 }
 
+export function downloadPickListPDF(
+  pickItems: Array<{ sku: string; name: string; quantity: number }>,
+  pendingOrdersCount: number,
+  businessName: string = 'Inventory 360 Enterprise',
+  logoUrl?: string,
+  taxNumber?: string
+): void {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+  const pageWidth = 595.28;
+  const leftMargin = 36;
+  const rightMargin = 559;
+  const printableWidth = rightMargin - leftMargin;
+
+  let brandX = leftMargin;
+  if (logoUrl && (logoUrl.startsWith('data:image') || logoUrl.startsWith('http') || logoUrl.startsWith('blob:'))) {
+    try {
+      doc.addImage(logoUrl, 'PNG', leftMargin, 26, 38, 38);
+      brandX = leftMargin + 46;
+    } catch {}
+  }
+
+  // 1. Header
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text(businessName.toUpperCase(), brandX, 38);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80, 80, 80);
+  doc.text('WAREHOUSE FULFILLMENT & BATCH PICK LIST', brandX, 50);
+
+  if (taxNumber) {
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(60, 60, 60);
+    doc.text(`GSTIN / TAX ID: ${taxNumber}`, brandX, 62);
+  }
+
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text('BATCH PICK LIST', rightMargin, 38, { align: 'right' });
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, rightMargin, 51, { align: 'right' });
+  doc.text(`Orders Queued: ${pendingOrdersCount} Pending Shipments`, rightMargin, 63, { align: 'right' });
+
+  // Top Rule
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(1.25);
+  doc.line(leftMargin, 74, rightMargin, 74);
+
+  // 2. Summary Card
+  const totalUnits = pickItems.reduce((a, b) => a + b.quantity, 0);
+  doc.setFillColor(250, 250, 250);
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.75);
+  doc.rect(leftMargin, 84, printableWidth, 42, 'FD');
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text('DISPATCH PICKING INSTRUCTIONS:', leftMargin + 10, 100);
+
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(60, 60, 60);
+  doc.text(
+    `Retrieve total ${totalUnits} units across ${pickItems.length} SKUs for staging & packaging. Verify barcode labels before transferring to packing station.`,
+    leftMargin + 10,
+    114,
+    { maxWidth: printableWidth - 20 }
+  );
+
+  // 3. Line Items Table with Checkboxes
+  const tableData = pickItems.map((item, idx) => [
+    '[  ]',
+    idx + 1,
+    item.sku,
+    item.name,
+    item.quantity,
+    '________',
+  ]);
+
+  autoTable(doc, {
+    startY: 136,
+    head: [['CHECK', '#', 'SKU / ITEM CODE', 'PRODUCT NAME & DESCRIPTION', 'PICK QTY', 'PICKER SIGN']],
+    body: tableData,
+    theme: 'grid',
+    headStyles: {
+      fillColor: [243, 244, 246],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold',
+      fontSize: 8,
+      lineWidth: 0.5,
+      lineColor: [180, 180, 180],
+    },
+    columnStyles: {
+      0: { cellWidth: 45, halign: 'center' },
+      1: { cellWidth: 25, halign: 'center' },
+      2: { cellWidth: 110 },
+      3: { cellWidth: 210 },
+      4: { cellWidth: 65, halign: 'center', fontStyle: 'bold' },
+      5: { cellWidth: 68, halign: 'center' },
+    },
+    bodyStyles: {
+      fontSize: 8,
+      textColor: [20, 20, 20],
+      lineWidth: 0.5,
+      lineColor: [225, 225, 225],
+    },
+    alternateRowStyles: {
+      fillColor: [252, 252, 252],
+    },
+    margin: { left: leftMargin, right: pageWidth - rightMargin },
+  });
+
+  // 4. Signatures
+  const finalY = (doc as any).lastAutoTable.finalY + 25;
+  const sigY = Math.max(finalY, 730);
+
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.75);
+  doc.line(leftMargin, sigY, leftMargin + 210, sigY);
+  doc.line(rightMargin - 210, sigY, rightMargin, sigY);
+
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text('WAREHOUSE PICKER SIGN-OFF', leftMargin, sigY + 12);
+  doc.text('DISPATCH SUPERVISOR AUDIT', rightMargin - 210, sigY + 12);
+
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text('Picker Name & Timestamp', leftMargin, sigY + 22);
+  doc.text('Supervisor Verification & Stamp', rightMargin - 210, sigY + 22);
+
+  // 5. Running Footer
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.5);
+  doc.line(leftMargin, 795, rightMargin, 795);
+
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(120, 120, 120);
+  doc.text('Inventory360 Enterprise ERP - Warehouse Dispatch Control Slip', leftMargin, 807);
+  doc.text(`Page 1 of 1 | Printed: ${new Date().toLocaleString()}`, rightMargin, 807, { align: 'right' });
+
+  // Download PDF
+  doc.save(`Warehouse_Batch_Pick_List_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
 // Keep printPOSlipDocument as an alias if needed
 export const printPOSlipDocument = downloadPOSlipPDF;
 

@@ -8,9 +8,11 @@ import {
   SalesChannelType,
   Product,
   Location,
+  BusinessSettings,
 } from '../../lib/types';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { Modal } from '../common/Modal';
+import { downloadPickListPDF } from '../../lib/exportImport';
 import {
   Globe,
   ShoppingBag,
@@ -37,6 +39,7 @@ import {
   FileCheck,
   Send,
   Boxes,
+  Download,
 } from 'lucide-react';
 
 interface FulfillmentViewProps {
@@ -52,6 +55,7 @@ interface FulfillmentViewProps {
     trackingNumber?: string
   ) => Promise<void>;
   currencySymbol: string;
+  settings?: BusinessSettings;
   activeSubTab?: string;
   onSubTabChange?: (subTab: string) => void;
 }
@@ -64,7 +68,8 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
   onSyncAllChannels,
   onUpdateOrderStatus,
   currencySymbol,
-  activeSubTab = 'all-orders',
+  settings,
+  activeSubTab = 'channels',
   onSubTabChange,
 }) => {
   // Filters & State
@@ -1051,18 +1056,43 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
               ))}
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+            <div className="flex flex-wrap justify-end gap-2 pt-3 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => setIsBatchPickListOpen(false)}
-                className="px-4 py-2 bg-slate-100 border border-slate-300 text-slate-700 font-bold uppercase hover:bg-slate-200"
+                className="px-4 py-2 bg-slate-100 border border-slate-300 text-slate-700 font-bold uppercase hover:bg-slate-200 text-xs"
               >
                 Close
               </button>
               <button
                 type="button"
-                onClick={() => window.print()}
-                className="px-5 py-2 bg-slate-900 text-white font-bold uppercase hover:bg-black flex items-center gap-1.5 shadow-xs"
+                onClick={() => {
+                  downloadPickListPDF(
+                    aggregatedPickItems,
+                    pendingOrders.length,
+                    settings?.businessName,
+                    settings?.logoUrl,
+                    settings?.taxNumber
+                  );
+                }}
+                className="px-4 py-2 bg-white border border-slate-300 text-slate-800 font-bold uppercase hover:bg-slate-100 flex items-center gap-1.5 shadow-2xs text-xs"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download PDF</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  downloadPickListPDF(
+                    aggregatedPickItems,
+                    pendingOrders.length,
+                    settings?.businessName,
+                    settings?.logoUrl,
+                    settings?.taxNumber
+                  );
+                  window.print();
+                }}
+                className="px-5 py-2 bg-slate-900 text-white font-bold uppercase hover:bg-black flex items-center gap-1.5 shadow-xs text-xs"
               >
                 <Printer className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Print Pick List</span>
@@ -1071,6 +1101,76 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
           </div>
         </Modal>
       )}
+
+        {/* ========================================================================= */}
+        {/* PRINT-ONLY WAREHOUSE PICK LIST CONTAINER                                  */}
+        {/* ========================================================================= */}
+        <div className="hidden print-only print-container font-mono text-black p-8">
+          <div className="border-b-2 border-black pb-4 mb-4 flex justify-between items-start">
+            <div className="flex items-center gap-3">
+              {settings?.logoUrl && (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={settings.logoUrl} alt="Logo" className="max-h-12 max-w-[140px] object-contain" />
+              )}
+              <div>
+                <h1 className="font-extrabold text-xl uppercase tracking-tight">
+                  {settings?.businessName || 'INVENTORY 360'}
+                </h1>
+                <p className="text-xs text-gray-700">WAREHOUSE BATCH PICK &amp; FULFILLMENT LIST</p>
+                {settings?.taxNumber && <p className="text-[10px] text-gray-600">GSTIN / TAX: {settings.taxNumber}</p>}
+              </div>
+            </div>
+            <div className="text-right text-xs">
+              <p className="font-bold text-sm">BATCH PICK LIST</p>
+              <p className="text-[10px] text-gray-600">Date: {new Date().toLocaleString()}</p>
+              <p className="text-[10px] font-bold">Pending Orders: {pendingOrders.length}</p>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 border border-gray-300 p-3 mb-4 text-xs">
+            <p className="font-bold uppercase">Summary Instructions:</p>
+            <p className="text-gray-700">
+              Retrieve total {aggregatedPickItems.reduce((a, b) => a + b.quantity, 0)} units across {aggregatedPickItems.length} SKUs.
+              Check items off as they are pulled from shelf locations.
+            </p>
+          </div>
+
+          <table className="w-full text-left text-xs border-collapse border border-black mb-6">
+            <thead>
+              <tr className="bg-gray-100 border-b border-black font-bold">
+                <th className="p-2 border-r border-black w-12 text-center">[ ✓ ]</th>
+                <th className="p-2 border-r border-black w-10 text-center">#</th>
+                <th className="p-2 border-r border-black">SKU</th>
+                <th className="p-2 border-r border-black">Product Name</th>
+                <th className="p-2 border-r border-black text-center w-20">Pick Qty</th>
+                <th className="p-2 text-center w-28">Picker Initials</th>
+              </tr>
+            </thead>
+            <tbody>
+              {aggregatedPickItems.map((item, idx) => (
+                <tr key={idx} className="border-b border-gray-300">
+                  <td className="p-2 border-r border-black text-center font-bold text-sm">[  ]</td>
+                  <td className="p-2 border-r border-black text-center">{idx + 1}</td>
+                  <td className="p-2 border-r border-black font-bold font-mono">{item.sku}</td>
+                  <td className="p-2 border-r border-black font-semibold">{item.name}</td>
+                  <td className="p-2 border-r border-black text-center font-extrabold text-sm">{item.quantity}</td>
+                  <td className="p-2 border-b border-dotted border-gray-400"></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="grid grid-cols-2 gap-8 pt-8 border-t border-gray-300 text-xs">
+            <div>
+              <div className="border-b border-black w-48 mb-1"></div>
+              <p className="font-bold">Warehouse Picker Sign &amp; Date</p>
+            </div>
+            <div className="text-right">
+              <div className="border-b border-black w-48 ml-auto mb-1"></div>
+              <p className="font-bold">Dispatch Supervisor Verification</p>
+            </div>
+          </div>
+        </div>
 
       {/* ========================================================================= */}
       {/* 8. LOG NEW ONLINE ORDER MODAL                                             */}
@@ -1094,12 +1194,11 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                     onClick={() => setNewOrderChannel(chan)}
                     className={`p-2 border text-left flex items-center gap-1.5 transition-all ${
                       newOrderChannel === chan
-                        ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
-                        : 'border-slate-300 bg-white text-slate-800 hover:bg-slate-100'
+                        ? 'bg-slate-900 text-white border-slate-900 font-bold'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                     }`}
                   >
-                    {getChannelIcon(chan)}
-                    <span className="font-bold text-[11px] uppercase">{chan}</span>
+                    <span className="text-[10px] uppercase">{chan}</span>
                   </button>
                 ))}
               </div>
@@ -1108,12 +1207,12 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                  Customer Name
+                  Customer Name *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Sarah Connor"
+                  placeholder="e.g. Jane Smith"
                   value={newOrderCustomer}
                   onChange={(e) => setNewOrderCustomer(e.target.value)}
                   className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
@@ -1126,7 +1225,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                 </label>
                 <input
                   type="email"
-                  placeholder="sarah@example.com"
+                  placeholder="jane@example.com"
                   value={newOrderEmail}
                   onChange={(e) => setNewOrderEmail(e.target.value)}
                   className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
@@ -1136,12 +1235,12 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
 
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                Shipping Destination Address
+                Delivery Address *
               </label>
               <input
                 type="text"
                 required
-                placeholder="e.g. 100 Main St, Suite 400, Los Angeles, CA 90012"
+                placeholder="Street address, city, state, zip"
                 value={newOrderAddress}
                 onChange={(e) => setNewOrderAddress(e.target.value)}
                 className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
@@ -1151,16 +1250,16 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                  Select Product Item
+                  Assigned Fulfillment Outlet *
                 </label>
                 <select
-                  value={newOrderProductId}
-                  onChange={(e) => setNewOrderProductId(e.target.value)}
-                  className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono text-xs"
+                  value={newOrderLocationId}
+                  onChange={(e) => setNewOrderLocationId(e.target.value)}
+                  className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
                 >
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.sku}) - {formatCurrency(p.retailPrice, currencySymbol)}
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name} ({loc.code})
                     </option>
                   ))}
                 </select>
@@ -1168,7 +1267,26 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
 
               <div>
                 <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                  Quantity
+                  Product SKU *
+                </label>
+                <select
+                  value={newOrderProductId}
+                  onChange={(e) => setNewOrderProductId(e.target.value)}
+                  className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono"
+                >
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} — {formatCurrency(p.retailPrice, currencySymbol)} (Stock: {p.stockQuantity})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                  Order Quantity *
                 </label>
                 <input
                   type="number"
