@@ -18,7 +18,8 @@ import {
   Settings,
   Lightbulb,
   CheckCircle2,
-  Compass,
+  Bot,
+  MessageSquare,
 } from 'lucide-react';
 
 export interface TourStep {
@@ -29,7 +30,7 @@ export interface TourStep {
   subTabKey?: string;
   badge: string;
   icon: React.ElementType;
-  description: string;
+  bubbleMessage: string;
   proTip: string;
   highlights: string[];
 }
@@ -43,9 +44,9 @@ const TOUR_STEPS: TourStep[] = [
     subTabKey: 'retail-dashboard',
     badge: 'Overview Hub',
     icon: LayoutDashboard,
-    description:
-      'Monitor your business performance in real time. Track gross revenue, net profit, inventory valuation, recent transactions, and low stock alert counters.',
-    proTip: 'Use the outlet filter dropdown in the top bar to inspect metrics for specific store locations.',
+    bubbleMessage:
+      'Welcome to your central control room! Here you can monitor live gross revenue, net profit margins, inventory valuation, and urgent stock alert counters.',
+    proTip: 'Use the outlet dropdown in the top bar to inspect performance for specific retail stores or warehouses.',
     highlights: ['Real-time revenue & gross profit', 'Inventory & retail valuation', 'Quick POS launch & recent sales'],
   },
   {
@@ -56,9 +57,9 @@ const TOUR_STEPS: TourStep[] = [
     subTabKey: 'quick-sale',
     badge: 'Sales POS',
     icon: ShoppingBag,
-    description:
-      'Process high-speed sales with sub-50ms barcode lookup, category filters, custom discounts, individual item tax calculations, and instant thermal receipt printing.',
-    proTip: 'Cashiers can apply individual tax rates or custom discounts directly on the checkout sidebar.',
+    bubbleMessage:
+      'This is your high-speed checkout lane! Scan barcodes with sub-50ms latency, apply custom item taxes or discounts, and print instant thermal receipts.',
+    proTip: 'Cashiers can easily split payments between Cash, Card, and Digital Wallets on the checkout sidebar.',
     highlights: ['Barcode/SKU instant search', 'Split payment & change calculator', '58mm, 80mm & A4 receipt printing'],
   },
   {
@@ -69,8 +70,8 @@ const TOUR_STEPS: TourStep[] = [
     subTabKey: 'all-orders',
     badge: 'Channels & Dispatch',
     icon: Globe,
-    description:
-      'Manage multi-channel orders from Shopify, Amazon, WooCommerce, and In-Store POS. Generate print-ready pick lists and update courier tracking numbers.',
+    bubbleMessage:
+      'Manage all multi-channel sales from Shopify, Amazon, WooCommerce, and In-Store POS in one synchronized dispatch registry.',
     proTip: 'Click "Generate Pick List" in Pending Dispatch to print a consolidated warehouse picking slip.',
     highlights: ['Multi-channel order sync', 'Batch pick list PDF generation', 'Courier tracking & dispatch flow'],
   },
@@ -82,8 +83,8 @@ const TOUR_STEPS: TourStep[] = [
     subTabKey: 'products',
     badge: 'Product Master',
     icon: Package,
-    description:
-      'Maintain your entire SKU catalog with cost prices, retail prices, gross profit margins, suppliers, categories, and individual item tax rules.',
+    bubbleMessage:
+      'Your master SKU registry. Track unit cost, retail price, real-time profit margins, barcode indexes, and automated low-stock reorder thresholds.',
     proTip: 'Set realistic Reorder Points so the system can alert you before popular items run out of stock.',
     highlights: ['Real-time profit margin calculator', 'Strict SKU/Barcode validation', 'CSV bulk import & export'],
   },
@@ -95,8 +96,8 @@ const TOUR_STEPS: TourStep[] = [
     subTabKey: 'stock-levels',
     badge: 'Inventory Hub',
     icon: Boxes,
-    description:
-      'Keep track of stock quantities across multiple warehouse and retail outlets. Execute internal stock transfers and create supplier purchase orders (POs).',
+    bubbleMessage:
+      'Gain total control over multi-location stock levels. Transfer goods between store outlets and generate supplier purchase orders with 1 click.',
     proTip: 'Generate restock POs with 1 click directly from the low-stock alert screen.',
     highlights: ['Multi-location inventory tracking', 'Inter-outlet stock transfers', 'Supplier POs & stock receiving'],
   },
@@ -107,8 +108,8 @@ const TOUR_STEPS: TourStep[] = [
     tabKey: 'customers',
     badge: 'Customer CRM',
     icon: Users,
-    description:
-      'Build client relationships by tracking lifetime spend, total order frequency, contact details, and past transaction ledgers for walk-in and VIP accounts.',
+    bubbleMessage:
+      'Strengthen customer loyalty by tracking lifetime spend, order frequency, loyalty points, and full transaction ledgers.',
     proTip: 'Select or create a customer at checkout to automatically update their purchase history profile.',
     highlights: ['Customer lifetime value tracking', 'Quick contact directory', 'Individual sales ledger'],
   },
@@ -120,9 +121,9 @@ const TOUR_STEPS: TourStep[] = [
     subTabKey: 'data',
     badge: 'Local Control',
     icon: Settings,
-    description:
-      'Full data sovereignty. Configure automated background JSON backups directly into your local machine folder on a schedule (30m, 1h, 24h) without prompt popups.',
-    proTip: 'Link a local folder under Setup > Data & Backup to enable silent automated backups.',
+    bubbleMessage:
+      '100% data ownership. Set up automated background JSON backups directly to your local machine folder without annoying browser popups.',
+    proTip: 'Select a local folder under Setup > Data & Backup to activate scheduled background auto-saves.',
     highlights: ['Automated local JSON backups', '1-click full database restore', 'Tax ID, currency & branding setup'],
   },
 ];
@@ -202,148 +203,158 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
     }
   };
 
-  // Minimized Floating Widget Pill
+  // Minimized Floating Speech Bubble Pill
   if (isMinimized) {
     return (
-      <div className="fixed bottom-5 right-5 z-50 font-mono animate-in fade-in slide-in-from-bottom-2">
-        <div className="flex items-center gap-2 bg-slate-900 text-white border border-slate-700 shadow-2xl p-2.5 rounded-xs">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsMinimized(false)}>
-            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
-              Tour {currentStep.stepNumber}/07:
+      <div className="fixed bottom-6 right-6 z-50 font-mono animate-in fade-in zoom-in-95 duration-200">
+        <button
+          type="button"
+          onClick={() => setIsMinimized(false)}
+          className="group relative flex items-center gap-3 bg-slate-900/95 hover:bg-slate-900 text-white border-2 border-emerald-400/80 px-4 py-2.5 rounded-full shadow-2xl shadow-emerald-950/50 backdrop-blur-md transition-all hover:scale-105"
+        >
+          {/* Pulsing Avatar Bubble */}
+          <div className="relative w-8 h-8 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-extrabold shadow-md shrink-0">
+            <Bot className="w-4 h-4" />
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-300 rounded-full animate-ping" />
+          </div>
+
+          <div className="flex flex-col text-left">
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest leading-none">
+              Tour Step {currentStep.stepNumber}/07
             </span>
-            <span className="text-xs font-bold text-white uppercase tracking-wider truncate max-w-[160px]">
+            <span className="text-xs font-bold text-white uppercase tracking-wider mt-0.5 max-w-[140px] truncate">
               {currentStep.title}
             </span>
           </div>
 
-          <div className="flex items-center gap-1 border-l border-slate-700 pl-2">
+          <span className="p-1 text-slate-400 group-hover:text-white transition-colors">
+            <Maximize2 className="w-3.5 h-3.5" />
+          </span>
+        </button>
+      </div>
+    );
+  }
+
+  // Full Conversational Speech Bubble Floating Widget
+  return (
+    <div className="fixed bottom-6 right-6 z-50 font-mono max-w-md w-[calc(100vw-3rem)] animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-200">
+      <div className="relative">
+        {/* Floating AI Guide Mascot Bubble Header */}
+        <div className="flex items-center justify-between px-2 mb-2">
+          <div className="flex items-center gap-2">
+            <div className="relative w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-300 text-slate-950 flex items-center justify-center font-bold shadow-lg ring-2 ring-emerald-400/40">
+              <Bot className="w-4.5 h-4.5" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-900 rounded-full" />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-white uppercase tracking-wider">
+                  Interactive Guide
+                </span>
+                <span className="text-[9px] font-extrabold px-1.5 py-0.2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full uppercase">
+                  Step {currentStep.stepNumber} of 07
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setIsMinimized(false)}
-              className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-              title="Expand Tour Guide"
+              onClick={() => setIsMinimized(true)}
+              className="p-1.5 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 rounded-full transition-colors"
+              title="Minimize to floating pill"
             >
-              <Maximize2 className="w-3.5 h-3.5" />
+              <Minimize2 className="w-3.5 h-3.5" />
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="p-1 text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
-              title="Close Tour"
+              className="p-1.5 text-slate-400 hover:text-rose-400 bg-slate-800/80 hover:bg-slate-700 rounded-full transition-colors"
+              title="Close Tour (Esc)"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
-      </div>
-    );
-  }
 
-  // Full Floating Speech Bubble Widget (Zero Fullscreen Dimming Overlay)
-  return (
-    <div className="fixed bottom-5 right-5 z-50 font-mono max-w-md w-[calc(100vw-2.5rem)] animate-in fade-in slide-in-from-bottom-3 duration-200">
-      <div className="bg-slate-900 text-white border-2 border-slate-700 shadow-2xl overflow-hidden rounded-xs">
-        {/* Top Progress Track */}
-        <div className="w-full bg-slate-800 h-1">
-          <div
-            className="bg-emerald-400 h-1 transition-all duration-300 ease-out"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+        {/* Speech Bubble Container with Rounded Curves & Glow */}
+        <div className="relative bg-slate-900/95 text-white border-2 border-emerald-500/40 shadow-2xl shadow-slate-950/80 backdrop-blur-xl rounded-3xl p-5 space-y-4">
+          {/* Top Progress Bar */}
+          <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-emerald-400 to-teal-300 h-1.5 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
 
-        <div className="p-4 sm:p-5 space-y-3.5">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-2.5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-xs bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0">
-                <StepIcon className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold tracking-widest text-emerald-400 uppercase">
-                    STEP {currentStep.stepNumber} OF 07
-                  </span>
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 bg-slate-800 text-slate-300 border border-slate-700 uppercase">
-                    {currentStep.badge}
-                  </span>
-                </div>
-                <h3 className="font-bold text-xs sm:text-sm text-white uppercase tracking-wider font-heading mt-0.5">
-                  {currentStep.title}
-                </h3>
-              </div>
+          {/* Module Title Banner */}
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 shadow-inner">
+              <StepIcon className="w-4.5 h-4.5" />
             </div>
-
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsMinimized(true)}
-                className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                title="Minimize Tour"
-              >
-                <Minimize2 className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
-                title="Close Tour (Esc)"
-              >
-                <X className="w-4 h-4" />
-              </button>
+            <div>
+              <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">
+                {currentStep.badge}
+              </span>
+              <h3 className="text-sm font-extrabold text-white uppercase tracking-wider font-heading leading-tight">
+                {currentStep.title}
+              </h3>
             </div>
           </div>
 
-          {/* Description */}
-          <p className="text-xs text-slate-300 leading-relaxed">
-            {currentStep.description}
-          </p>
+          {/* Conversational Speech Bubble Dialogue Text */}
+          <div className="relative bg-slate-800/80 border border-slate-700/70 p-3.5 rounded-2xl">
+            <p className="text-xs text-slate-200 leading-relaxed font-sans font-medium">
+              "{currentStep.bubbleMessage}"
+            </p>
+          </div>
 
-          {/* Highlights checklist */}
-          <div className="space-y-1 pt-0.5">
+          {/* Feature Highlights Pill Grid */}
+          <div className="space-y-1.5">
             {currentStep.highlights.map((h, i) => (
-              <div key={i} className="flex items-center gap-1.5 text-[11px] text-slate-200">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+              <div key={i} className="flex items-center gap-2 text-[11px] text-slate-300">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span className="truncate">{h}</span>
               </div>
             ))}
           </div>
 
-          {/* Pro-Tip Box */}
-          <div className="p-2.5 bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2 rounded-xs">
-            <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-            <div className="text-[10.5px] leading-snug">
-              <span className="font-bold uppercase tracking-wider text-amber-400 mr-1">Tip:</span>
-              <span className="text-amber-200/90">{currentStep.proTip}</span>
+          {/* Thought Bubble / Pro-Tip Box */}
+          <div className="p-3 bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2.5 rounded-2xl shadow-inner">
+            <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-[11px] leading-snug">
+              <span className="font-bold uppercase tracking-wider text-amber-400 mr-1.5">Pro-Tip:</span>
+              <span className="text-amber-100/90">{currentStep.proTip}</span>
             </div>
           </div>
 
-          {/* Footer Controls */}
-          <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800">
-            {/* Step Dots */}
-            <div className="flex items-center gap-1">
+          {/* Bottom Actions & Step Dots */}
+          <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
+            {/* Step Bubble Dots */}
+            <div className="flex items-center gap-1.5">
               {TOUR_STEPS.map((_, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleGoToStep(idx)}
-                  className={`h-1.5 rounded-full transition-all ${
+                  className={`h-2 rounded-full transition-all ${
                     currentStepIndex === idx
-                      ? 'bg-emerald-400 w-4'
-                      : 'bg-slate-700 hover:bg-slate-500 w-1.5'
+                      ? 'bg-emerald-400 w-5'
+                      : 'bg-slate-700 hover:bg-slate-500 w-2'
                   }`}
-                  title={`Go to Step ${idx + 1}`}
+                  title={`Jump to Step ${idx + 1}`}
                 />
               ))}
             </div>
 
-            {/* Buttons */}
-            <div className="flex items-center gap-1.5">
+            {/* Navigation Buttons */}
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 disabled={isFirstStep}
                 onClick={handlePrev}
-                className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider flex items-center gap-1 border transition-colors ${
+                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1 rounded-full border transition-all ${
                   isFirstStep
                     ? 'opacity-30 cursor-not-allowed border-slate-800 text-slate-600'
                     : 'bg-slate-800 hover:bg-slate-700 text-white border-slate-600'
@@ -356,14 +367,10 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-3.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center gap-1 shadow-sm transition-colors"
+                className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 rounded-full shadow-md shadow-emerald-950/40 transition-all hover:scale-102 active:scale-98"
               >
-                <span>{isLastStep ? 'Finish' : 'Next'}</span>
-                {isLastStep ? (
-                  <CheckCircle2 className="w-3 h-3" />
-                ) : (
-                  <ArrowRight className="w-3 h-3" />
-                )}
+                <span>{isLastStep ? 'Finish Tour 🎉' : 'Next Step'}</span>
+                {!isLastStep && <ArrowRight className="w-3.5 h-3.5" />}
               </button>
             </div>
           </div>
