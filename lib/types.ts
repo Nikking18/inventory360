@@ -1,4 +1,4 @@
-export type StockStatus = 'Healthy' | 'Low Stock' | 'Out of Stock' | 'Dead Stock';
+export type StockStatus = 'Healthy' | 'Low Stock' | 'Out of Stock' | 'Dead Stock' | 'Quarantined';
 
 export interface ProductVariant {
   id: string;

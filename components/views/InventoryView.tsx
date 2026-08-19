@@ -42,7 +42,12 @@ import {
   ArrowUpRight,
   Filter,
 } from 'lucide-react';
-import { exportToCSV, exportToExcel, exportToPDF } from '../../lib/exportImport';
+import {
+  exportToCSV,
+  exportToExcel,
+  exportToPDF,
+  printPOSlipDocument,
+} from '../../lib/exportImport';
 
 interface InventoryViewProps {
   products: Product[];
@@ -56,6 +61,7 @@ interface InventoryViewProps {
   onStockAdjustment: (productId: string, qtyChange: number, reason: string) => Promise<void>;
   onStockTransfer: (transfer: Omit<StockTransfer, 'id' | 'transferNumber' | 'createdAt'>) => Promise<void>;
   onBulkAutoGeneratePOs?: () => Promise<void>;
+  onQuarantineProduct?: (productId: string, isQuarantine: boolean) => Promise<void>;
   currencySymbol: string;
   activeSubTab?: string;
   onSubTabChange?: (sub: string) => void;
@@ -73,6 +79,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   onStockAdjustment,
   onStockTransfer,
   onBulkAutoGeneratePOs,
+  onQuarantineProduct,
   currencySymbol,
   activeSubTab = 'stock-levels',
   onSubTabChange,
@@ -94,7 +101,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   // Stock Adjustment Modal Form States
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [selectedProductForAdjust, setSelectedProductForAdjust] = useState<Product | null>(null);
+  const [adjustMode, setAdjustMode] = useState<'delta' | 'exact'>('delta');
   const [adjustQty, setAdjustQty] = useState<number>(0);
+  const [newExactStock, setNewExactStock] = useState<number>(0);
   const [adjustReason, setAdjustReason] = useState('Cycle Count Physical Audit');
 
   // Purchase Order Creation Modal States
@@ -113,16 +122,18 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const [receivingPO, setReceivingPO] = useState<PurchaseOrder | null>(null);
   const [receivedQtyMap, setReceivedQtyMap] = useState<Record<string, number>>({});
 
-  // Printable PO Voucher State
-  const [printPO, setPrintPO] = useState<PurchaseOrder | null>(null);
-
   // Batch Recall & Expiry Quarantine States
   const [recallSearchQuery, setRecallSearchQuery] = useState('');
-  const [quarantinedLots, setQuarantinedLots] = useState<string[]>([]);
   const [bulkPOSuccess, setBulkPOSuccess] = useState(false);
+  const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
 
   // Expanded PO Cards
   const [expandedPoIds, setExpandedPoIds] = useState<Record<string, boolean>>({});
+
+  const showToast = (msg: string) => {
+    setActionSuccessMsg(msg);
+    setTimeout(() => setActionSuccessMsg(null), 3500);
+  };
 
   const togglePoExpand = (poId: string) => {
     setExpandedPoIds((prev) => ({ ...prev, [poId]: !prev[poId] }));
@@ -186,10 +197,13 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         }
       }
 
+      const isQuarantined = p.status === 'Dead Stock';
+
       return {
         ...p,
         daysRemaining,
         expiryStatus,
+        isQuarantined,
       };
     });
 
@@ -274,7 +288,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     const prod = products.find((p) => p.id === poProductId);
     const sup = suppliers.find((s) => s.id === poSupplierId) || {
       id: poSupplierId,
-      name: prod?.supplierName || 'Primary Supplier',
+      name: prod?.supplierName || suppliers[0]?.name || 'Primary Supplier',
     };
     const targetLoc = locations.find((l) => l.id === poTargetLocId) || locations[0];
 
@@ -307,19 +321,23 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
     await onCreatePO(poPayload);
     setIsPOModalOpen(false);
+    showToast(`Purchase Order issued successfully for ${prod.name}!`);
   };
 
   const handleBulkAutoReorders = async () => {
     if (onBulkAutoGeneratePOs) {
       await onBulkAutoGeneratePOs();
       setBulkPOSuccess(true);
-      setTimeout(() => setBulkPOSuccess(false), 4000);
+      showToast('Automated Purchase Orders generated for all low stock items!');
+      setTimeout(() => setBulkPOSuccess(false), 5000);
     }
   };
 
   const openAdjustModal = (p: Product) => {
     setSelectedProductForAdjust(p);
+    setAdjustMode('delta');
     setAdjustQty(0);
+    setNewExactStock(p.stockQuantity);
     setAdjustReason('Cycle Count Physical Audit');
     setIsAdjustModalOpen(true);
   };
@@ -327,8 +345,20 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const handleAdjustSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProductForAdjust) return;
-    await onStockAdjustment(selectedProductForAdjust.id, adjustQty, adjustReason);
+
+    let delta = adjustQty;
+    if (adjustMode === 'exact') {
+      delta = newExactStock - selectedProductForAdjust.stockQuantity;
+    }
+
+    if (delta === 0) {
+      setIsAdjustModalOpen(false);
+      return;
+    }
+
+    await onStockAdjustment(selectedProductForAdjust.id, delta, adjustReason);
     setIsAdjustModalOpen(false);
+    showToast(`Stock level adjusted for ${selectedProductForAdjust.name} (${delta > 0 ? `+${delta}` : delta} units)`);
   };
 
   const handleTransferSubmit = async (e: React.FormEvent) => {
@@ -358,6 +388,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     });
 
     setIsTransferModalOpen(false);
+    showToast(`Successfully transferred ${transferQty} units of ${prod.name} to ${dst.name}!`);
   };
 
   const openReceiveModal = (po: PurchaseOrder) => {
@@ -372,83 +403,109 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const handleConfirmReceive = async () => {
     if (!receivingPO || !onReceivePO) return;
     await onReceivePO(receivingPO.id, receivedQtyMap);
+    showToast(`Received items for PO #${receivingPO.poNumber}. Stock updated!`);
     setReceivingPO(null);
   };
 
-  const toggleQuarantineLot = (lotNum: string) => {
-    if (!lotNum) return;
-    setQuarantinedLots((prev) =>
-      prev.includes(lotNum) ? prev.filter((l) => l !== lotNum) : [...prev, lotNum]
-    );
+  const handleQuarantineToggle = async (p: Product, shouldQuarantine: boolean) => {
+    if (onQuarantineProduct) {
+      await onQuarantineProduct(p.id, shouldQuarantine);
+      showToast(
+        shouldQuarantine
+          ? `Lot #${p.lotNumber || p.name} placed under quarantine.`
+          : `Lot #${p.lotNumber || p.name} released from quarantine.`
+      );
+    }
   };
 
   // Export handlers
   const handleExportStockCSV = () => {
     const data = filteredProducts.map((p) => ({
       SKU: p.sku,
-      Name: p.name,
+      'Product Name': p.name,
       Category: p.categoryName,
       Supplier: p.supplierName,
-      'Cost Price': p.costPrice,
-      'Retail Price': p.retailPrice,
-      'Stock Quantity': p.stockQuantity,
-      'Reorder Point': p.reorderPoint,
-      'Cost Valuation': p.costPrice * p.stockQuantity,
-      'Retail Valuation': p.retailPrice * p.stockQuantity,
-      Status: p.status,
+      'Cost Price ($)': p.costPrice.toFixed(2),
+      'Retail Price ($)': p.retailPrice.toFixed(2),
+      'Stock On Hand': p.stockQuantity,
+      'Reorder Threshold': p.reorderPoint,
+      'Total Cost Valuation ($)': (p.costPrice * p.stockQuantity).toFixed(2),
+      'Total Retail Valuation ($)': (p.retailPrice * p.stockQuantity).toFixed(2),
+      'Inventory Status': p.status,
     }));
-    exportToCSV('Stock_Levels_Report', data);
+    exportToCSV('Master_Stock_Levels_Report', data);
+    showToast('Stock Levels exported to CSV!');
   };
 
   const handleExportStockExcel = () => {
     const data = filteredProducts.map((p) => ({
       SKU: p.sku,
-      Name: p.name,
+      'Product Name': p.name,
       Category: p.categoryName,
       Supplier: p.supplierName,
-      'Cost Price': p.costPrice,
-      'Retail Price': p.retailPrice,
-      'Stock Quantity': p.stockQuantity,
-      'Reorder Point': p.reorderPoint,
-      'Cost Valuation': p.costPrice * p.stockQuantity,
-      'Retail Valuation': p.retailPrice * p.stockQuantity,
-      Status: p.status,
+      'Cost Price ($)': p.costPrice.toFixed(2),
+      'Retail Price ($)': p.retailPrice.toFixed(2),
+      'Stock On Hand': p.stockQuantity,
+      'Reorder Threshold': p.reorderPoint,
+      'Cost Valuation ($)': (p.costPrice * p.stockQuantity).toFixed(2),
+      'Retail Valuation ($)': (p.retailPrice * p.stockQuantity).toFixed(2),
+      'Inventory Status': p.status,
     }));
-    exportToExcel('Stock_Levels_Report', data);
+    exportToExcel('Master_Stock_Levels_Report', data);
+    showToast('Stock Levels exported to Excel!');
   };
 
   const handleExportStockPDF = () => {
     const data = filteredProducts.map((p) => ({
       SKU: p.sku,
-      Name: p.name,
+      'Product Name': p.name,
       Category: p.categoryName,
       Supplier: p.supplierName,
-      'Cost Price': `${currencySymbol}${p.costPrice.toFixed(2)}`,
-      'Retail Price': `${currencySymbol}${p.retailPrice.toFixed(2)}`,
-      'Stock Qty': p.stockQuantity,
-      'Cost Value': `${currencySymbol}${(p.costPrice * p.stockQuantity).toFixed(2)}`,
+      Cost: `${currencySymbol}${p.costPrice.toFixed(2)}`,
+      Retail: `${currencySymbol}${p.retailPrice.toFixed(2)}`,
+      Stock: p.stockQuantity,
+      'Total Value': `${currencySymbol}${(p.costPrice * p.stockQuantity).toFixed(2)}`,
       Status: p.status,
     }));
-    exportToPDF('Stock_Levels_Report', 'Master Stock Levels Audit Report', data);
+    exportToPDF('Stock_Levels_Report', 'Master Stock Levels Valuation Report', data);
   };
 
   const handleExportMovementsCSV = () => {
     const data = filteredMovements.map((m) => ({
-      Timestamp: m.createdAt,
-      Type: m.type,
-      Product: m.productName,
+      'Transaction Ref': m.referenceId || m.id,
+      'Date & Time': formatDateTime(m.createdAt),
+      'Movement Type': m.type,
+      'Product Name': m.productName,
       SKU: m.sku,
-      Location: m.locationName,
-      'Qty Change': m.quantityChange,
+      'Outlet / Location': m.locationName,
+      'Quantity Delta': m.quantityChange > 0 ? `+${m.quantityChange}` : `${m.quantityChange}`,
       'Previous Stock': m.previousStock,
-      'New Stock': m.newStock,
-      'Reference / Reason': m.notes || m.referenceId,
+      'Resulting Stock': m.newStock,
+      'Audit Notes / Reason': m.notes || 'System Ledger',
     }));
     exportToCSV('Stock_Movements_Audit_Ledger', data);
+    showToast('Movements ledger exported to CSV!');
+  };
+
+  const handlePrintSlip = (po: PurchaseOrder) => {
+    printPOSlipDocument(po, currencySymbol, 'Inventory 360 Enterprise');
   };
 
   return (
     <div id="tour-inventory-hub" className="space-y-6 text-slate-900 font-mono">
+      {/* Toast Banner */}
+      {actionSuccessMsg && (
+        <div className="p-3 bg-emerald-900 text-white text-xs font-bold font-mono flex items-center justify-between shadow-lg animate-fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span>{actionSuccessMsg}</span>
+          </div>
+          <button onClick={() => setActionSuccessMsg(null)} className="text-slate-300 hover:text-white text-xs">
+            &times;
+          </button>
+        </div>
+      )}
+
       {/* Top Header & Sub-Tabs */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-slate-200 pb-3 gap-3">
         <div>
@@ -593,6 +650,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 <button
                   onClick={handleExportStockCSV}
                   className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase flex items-center gap-1 shadow-2xs"
+                  title="Export Stock Levels to CSV"
                 >
                   <Download className="w-3.5 h-3.5 text-slate-500" />
                   <span>CSV</span>
@@ -600,6 +658,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 <button
                   onClick={handleExportStockExcel}
                   className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase flex items-center gap-1 shadow-2xs"
+                  title="Export Stock Levels to Excel Spreadsheet"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Excel</span>
@@ -607,6 +666,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 <button
                   onClick={handleExportStockPDF}
                   className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase flex items-center gap-1 shadow-2xs"
+                  title="Export Stock Levels to Formatted PDF"
                 >
                   <FileText className="w-3.5 h-3.5 text-rose-600" />
                   <span>PDF</span>
@@ -615,7 +675,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             </div>
 
             {/* Inventory Table */}
-            <div id="stock-table-print" className="overflow-x-auto">
+            <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse font-mono">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
@@ -671,9 +731,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                             <span
                               className={`${
                                 p.stockQuantity === 0
-                                  ? 'text-rose-700'
+                                  ? 'text-rose-700 font-extrabold'
                                   : p.stockQuantity <= p.reorderPoint
-                                  ? 'text-amber-700'
+                                  ? 'text-amber-700 font-bold'
                                   : 'text-slate-900'
                               }`}
                             >
@@ -698,14 +758,14 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                             <div className="flex items-center justify-center gap-1.5">
                               <button
                                 onClick={() => openAdjustModal(p)}
-                                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-[10px] uppercase font-bold"
+                                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-[10px] uppercase font-bold transition-colors cursor-pointer"
                                 title="Adjust Stock Quantity"
                               >
                                 Adjust
                               </button>
                               <button
                                 onClick={() => openCreatePOForProduct(p)}
-                                className="px-2 py-1 bg-slate-900 hover:bg-black text-white text-[10px] uppercase font-bold flex items-center gap-0.5"
+                                className="px-2 py-1 bg-slate-900 hover:bg-black text-white text-[10px] uppercase font-bold flex items-center gap-0.5 transition-colors cursor-pointer"
                                 title="Create Purchase Order"
                               >
                                 + PO
@@ -753,7 +813,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               <h3 className="text-2xl font-bold text-slate-900 mt-1 font-mono">
                 {formatCurrency(totalRestockCostRequired, currencySymbol)}
               </h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">To restore $2\times$ par buffer</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">To restore safety buffers</p>
             </div>
           </div>
 
@@ -772,7 +832,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               {lowStockItems.length > 0 && (
                 <button
                   onClick={handleBulkAutoReorders}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
+                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Auto-Generate All Restock POs</span>
@@ -781,9 +841,17 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             </div>
 
             {bulkPOSuccess && (
-              <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-700" />
-                <span>Automated purchase orders generated and added to Purchase Orders tab.</span>
+              <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-700" />
+                  <span>Automated purchase orders generated! Check the Purchase Orders tab to review &amp; receive them.</span>
+                </div>
+                <button
+                  onClick={() => onSubTabChange && onSubTabChange('purchases')}
+                  className="px-3 py-1 bg-emerald-800 text-white text-[10px] font-bold uppercase hover:bg-emerald-900"
+                >
+                  View POs &rarr;
+                </button>
               </div>
             )}
 
@@ -852,15 +920,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       <div className="pt-2 border-t border-slate-200 flex items-center justify-end gap-2">
                         <button
                           onClick={() => openAdjustModal(p)}
-                          className="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-[10px] font-bold uppercase"
+                          className="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-[10px] font-bold uppercase transition-colors cursor-pointer"
                         >
                           Adjust
                         </button>
                         <button
                           onClick={() => openCreatePOForProduct(p)}
-                          className="px-3 py-1 bg-slate-900 text-white hover:bg-black font-bold text-xs uppercase"
+                          className="px-3 py-1 bg-slate-900 text-white hover:bg-black font-bold text-xs uppercase transition-colors cursor-pointer flex items-center gap-1"
                         >
-                          + Issue PO
+                          <Plus className="w-3 h-3 text-emerald-400" />
+                          <span>Issue PO</span>
                         </button>
                       </div>
                     </div>
@@ -903,8 +972,10 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
             <div className="p-4 bg-white border border-slate-200 shadow-2xs">
               <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Quarantined Batches</p>
-              <h3 className="text-xl font-bold text-slate-900 mt-1">{quarantinedLots.length}</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Flagged for return</p>
+              <h3 className="text-xl font-bold text-rose-800 mt-1">
+                {lotTrackedProducts.filter((p) => p.isQuarantined).length}
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">Flagged for inspection</p>
             </div>
           </div>
 
@@ -917,7 +988,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                   <span>Batch, Lot &amp; FIFO Expiration Registry</span>
                 </h3>
                 <p className="text-xs text-slate-600">
-                  Traceability for perishable goods, regulated items, and manufacturer warranty tracking.
+                  Traceability for perishable goods, batch recalls, and manufacturer warranty tracking.
                 </p>
               </div>
 
@@ -945,7 +1016,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     <th className="p-2.5 text-right">Units on Hand</th>
                     <th className="p-2.5 text-right">Batch Value</th>
                     <th className="p-2.5 text-center">FIFO Status</th>
-                    <th className="p-2.5 text-center">Recall Action</th>
+                    <th className="p-2.5 text-center">Quarantine / Release</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -957,12 +1028,10 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     </tr>
                   ) : (
                     filteredLots.map((p) => {
-                      const isQuarantined = p.lotNumber && quarantinedLots.includes(p.lotNumber);
-
                       return (
                         <tr
                           key={p.id}
-                          className={`hover:bg-slate-50 ${isQuarantined ? 'bg-rose-50/60' : ''}`}
+                          className={`hover:bg-slate-50 transition-colors ${p.isQuarantined ? 'bg-rose-50/70' : ''}`}
                         >
                           <td className="p-2.5">
                             <p className="font-bold text-slate-900">{p.name}</p>
@@ -1002,7 +1071,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                           <td className="p-2.5 text-center">
                             <span
                               className={`text-[9px] font-bold px-1.5 py-0.5 border uppercase ${
-                                isQuarantined
+                                p.isQuarantined
                                   ? 'text-rose-900 border-rose-400 bg-rose-100'
                                   : p.expiryStatus === 'Expired'
                                   ? 'text-rose-800 border-rose-300 bg-rose-50'
@@ -1013,24 +1082,21 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                                   : 'text-emerald-800 border-emerald-300 bg-emerald-50'
                               }`}
                             >
-                              {isQuarantined ? 'QUARANTINED' : p.expiryStatus}
+                              {p.isQuarantined ? 'QUARANTINED' : p.expiryStatus}
                             </span>
                           </td>
                           <td className="p-2.5 text-center">
-                            {p.lotNumber ? (
-                              <button
-                                onClick={() => toggleQuarantineLot(p.lotNumber!)}
-                                className={`px-2 py-1 text-[10px] uppercase font-bold border transition-colors ${
-                                  isQuarantined
-                                    ? 'bg-slate-900 text-white border-slate-900'
-                                    : 'bg-white text-rose-700 border-rose-300 hover:bg-rose-50'
-                                }`}
-                              >
-                                {isQuarantined ? 'Release' : 'Quarantine'}
-                              </button>
-                            ) : (
-                              <span className="text-slate-400 text-[10px]">—</span>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleQuarantineToggle(p, !p.isQuarantined)}
+                              className={`px-2.5 py-1 text-[10px] uppercase font-bold border transition-colors cursor-pointer ${
+                                p.isQuarantined
+                                  ? 'bg-slate-900 text-white border-slate-900 hover:bg-black'
+                                  : 'bg-white text-rose-700 border-rose-300 hover:bg-rose-50'
+                              }`}
+                            >
+                              {p.isQuarantined ? 'Release' : 'Quarantine'}
+                            </button>
                           </td>
                         </tr>
                       );
@@ -1052,11 +1118,11 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono">
             {locations.map((loc) => {
               const locTotalUnits = products.reduce(
-                (acc, p) => acc + (p.locationQuantities?.[loc.id] || Math.floor(p.stockQuantity / locations.length)),
+                (acc, p) => acc + (p.locationQuantities?.[loc.id] ?? Math.floor(p.stockQuantity / locations.length)),
                 0
               );
               const locValuation = products.reduce((acc, p) => {
-                const qty = p.locationQuantities?.[loc.id] || Math.floor(p.stockQuantity / locations.length);
+                const qty = p.locationQuantities?.[loc.id] ?? Math.floor(p.stockQuantity / locations.length);
                 return acc + p.costPrice * qty;
               }, 0);
 
@@ -1087,13 +1153,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                   Multi-Outlet Stock Allocation Matrix
                 </h3>
                 <p className="text-xs text-slate-600">
-                  Cross-outlet stock parity, safety buffer allocation, and transfer order dispatch.
+                  Cross-outlet stock parity, safety buffer allocation, and inter-branch transfer dispatch.
                 </p>
               </div>
 
               <button
-                onClick={() => setIsTransferModalOpen(true)}
-                className="px-3.5 py-1.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black flex items-center gap-1.5 shadow-xs"
+                onClick={() => {
+                  setTransferProductId(products[0]?.id || '');
+                  setIsTransferModalOpen(true);
+                }}
+                className="px-3.5 py-1.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
               >
                 <ArrowRightLeft className="w-3.5 h-3.5 text-emerald-400" />
                 <span>+ New Transfer Order</span>
@@ -1142,7 +1211,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                             setTransferProductId(p.id);
                             setIsTransferModalOpen(true);
                           }}
-                          className="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-[10px] uppercase font-bold"
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-[10px] uppercase font-bold transition-colors cursor-pointer"
                         >
                           Transfer
                         </button>
@@ -1167,14 +1236,15 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 Immutable Stock Movement Audit Trail ({filteredMovements.length})
               </h3>
               <p className="text-xs text-slate-600">
-                Detailed ledger recording all POS sales, purchase arrivals, branch transfers, and manual variances.
+                Detailed audit trail recording all POS sales, purchase arrivals, branch transfers, and manual variances.
               </p>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={handleExportMovementsCSV}
-                className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase flex items-center gap-1 shadow-2xs"
+                className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold uppercase flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                title="Export Movement Audit Ledger to CSV"
               >
                 <Download className="w-3.5 h-3.5 text-slate-500" />
                 <span>Export CSV</span>
@@ -1337,7 +1407,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={openNewPOModal}
-                  className="px-4 py-2 bg-slate-900 text-white hover:bg-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs"
+                  className="px-4 py-2 bg-slate-900 text-white hover:bg-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5 text-emerald-400" />
                   <span>+ Create Purchase Order</span>
@@ -1350,7 +1420,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                   <button
                     key={status}
                     onClick={() => setPoStatusFilter(status)}
-                    className={`px-2.5 py-1 text-xs font-mono uppercase font-bold transition-colors ${
+                    className={`px-2.5 py-1 text-xs font-mono uppercase font-bold transition-colors cursor-pointer ${
                       poStatusFilter === status
                         ? 'bg-slate-900 text-white'
                         : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
@@ -1383,7 +1453,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                         <div className="flex items-start gap-3">
                           <button
                             onClick={() => togglePoExpand(po.id)}
-                            className="p-1 text-slate-500 hover:text-slate-900 mt-0.5"
+                            className="p-1 text-slate-500 hover:text-slate-900 mt-0.5 cursor-pointer"
                           >
                             <ChevronDown
                               className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -1405,7 +1475,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-600 mt-0.5">
-                              Supplier: <strong>{po.supplierName}</strong> &bull; Target: {po.locationName}
+                              Supplier: <strong>{po.supplierName}</strong> &bull; Target Node:{' '}
+                              <strong>{po.locationName}</strong>
                             </p>
                             <p className="text-[10px] text-slate-500">
                               Issued: {formatDateTime(po.createdAt)} &bull; Expected: {po.expectedDate}
@@ -1425,9 +1496,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
                           <div className="flex items-center gap-1.5">
                             <button
-                              onClick={() => setPrintPO(po)}
-                              className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-bold uppercase flex items-center gap-1"
-                              title="Print Purchase Order Voucher"
+                              onClick={() => handlePrintSlip(po)}
+                              className="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-bold uppercase flex items-center gap-1 transition-colors cursor-pointer"
+                              title="Generate Official Purchase Order Voucher Slip"
                             >
                               <Printer className="w-3.5 h-3.5" />
                               <span>Slip</span>
@@ -1435,7 +1506,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                             {po.status !== 'Received' && (
                               <button
                                 onClick={() => openReceiveModal(po)}
-                                className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold uppercase flex items-center gap-1 shadow-xs"
+                                className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold uppercase flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 <span>Receive Goods</span>
@@ -1507,36 +1578,94 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         <form onSubmit={handleAdjustSubmit} className="space-y-4 font-mono text-xs">
           {selectedProductForAdjust && (
             <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
-              <p className="font-bold text-slate-900">{selectedProductForAdjust.name}</p>
+              <p className="font-bold text-slate-900 text-sm">{selectedProductForAdjust.name}</p>
               <p className="text-[10px] text-slate-500">SKU: {selectedProductForAdjust.sku}</p>
               <p className="text-[11px] text-slate-700">
                 Current Stock On Hand:{' '}
-                <strong className="text-slate-900">{selectedProductForAdjust.stockQuantity}</strong>
+                <strong className="text-slate-900 font-bold">{selectedProductForAdjust.stockQuantity} units</strong>
               </p>
             </div>
           )}
 
-          <div>
-            <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-              Quantity Adjustment (+ to add, - to deduct) *
-            </label>
-            <input
-              type="number"
-              required
-              value={adjustQty}
-              onChange={(e) => setAdjustQty(Number(e.target.value))}
-              className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono text-right"
-              placeholder="e.g. +5 or -2"
-            />
-            {selectedProductForAdjust && (
-              <p className="text-[11px] text-slate-500 mt-1">
-                New resulting stock:{' '}
-                <strong className="text-slate-900">
-                  {Math.max(0, (selectedProductForAdjust.stockQuantity || 0) + adjustQty)}
-                </strong>
-              </p>
-            )}
+          {/* Adjustment Mode Toggle */}
+          <div className="flex border border-slate-300">
+            <button
+              type="button"
+              onClick={() => setAdjustMode('delta')}
+              className={`flex-1 py-1.5 text-xs font-bold uppercase ${
+                adjustMode === 'delta' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              +/- Quantity Delta
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAdjustMode('exact');
+                if (selectedProductForAdjust) {
+                  setNewExactStock(selectedProductForAdjust.stockQuantity);
+                }
+              }}
+              className={`flex-1 py-1.5 text-xs font-bold uppercase ${
+                adjustMode === 'exact' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              Set Exact Count
+            </button>
           </div>
+
+          {adjustMode === 'delta' ? (
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Quantity Delta (+ to add, - to deduct) *
+              </label>
+              <input
+                type="number"
+                required
+                value={adjustQty || ''}
+                onChange={(e) => setAdjustQty(Number(e.target.value))}
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono text-right font-bold text-sm"
+                placeholder="e.g. 5 or -2"
+              />
+              {selectedProductForAdjust && (
+                <p className="text-[11px] text-slate-500 mt-1">
+                  New resulting stock:{' '}
+                  <strong className="text-slate-900">
+                    {Math.max(0, (selectedProductForAdjust.stockQuantity || 0) + adjustQty)} units
+                  </strong>
+                </p>
+              )}
+            </div>
+          ) : (
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                New Exact Physical Count *
+              </label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={newExactStock}
+                onChange={(e) => setNewExactStock(Number(e.target.value))}
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono text-right font-bold text-sm"
+              />
+              {selectedProductForAdjust && (
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Variance delta:{' '}
+                  <strong
+                    className={
+                      newExactStock - selectedProductForAdjust.stockQuantity >= 0
+                        ? 'text-emerald-700'
+                        : 'text-rose-700'
+                    }
+                  >
+                    {newExactStock - selectedProductForAdjust.stockQuantity >= 0 ? '+' : ''}
+                    {newExactStock - selectedProductForAdjust.stockQuantity} units
+                  </strong>
+                </p>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
@@ -1559,13 +1688,13 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             <button
               type="button"
               onClick={() => setIsAdjustModalOpen(false)}
-              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase text-xs hover:bg-slate-200 border border-slate-300"
+              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase text-xs hover:bg-slate-200 border border-slate-300 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-slate-900 text-white font-bold uppercase text-xs hover:bg-black"
+              className="px-6 py-2 bg-slate-900 text-white font-bold uppercase text-xs hover:bg-black cursor-pointer"
             >
               Commit Adjustment
             </button>
@@ -1632,7 +1761,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 const srcQty = p.locationQuantities?.[sourceLocId] ?? Math.floor(p.stockQuantity / locations.length);
                 return (
                   <option key={p.id} value={p.id}>
-                    {p.name} (SKU: {p.sku}) &mdash; {srcQty} on hand at source
+                    {p.name} (SKU: {p.sku}) &mdash; {srcQty} units on hand
                   </option>
                 );
               })}
@@ -1649,7 +1778,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               required
               value={transferQty}
               onChange={(e) => setTransferQty(Number(e.target.value))}
-              className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono text-right"
+              className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono text-right font-bold text-sm"
             />
           </div>
 
@@ -1670,15 +1799,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             <button
               type="button"
               onClick={() => setIsTransferModalOpen(false)}
-              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase text-xs hover:bg-slate-200 border border-slate-300"
+              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase text-xs hover:bg-slate-200 border border-slate-300 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-slate-900 text-white font-bold uppercase text-xs hover:bg-black"
+              className="px-6 py-2 bg-slate-900 text-white font-bold uppercase text-xs hover:bg-black cursor-pointer flex items-center gap-1"
             >
-              Dispatch Transfer
+              <ArrowRightLeft className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Dispatch Transfer</span>
             </button>
           </div>
         </form>
@@ -1713,7 +1843,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                Receiving Outlet *
+                Receiving Destination Outlet *
               </label>
               <select
                 value={poTargetLocId}
@@ -1742,7 +1872,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             >
               {products.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} (SKU: {p.sku})
+                  {p.name} (SKU: {p.sku}) &mdash; Cost: {formatCurrency(p.costPrice, currencySymbol)}
                 </option>
               ))}
             </select>
@@ -1759,7 +1889,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 required
                 value={poOrderQty}
                 onChange={(e) => setPoOrderQty(Number(e.target.value))}
-                className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono text-right"
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono text-right font-bold text-sm"
               />
             </div>
 
@@ -1774,7 +1904,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 required
                 value={poUnitCost}
                 onChange={(e) => setPoUnitCost(Number(e.target.value))}
-                className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono text-right"
+                className="w-full bg-white border border-slate-300 p-2 text-slate-900 font-mono text-right font-bold text-sm"
               />
             </div>
           </div>
@@ -1818,15 +1948,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             <button
               type="button"
               onClick={() => setIsPOModalOpen(false)}
-              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase text-xs hover:bg-slate-200 border border-slate-300"
+              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase text-xs hover:bg-slate-200 border border-slate-300 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-slate-900 text-white font-bold uppercase text-xs hover:bg-black"
+              className="px-6 py-2 bg-slate-900 text-white font-bold uppercase text-xs hover:bg-black cursor-pointer flex items-center gap-1.5"
             >
-              Issue Purchase Order
+              <Plus className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Issue Purchase Order</span>
             </button>
           </div>
         </form>
@@ -1844,17 +1975,17 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         <div className="space-y-4 font-mono text-xs">
           <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
             <p className="text-slate-700">
-              Supplier: <strong>{receivingPO?.supplierName}</strong> &bull; Receiving Outlet:{' '}
+              Supplier: <strong>{receivingPO?.supplierName}</strong> &bull; Receiving Destination:{' '}
               <strong>{receivingPO?.locationName}</strong>
             </p>
             <p className="text-[10px] text-slate-500">
-              Confirm actual physical quantities arriving at loading dock. Inventory will be updated immediately.
+              Confirm actual physical quantities arriving at loading dock. Inventory stock will be updated immediately.
             </p>
           </div>
 
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {receivingPO?.items.map((item) => {
-              const remainingToReceive = item.orderedQuantity - (item.receivedQuantity || 0);
+              const remainingToReceive = Math.max(0, item.orderedQuantity - (item.receivedQuantity || 0));
               const currentInput = receivedQtyMap[item.productId] ?? remainingToReceive;
 
               return (
@@ -1865,7 +1996,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                   <div className="flex-1">
                     <p className="font-bold text-slate-900">{item.productName}</p>
                     <p className="text-[10px] text-slate-500 font-mono">
-                      SKU: {item.sku} &bull; Ordered: {item.orderedQuantity} &bull; Prev Received:{' '}
+                      SKU: {item.sku} &bull; Ordered: {item.orderedQuantity} &bull; Previously Received:{' '}
                       {item.receivedQuantity || 0}
                     </p>
                   </div>
@@ -1897,122 +2028,17 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             <button
               type="button"
               onClick={() => setReceivingPO(null)}
-              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase text-xs hover:bg-slate-200 border border-slate-300"
+              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase text-xs hover:bg-slate-200 border border-slate-300 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleConfirmReceive}
-              className="px-6 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold uppercase text-xs flex items-center gap-1.5 shadow-xs"
+              className="px-6 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold uppercase text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Confirm Dock Receipt</span>
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* ========================================================================= */}
-      {/* MODAL: PRINTABLE PO VOUCHER SLIP                                          */}
-      {/* ========================================================================= */}
-      <Modal
-        isOpen={!!printPO}
-        onClose={() => setPrintPO(null)}
-        title="PURCHASE ORDER VOUCHER SLIP"
-        maxWidth="max-w-2xl"
-      >
-        <div className="space-y-4 font-mono text-xs">
-          <div id="po-printable-area" className="p-6 bg-white border border-slate-300 space-y-4">
-            <div className="flex justify-between items-start border-b border-slate-200 pb-3">
-              <div>
-                <h2 className="text-base font-bold text-slate-900 font-heading uppercase">
-                  PURCHASE ORDER SLIP
-                </h2>
-                <p className="text-xs text-slate-500 font-mono">Reference: {printPO?.poNumber}</p>
-                <p className="text-[10px] text-slate-500">Date: {formatDateTime(printPO?.createdAt || '')}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-bold text-slate-900 uppercase">INVENTORY 360 ENTERPRISE</p>
-                <p className="text-[10px] text-slate-500">Target Node: {printPO?.locationName}</p>
-                <p className="text-[10px] text-slate-500">Status: {printPO?.status}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-3 border border-slate-200">
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-500">Supplier / Vendor:</p>
-                <p className="font-bold text-slate-900">{printPO?.supplierName}</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-500">Expected Delivery:</p>
-                <p className="font-bold text-slate-900">{printPO?.expectedDate}</p>
-              </div>
-            </div>
-
-            <table className="w-full text-left text-xs border-collapse font-mono">
-              <thead>
-                <tr className="border-b border-slate-300 font-bold uppercase text-[10px] text-slate-600 bg-slate-100">
-                  <th className="p-2">Item &amp; SKU</th>
-                  <th className="p-2 text-right">Unit Cost</th>
-                  <th className="p-2 text-right">Ordered Qty</th>
-                  <th className="p-2 text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {printPO?.items.map((item, idx) => (
-                  <tr key={idx}>
-                    <td className="p-2 font-bold text-slate-900">
-                      {item.productName}{' '}
-                      <span className="text-[10px] text-slate-500 font-mono">({item.sku})</span>
-                    </td>
-                    <td className="p-2 text-right font-mono text-slate-700">
-                      {formatCurrency(item.unitCost, currencySymbol)}
-                    </td>
-                    <td className="p-2 text-right font-mono font-bold text-slate-900">
-                      {item.orderedQuantity}
-                    </td>
-                    <td className="p-2 text-right font-mono font-bold text-slate-900">
-                      {formatCurrency(item.total, currencySymbol)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div className="border-t border-slate-300 pt-2 flex justify-end">
-              <div className="w-48 space-y-1 text-right text-xs">
-                <div className="flex justify-between text-slate-600">
-                  <span>Subtotal:</span>
-                  <span>{formatCurrency(printPO?.subtotal || 0, currencySymbol)}</span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>Est. Tax (8.5%):</span>
-                  <span>{formatCurrency(printPO?.tax || 0, currencySymbol)}</span>
-                </div>
-                <div className="flex justify-between font-bold text-slate-900 border-t border-slate-200 pt-1 text-sm">
-                  <span>Grand Total:</span>
-                  <span>{formatCurrency(printPO?.total || 0, currencySymbol)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => setPrintPO(null)}
-              className="px-4 py-2 bg-slate-100 text-slate-700 font-bold uppercase text-xs hover:bg-slate-200 border border-slate-300"
-            >
-              Close
-            </button>
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="px-6 py-2 bg-slate-900 text-white font-bold uppercase text-xs hover:bg-black flex items-center gap-1.5"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print Slip</span>
             </button>
           </div>
         </div>

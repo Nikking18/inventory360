@@ -664,25 +664,28 @@ export default function AppMain() {
 
   // Bulk Auto-Generate POs for Low Stock
   const handleBulkAutoGeneratePOs = async () => {
-    const lowStockItems = products.filter((p) => p.stockQuantity <= p.reorderPoint && p.status !== 'Dead Stock');
+    const lowStockItems = products.filter(
+      (p) => p.stockQuantity <= p.reorderPoint && p.status !== 'Dead Stock' && p.status !== 'Quarantined'
+    );
     if (lowStockItems.length === 0) return;
 
     const supplierGroups: Record<string, Product[]> = {};
     lowStockItems.forEach((p) => {
-      if (!supplierGroups[p.supplierId]) {
-        supplierGroups[p.supplierId] = [];
+      const supKey = p.supplierId || suppliers[0]?.id || 'sup_general';
+      if (!supplierGroups[supKey]) {
+        supplierGroups[supKey] = [];
       }
-      supplierGroups[p.supplierId].push(p);
+      supplierGroups[supKey].push(p);
     });
 
     const newPOs: PurchaseOrder[] = [];
     for (const [supId, prods] of Object.entries(supplierGroups)) {
       const sup = suppliers.find((s) => s.id === supId) || {
         id: supId,
-        name: prods[0]?.supplierName || 'Primary Supplier',
+        name: prods[0]?.supplierName || suppliers[0]?.name || 'Primary Supplier',
       };
       const items = prods.map((p) => {
-        const orderQty = Math.max(20, p.reorderPoint * 2 - p.stockQuantity);
+        const orderQty = Math.max(10, p.reorderPoint * 2 - p.stockQuantity);
         return {
           productId: p.id,
           productName: p.name,
@@ -708,7 +711,7 @@ export default function AppMain() {
         expectedDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
         locationId: locations[0]?.id || 'loc_downtown',
         locationName: locations[0]?.name || 'Downtown Flagship',
-        notes: 'Automated reorder PO generated from low stock threshold alerts.',
+        notes: 'Automated replenishment PO generated from low stock buffer alerts.',
         createdAt: new Date().toISOString(),
       };
 
@@ -719,7 +722,6 @@ export default function AppMain() {
     setPurchaseOrders((prev) => [...newPOs, ...prev]);
   };
 
-  // MULTI-CHANNEL SALES SYNC & FULFILLMENT HANDLERS
   const handleSyncAllChannels = async () => {
     const updated = salesChannels.map((c) => ({
       ...c,
@@ -766,6 +768,7 @@ export default function AppMain() {
             ...prod,
             stockQuantity: newStock,
             status: calculateStockStatus({ ...prod, stockQuantity: newStock }),
+            updatedAt: new Date().toISOString(),
           };
 
           updatedProds[pIdx] = updatedProd;
@@ -776,7 +779,7 @@ export default function AppMain() {
             productId: prod.id,
             productName: prod.name,
             sku: prod.sku,
-            type: 'Fulfillment',
+            type: 'Sale',
             quantityChange: -item.quantity,
             previousStock: prevStock,
             newStock: newStock,
@@ -804,17 +807,27 @@ export default function AppMain() {
 
     const prevStock = p.stockQuantity;
     const newStock = Math.max(0, prevStock + qtyChange);
-    const updated = {
+    const defaultLocId = locations[0]?.id || 'loc_downtown';
+    const currentLocQty = p.locationQuantities?.[defaultLocId] ?? prevStock;
+
+    const updatedLocQuantities = {
+      ...(p.locationQuantities || {}),
+      [defaultLocId]: Math.max(0, currentLocQty + qtyChange),
+    };
+
+    const updated: Product = {
       ...p,
       stockQuantity: newStock,
+      locationQuantities: updatedLocQuantities,
       status: calculateStockStatus({ ...p, stockQuantity: newStock }),
+      updatedAt: new Date().toISOString(),
     };
 
     await putToStore('products', updated);
     setProducts((prev) => prev.map((prod) => (prod.id === productId ? updated : prod)));
 
     const mov: StockMovement = {
-      id: `sm_${Date.now()}`,
+      id: `sm_${Date.now()}_adj_${Math.random().toString(36).substr(2, 4)}`,
       productId: p.id,
       productName: p.name,
       sku: p.sku,
@@ -822,7 +835,7 @@ export default function AppMain() {
       quantityChange: qtyChange,
       previousStock: prevStock,
       newStock: newStock,
-      locationId: locations[0]?.id || 'loc_downtown',
+      locationId: defaultLocId,
       locationName: locations[0]?.name || 'Downtown Flagship',
       notes: reason,
       createdAt: new Date().toISOString(),
@@ -850,11 +863,16 @@ export default function AppMain() {
       const idx = updatedProds.findIndex((p) => p.id === item.productId);
       if (idx !== -1) {
         const prod = updatedProds[idx];
-        const srcQty = prod.locationQuantities?.[transfer.sourceLocationId] || 0;
-        const dstQty = prod.locationQuantities?.[transfer.targetLocationId] || 0;
+        const initialLocMap: Record<string, number> = {};
+        locations.forEach((loc) => {
+          initialLocMap[loc.id] = prod.locationQuantities?.[loc.id] ?? Math.floor(prod.stockQuantity / locations.length);
+        });
+
+        const srcQty = initialLocMap[transfer.sourceLocationId] ?? prod.stockQuantity;
+        const dstQty = initialLocMap[transfer.targetLocationId] ?? 0;
 
         const updatedLocationQuantities = {
-          ...(prod.locationQuantities || {}),
+          ...initialLocMap,
           [transfer.sourceLocationId]: Math.max(0, srcQty - item.quantity),
           [transfer.targetLocationId]: dstQty + item.quantity,
         };
@@ -869,7 +887,7 @@ export default function AppMain() {
         await putToStore('products', updatedProd);
 
         const movOut: StockMovement = {
-          id: `sm_${Date.now()}_out_${Math.random()}`,
+          id: `sm_${Date.now()}_out_${Math.random().toString(36).substr(2, 4)}`,
           productId: prod.id,
           productName: prod.name,
           sku: prod.sku,
@@ -885,7 +903,7 @@ export default function AppMain() {
         };
 
         const movIn: StockMovement = {
-          id: `sm_${Date.now()}_in_${Math.random()}`,
+          id: `sm_${Date.now()}_in_${Math.random().toString(36).substr(2, 4)}`,
           productId: prod.id,
           productName: prod.name,
           sku: prod.sku,
@@ -908,6 +926,41 @@ export default function AppMain() {
 
     setProducts(updatedProds);
     setMovements((prev) => [...newMovements, ...prev]);
+  };
+
+  // HANDLER FOR LOT QUARANTINE / RELEASE
+  const handleQuarantineProduct = async (productId: string, isQuarantine: boolean) => {
+    const p = products.find((prod) => prod.id === productId);
+    if (!p) return;
+
+    const newStatus = isQuarantine ? ('Quarantined' as const) : calculateStockStatus(p);
+    const updatedProd: Product = {
+      ...p,
+      status: newStatus,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await putToStore('products', updatedProd);
+    setProducts((prev) => prev.map((prod) => (prod.id === productId ? updatedProd : prod)));
+
+    const mov: StockMovement = {
+      id: `sm_${Date.now()}_qr_${Math.random().toString(36).substr(2, 4)}`,
+      productId: p.id,
+      productName: p.name,
+      sku: p.sku,
+      type: 'Adjustment',
+      quantityChange: 0,
+      previousStock: p.stockQuantity,
+      newStock: p.stockQuantity,
+      locationId: locations[0]?.id || 'loc_downtown',
+      locationName: locations[0]?.name || 'Downtown Flagship',
+      notes: isQuarantine
+        ? `Quarantine initiated for Lot #${p.lotNumber || 'N/A'}`
+        : `Quarantine released for Lot #${p.lotNumber || 'N/A'}`,
+      createdAt: new Date().toISOString(),
+    };
+    await putToStore('stockMovements', mov);
+    setMovements((prev) => [mov, ...prev]);
   };
 
   // HANDLERS FOR SETTINGS & LOCATIONS
@@ -1187,6 +1240,7 @@ export default function AppMain() {
                   onStockAdjustment={handleStockAdjustment}
                   onStockTransfer={handleStockTransfer}
                   onBulkAutoGeneratePOs={handleBulkAutoGeneratePOs}
+                  onQuarantineProduct={handleQuarantineProduct}
                   currencySymbol={settings.currencySymbol}
                   activeSubTab={activeSubTab}
                   onSubTabChange={setActiveSubTab}
