@@ -7,6 +7,8 @@ import {
   ArrowRight,
   ArrowLeft,
   X,
+  Minimize2,
+  Maximize2,
   LayoutDashboard,
   ShoppingBag,
   Globe,
@@ -16,6 +18,7 @@ import {
   Settings,
   Lightbulb,
   CheckCircle2,
+  Compass,
 } from 'lucide-react';
 
 export interface TourStep {
@@ -136,11 +139,13 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
   onNavigateTab,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isMinimized, setIsMinimized] = useState(false);
 
-  // When tour opens, navigate to the first step
+  // When tour opens, navigate to current step
   useEffect(() => {
     if (isOpen) {
       setCurrentStepIndex(0);
+      setIsMinimized(false);
       const step = TOUR_STEPS[0];
       onNavigateTab(step.tabKey, step.subTabKey);
     }
@@ -197,17 +202,48 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 pointer-events-none flex flex-col justify-end p-3 sm:p-6 lg:p-8 font-mono">
-      {/* Background Soft Dim Overlay (Click to close safely) */}
-      <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-[1.5px] pointer-events-auto transition-opacity duration-200"
-        onClick={onClose}
-        title="Click to dismiss tour"
-      />
+  // Minimized Floating Widget Pill
+  if (isMinimized) {
+    return (
+      <div className="fixed bottom-5 right-5 z-50 font-mono animate-in fade-in slide-in-from-bottom-2">
+        <div className="flex items-center gap-2 bg-slate-900 text-white border border-slate-700 shadow-2xl p-2.5 rounded-xs">
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsMinimized(false)}>
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+              Tour {currentStep.stepNumber}/07:
+            </span>
+            <span className="text-xs font-bold text-white uppercase tracking-wider truncate max-w-[160px]">
+              {currentStep.title}
+            </span>
+          </div>
 
-      {/* Floating Guided Tour Spotlight Card */}
-      <div className="relative z-10 pointer-events-auto max-w-xl w-full mx-auto bg-slate-900 text-white border border-slate-700 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center gap-1 border-l border-slate-700 pl-2">
+            <button
+              type="button"
+              onClick={() => setIsMinimized(false)}
+              className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title="Expand Tour Guide"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+              title="Close Tour"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Full Floating Speech Bubble Widget (Zero Fullscreen Dimming Overlay)
+  return (
+    <div className="fixed bottom-5 right-5 z-50 font-mono max-w-md w-[calc(100vw-2.5rem)] animate-in fade-in slide-in-from-bottom-3 duration-200">
+      <div className="bg-slate-900 text-white border-2 border-slate-700 shadow-2xl overflow-hidden rounded-xs">
         {/* Top Progress Track */}
         <div className="w-full bg-slate-800 h-1">
           <div
@@ -216,12 +252,12 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
           />
         </div>
 
-        <div className="p-5 sm:p-6 space-y-4">
-          {/* Card Header */}
-          <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
+        <div className="p-4 sm:p-5 space-y-3.5">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-2.5">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xs bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0">
-                <StepIcon className="w-4 h-4" />
+              <div className="w-7 h-7 rounded-xs bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0">
+                <StepIcon className="w-3.5 h-3.5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -232,102 +268,101 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
                     {currentStep.badge}
                   </span>
                 </div>
-                <h3 className="font-bold text-sm text-white uppercase tracking-wider font-heading mt-0.5">
+                <h3 className="font-bold text-xs sm:text-sm text-white uppercase tracking-wider font-heading mt-0.5">
                   {currentStep.title}
                 </h3>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0"
-              title="Close Tour (Esc)"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsMinimized(true)}
+                className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                title="Minimize Tour"
+              >
+                <Minimize2 className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                title="Close Tour (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Step Description */}
+          {/* Description */}
           <p className="text-xs text-slate-300 leading-relaxed">
             {currentStep.description}
           </p>
 
-          {/* Key Feature Highlights */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+          {/* Highlights checklist */}
+          <div className="space-y-1 pt-0.5">
             {currentStep.highlights.map((h, i) => (
-              <div
-                key={i}
-                className="p-2 bg-slate-800/70 border border-slate-700/60 flex items-center gap-1.5 text-[10px] text-slate-200"
-              >
+              <div key={i} className="flex items-center gap-1.5 text-[11px] text-slate-200">
                 <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
                 <span className="truncate">{h}</span>
               </div>
             ))}
           </div>
 
-          {/* Pro-Tip Alert Box */}
-          <div className="p-3 bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2.5">
-            <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <div className="space-y-0.5 text-[11px] leading-snug">
-              <span className="font-bold uppercase tracking-wider text-amber-400 block">Pro-Tip:</span>
+          {/* Pro-Tip Box */}
+          <div className="p-2.5 bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2 rounded-xs">
+            <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-[10.5px] leading-snug">
+              <span className="font-bold uppercase tracking-wider text-amber-400 mr-1">Tip:</span>
               <span className="text-amber-200/90">{currentStep.proTip}</span>
             </div>
           </div>
 
-          {/* Card Footer Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-800">
+          {/* Footer Controls */}
+          <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800">
             {/* Step Dots */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               {TOUR_STEPS.map((_, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleGoToStep(idx)}
-                  className={`w-2 h-2 rounded-full transition-all ${
+                  className={`h-1.5 rounded-full transition-all ${
                     currentStepIndex === idx
-                      ? 'bg-emerald-400 w-5'
-                      : 'bg-slate-700 hover:bg-slate-500'
+                      ? 'bg-emerald-400 w-4'
+                      : 'bg-slate-700 hover:bg-slate-500 w-1.5'
                   }`}
                   title={`Go to Step ${idx + 1}`}
                 />
               ))}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-3 py-1.5 bg-transparent hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors"
-              >
-                Skip Tour
-              </button>
-
+            {/* Buttons */}
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 disabled={isFirstStep}
                 onClick={handlePrev}
-                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1 border transition-colors ${
+                className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider flex items-center gap-1 border transition-colors ${
                   isFirstStep
-                    ? 'opacity-40 cursor-not-allowed border-slate-800 text-slate-600'
+                    ? 'opacity-30 cursor-not-allowed border-slate-800 text-slate-600'
                     : 'bg-slate-800 hover:bg-slate-700 text-white border-slate-600'
                 }`}
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
+                <ArrowLeft className="w-3 h-3" />
                 <span>Prev</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-colors"
+                className="px-3.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider flex items-center gap-1 shadow-sm transition-colors"
               >
-                <span>{isLastStep ? 'Finish Tour' : 'Next'}</span>
+                <span>{isLastStep ? 'Finish' : 'Next'}</span>
                 {isLastStep ? (
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-3 h-3" />
                 ) : (
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3 h-3" />
                 )}
               </button>
             </div>

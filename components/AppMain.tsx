@@ -197,7 +197,7 @@ export default function AppMain() {
     } else {
       const targetHash = `#/${activeTab}${activeSubTab ? '/' + activeSubTab : ''}`;
       if (window.location.hash !== targetHash) {
-        window.history.replaceState(null, '', `/${targetHash}`);
+        window.history.replaceState(null, '', targetHash);
       }
     }
   }, [showLanding, activeTab, activeSubTab]);
