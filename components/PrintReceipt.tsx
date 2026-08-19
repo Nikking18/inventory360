@@ -82,9 +82,15 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
                     <span>-{formatCurrency(sale.discount, settings.currencySymbol)}</span>
                   </div>
                 )}
+                {sale.itemTax !== undefined && sale.itemTax > 0 && (
+                  <div className="flex justify-between">
+                    <span>Item Tax:</span>
+                    <span>+{formatCurrency(sale.itemTax, settings.currencySymbol)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
-                  <span>Tax:</span>
-                  <span>{formatCurrency(sale.tax, settings.currencySymbol)}</span>
+                  <span>HST/GST ({sale.mainTaxRate !== undefined ? sale.mainTaxRate : settings.taxRate}%):</span>
+                  <span>+{formatCurrency(sale.mainTax !== undefined ? sale.mainTax : sale.tax, settings.currencySymbol)}</span>
                 </div>
                 <div className="flex justify-between font-extrabold text-[11px] border-t border-b border-black py-0.5 my-0.5">
                   <span>TOTAL:</span>
@@ -180,10 +186,22 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
                     <span>-{formatCurrency(sale.discount, settings.currencySymbol)}</span>
                   </div>
                 )}
+                {sale.itemTax !== undefined && sale.itemTax > 0 && (
+                  <div className="flex justify-between text-indigo-950 font-semibold">
+                    <span>ITEM SPECIFIC TAX:</span>
+                    <span>+{formatCurrency(sale.itemTax, settings.currencySymbol)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
-                  <span>TAXES / GST:</span>
-                  <span>{formatCurrency(sale.tax, settings.currencySymbol)}</span>
+                  <span>MAIN HST / GST ({sale.mainTaxRate !== undefined ? sale.mainTaxRate : settings.taxRate}%):</span>
+                  <span>+{formatCurrency(sale.mainTax !== undefined ? sale.mainTax : sale.tax, settings.currencySymbol)}</span>
                 </div>
+                {sale.itemTax !== undefined && sale.itemTax > 0 && (
+                  <div className="flex justify-between text-[10px] text-gray-700 border-t border-dotted border-gray-300 pt-0.5">
+                    <span>TOTAL TAXES:</span>
+                    <span>{formatCurrency(sale.tax, settings.currencySymbol)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-extrabold text-sm border-t border-b border-black py-1 my-1">
                   <span>TOTAL PAID:</span>
                   <span>{formatCurrency(sale.total, settings.currencySymbol)}</span>
@@ -321,10 +339,22 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
                       <span>-{formatCurrency(sale.discount, settings.currencySymbol)}</span>
                     </div>
                   )}
+                  {sale.itemTax !== undefined && sale.itemTax > 0 && (
+                    <div className="flex justify-between text-indigo-950 font-semibold">
+                      <span>Individual Item Taxes:</span>
+                      <span>+{formatCurrency(sale.itemTax, settings.currencySymbol)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-gray-700">
-                    <span>Applicable Tax ({settings.taxRate}%):</span>
-                    <span>{formatCurrency(sale.tax, settings.currencySymbol)}</span>
+                    <span>Main HST / GST ({sale.mainTaxRate !== undefined ? sale.mainTaxRate : settings.taxRate}%):</span>
+                    <span>+{formatCurrency(sale.mainTax !== undefined ? sale.mainTax : sale.tax, settings.currencySymbol)}</span>
                   </div>
+                  {sale.itemTax !== undefined && sale.itemTax > 0 && (
+                    <div className="flex justify-between text-[11px] text-gray-600 border-t border-dotted border-gray-300 pt-0.5">
+                      <span>Combined Taxes:</span>
+                      <span>{formatCurrency(sale.tax, settings.currencySymbol)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between font-extrabold text-base border-t-2 border-black pt-2 text-black">
                     <span>NET TOTAL:</span>
                     <span>{formatCurrency(sale.total, settings.currencySymbol)}</span>

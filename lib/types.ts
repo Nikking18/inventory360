@@ -121,7 +121,10 @@ export interface Sale {
   customerName?: string;
   items: SaleItem[];
   subtotal: number;
-  tax: number;
+  itemTax?: number; // Individual item specific tax
+  mainTax?: number; // Main store HST / GST tax
+  mainTaxRate?: number; // Main store HST / GST rate %
+  tax: number; // Combined tax total (itemTax + mainTax)
   discount: number;
   total: number;
   costOfGoodsSold: number;

@@ -265,7 +265,7 @@ export const SellView: React.FC<SellViewProps> = ({
     setDiscountInput('');
   };
 
-  // Calculations (Respecting Individual Item Tax Rates and Custom Discounts)
+  // Calculations (Separating Individual Item Tax from Main Store HST/GST Tax)
   const subtotal = cart.reduce((acc, item) => acc + item.total, 0);
 
   const effectiveDiscount = React.useMemo(() => {
@@ -279,22 +279,37 @@ export const SellView: React.FC<SellViewProps> = ({
 
   const discountRatio = subtotal > 0 ? Math.max(0, (subtotal - effectiveDiscount) / subtotal) : 1;
 
-  const calculatedTax = cart.reduce((acc, item) => {
-    const rate = item.taxRate !== undefined ? item.taxRate : taxRate;
-    const discountedItemTotal = item.total * discountRatio;
-    return acc + discountedItemTotal * (rate / 100);
-  }, 0);
-
-  const taxBreakdown = React.useMemo(() => {
-    const slabs = new Map<number, number>();
-    cart.forEach((item) => {
-      const rate = item.taxRate !== undefined ? item.taxRate : taxRate;
+  // 1. Individual Item-Specific Taxes (Excise / Surcharge / Category Specific Tax on Product)
+  const totalItemTax = React.useMemo(() => {
+    return cart.reduce((acc, item) => {
+      const itemSpecificRate = item.taxRate !== undefined && !isNaN(item.taxRate) ? item.taxRate : 0;
       const discountedItemTotal = item.total * discountRatio;
-      const taxVal = discountedItemTotal * (rate / 100);
-      slabs.set(rate, (slabs.get(rate) || 0) + taxVal);
+      return acc + discountedItemTotal * (itemSpecificRate / 100);
+    }, 0);
+  }, [cart, discountRatio]);
+
+  // Breakdown of items with individual taxes
+  const itemTaxBreakdown = React.useMemo(() => {
+    const map = new Map<number, number>();
+    cart.forEach((item) => {
+      if (item.taxRate !== undefined && item.taxRate > 0) {
+        const discountedItemTotal = item.total * discountRatio;
+        const taxVal = discountedItemTotal * (item.taxRate / 100);
+        map.set(item.taxRate, (map.get(item.taxRate) || 0) + taxVal);
+      }
     });
-    return Array.from(slabs.entries()).map(([rate, amount]) => ({ rate, amount }));
-  }, [cart, discountRatio, taxRate]);
+    return Array.from(map.entries()).map(([rate, amount]) => ({ rate, amount }));
+  }, [cart, discountRatio]);
+
+  // 2. Main Store HST / GST / Sales Tax (Base tax rate applied across taxable sale)
+  const mainHSTGSTTax = React.useMemo(() => {
+    const taxableSubtotal = Math.max(0, subtotal - effectiveDiscount);
+    const storeTaxRate = taxRate !== undefined && !isNaN(taxRate) ? taxRate : 0;
+    return taxableSubtotal * (storeTaxRate / 100);
+  }, [subtotal, effectiveDiscount, taxRate]);
+
+  // 3. Combined Total Taxes
+  const calculatedTax = totalItemTax + mainHSTGSTTax;
 
   const total = Math.max(0, subtotal - effectiveDiscount + calculatedTax);
   const totalCOGS = cart.reduce((acc, item) => acc + item.quantity * item.unitCost, 0);
@@ -309,6 +324,9 @@ export const SellView: React.FC<SellViewProps> = ({
       items: cart,
       subtotal,
       discount: effectiveDiscount,
+      itemTax: totalItemTax,
+      mainTax: mainHSTGSTTax,
+      mainTaxRate: taxRate,
       tax: calculatedTax,
       total,
       paymentMethod,
@@ -681,9 +699,10 @@ export const SellView: React.FC<SellViewProps> = ({
                 </div>
               ) : (
                 cart.map((item) => {
-                  const effectiveItemTaxRate = item.taxRate !== undefined ? item.taxRate : taxRate;
+                  const hasItemTax = item.taxRate !== undefined && !isNaN(item.taxRate);
+                  const itemSpecificTaxRate = hasItemTax ? item.taxRate! : 0;
                   const itemDiscountedTotal = item.total * discountRatio;
-                  const itemTaxAmount = itemDiscountedTotal * (effectiveItemTaxRate / 100);
+                  const itemTaxAmount = itemDiscountedTotal * (itemSpecificTaxRate / 100);
 
                   return (
                     <div
@@ -693,23 +712,23 @@ export const SellView: React.FC<SellViewProps> = ({
                       <div className="min-w-0 flex-1 pr-2">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <p className="font-bold text-slate-900 truncate">{item.productName}</p>
-                          <span
-                            className={`text-[9px] font-bold px-1.5 py-0.2 border uppercase ${
-                              item.taxRate !== undefined
-                                ? item.taxRate === 0
-                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                                  : 'bg-indigo-50 text-indigo-800 border-indigo-300'
-                                : 'bg-slate-100 text-slate-700 border-slate-300'
-                            }`}
-                          >
-                            {item.taxRate !== undefined ? `${item.taxRate}% Tax` : `${taxRate}% Std`}
-                          </span>
+                          {hasItemTax && item.taxRate! > 0 ? (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 border uppercase bg-indigo-50 text-indigo-800 border-indigo-300">
+                              {item.taxRate}% Item Tax
+                            </span>
+                          ) : hasItemTax && item.taxRate === 0 ? (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 border uppercase bg-emerald-50 text-emerald-800 border-emerald-300">
+                              0% Item Tax (Exempt)
+                            </span>
+                          ) : null}
                         </div>
                         <p className="text-[10px] text-slate-500">
                           {formatCurrency(item.unitPrice, currencySymbol)} × {item.quantity} • {item.sku}
-                          <span className="ml-1 text-slate-600 font-semibold">
-                            (Tax: {formatCurrency(itemTaxAmount, currencySymbol)})
-                          </span>
+                          {hasItemTax && item.taxRate! > 0 && (
+                            <span className="ml-1 text-indigo-700 font-semibold font-mono">
+                              (Item Tax: +{formatCurrency(itemTaxAmount, currencySymbol)})
+                            </span>
+                          )}
                         </p>
                       </div>
 
@@ -835,26 +854,41 @@ export const SellView: React.FC<SellViewProps> = ({
                 </div>
               </div>
 
-              {/* Taxes Summary & Slab Breakdown */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-slate-600">
-                  <span>Taxes &amp; GST:</span>
+              {/* Individual Item Tax (if any items have custom item tax) */}
+              {totalItemTax > 0 && (
+                <div className="space-y-1 bg-indigo-50/70 border border-indigo-200 p-1.5 rounded-xs">
+                  <div className="flex justify-between text-indigo-900 font-semibold">
+                    <span>Individual Item Taxes:</span>
+                    <span>+{formatCurrency(totalItemTax, currencySymbol)}</span>
+                  </div>
+                  {itemTaxBreakdown.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1 justify-end">
+                      {itemTaxBreakdown.map((t) => (
+                        <span
+                          key={t.rate}
+                          className="text-[9px] bg-white border border-indigo-300 px-1 py-0.2 text-indigo-800 font-mono"
+                        >
+                          {t.rate}% Item Tax: {formatCurrency(t.amount, currencySymbol)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Main Store HST / GST Tax */}
+              <div className="flex justify-between text-slate-600">
+                <span>Main HST / GST Tax ({taxRate}%):</span>
+                <span>+{formatCurrency(mainHSTGSTTax, currencySymbol)}</span>
+              </div>
+
+              {/* Total Combined Taxes Summary */}
+              {totalItemTax > 0 && (
+                <div className="flex justify-between text-slate-500 text-[10px] border-t border-dotted border-slate-200 pt-1">
+                  <span>Combined Taxes (Item + HST/GST):</span>
                   <span>{formatCurrency(calculatedTax, currencySymbol)}</span>
                 </div>
-
-                {taxBreakdown.length > 1 && (
-                  <div className="flex flex-wrap items-center gap-1 justify-end">
-                    {taxBreakdown.map((t) => (
-                      <span
-                        key={t.rate}
-                        className="text-[9px] bg-slate-100 border border-slate-200 px-1 py-0.2 text-slate-600 font-mono"
-                      >
-                        {t.rate}%: {formatCurrency(t.amount, currencySymbol)}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+              )}
 
               <div className="flex justify-between text-base font-bold text-slate-900 border-t border-slate-200 pt-2">
                 <span>Total Due:</span>
