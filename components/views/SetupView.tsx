@@ -43,6 +43,8 @@ export const SetupView: React.FC<SetupViewProps> = ({
   const [currencyCode, setCurrencyCode] = useState(settings.currencyCode || 'USD');
   const [language, setLanguage] = useState<SupportedLanguage>((settings.language as SupportedLanguage) || 'en');
   const [taxRate, setTaxRate] = useState(settings.taxRate);
+  const [taxNumber, setTaxNumber] = useState(settings.taxNumber || '');
+  const [logoUrl, setLogoUrl] = useState(settings.logoUrl || '');
   const [address, setAddress] = useState(settings.address);
   const [phone, setPhone] = useState(settings.phone);
   const [email, setEmail] = useState(settings.email);
@@ -60,6 +62,8 @@ export const SetupView: React.FC<SetupViewProps> = ({
     setCurrencyCode(settings.currencyCode || 'USD');
     setLanguage((settings.language as SupportedLanguage) || 'en');
     setTaxRate(settings.taxRate);
+    setTaxNumber(settings.taxNumber || '');
+    setLogoUrl(settings.logoUrl || '');
     setAddress(settings.address);
     setPhone(settings.phone);
     setEmail(settings.email);
@@ -83,6 +87,25 @@ export const SetupView: React.FC<SetupViewProps> = ({
     setTimeout(() => setNotification(null), 2500);
   };
 
+  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setNotification('Logo file too large. Please select an image under 2MB.');
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setLogoUrl(reader.result);
+        setNotification('Logo uploaded successfully. Click "Save Settings" to apply.');
+        setTimeout(() => setNotification(null), 3000);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     await onUpdateSettings({
@@ -94,11 +117,13 @@ export const SetupView: React.FC<SetupViewProps> = ({
       language,
       theme: 'light',
       taxRate: Number(taxRate),
+      taxNumber,
+      logoUrl,
       address,
       phone,
       email,
     });
-    setNotification('Global business settings and preferences saved successfully.');
+    setNotification('Global business settings, tax ID, and logo saved successfully.');
     setTimeout(() => setNotification(null), 3000);
   };
 
@@ -202,6 +227,72 @@ export const SetupView: React.FC<SetupViewProps> = ({
             Business Profile &amp; General Configuration
           </h3>
 
+          {/* Company Logo & Branding */}
+          <div className="p-4 bg-slate-50 border border-slate-200 space-y-3">
+            <label className="block text-[10px] font-bold uppercase text-slate-700">
+              Company Logo &amp; Document Brand
+            </label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="w-24 h-24 bg-white border-2 border-dashed border-slate-300 flex items-center justify-center p-1 relative group shrink-0">
+                {logoUrl ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={logoUrl} alt="Company Logo" className="w-full h-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => setLogoUrl('')}
+                      className="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full p-1 shadow-md hover:bg-rose-700"
+                      title="Remove Logo"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-center p-2">
+                    <Building2 className="w-6 h-6 text-slate-400 mx-auto mb-1" />
+                    <span className="text-[9px] text-slate-500 uppercase font-bold">No Logo</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="px-3 py-1.5 bg-slate-900 hover:bg-black text-white text-xs font-bold uppercase cursor-pointer flex items-center gap-1.5 shadow-xs">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Upload Image File</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                      onChange={handleLogoFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  {logoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setLogoUrl('')}
+                      className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold uppercase"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="url"
+                    placeholder="Or enter public Logo Image URL (https://...)"
+                    value={logoUrl}
+                    onChange={(e) => setLogoUrl(e.target.value)}
+                    className="w-full bg-white border border-slate-300 p-2 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    PNG, JPG, or SVG. This logo will be automatically rendered on your Dashboard header, thermal receipts, and all exported PDF slips.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
@@ -230,7 +321,43 @@ export const SetupView: React.FC<SetupViewProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Tax Identification / GSTIN / VAT Number
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. GSTIN-27AABCT2834K1Z9 / US-EIN-98765432"
+                value={taxNumber}
+                onChange={(e) => setTaxNumber(e.target.value.toUpperCase())}
+                className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono uppercase"
+              />
+              <p className="text-[10px] text-slate-500 mt-1">
+                Official registration number displayed on PO slips, invoices, receipts, and tax reports.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
+                Default General Sales Tax Rate (%)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                value={taxRate}
+                onChange={(e) => setTaxRate(Number(e.target.value))}
+                className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono text-right"
+              />
+              <p className="text-[10px] text-slate-500 mt-1">
+                Fallback tax rate when a product does not specify an individual item tax percentage.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1 flex items-center gap-1">
                 <DollarSign className="w-3 h-3 text-slate-500" />
@@ -265,21 +392,6 @@ export const SetupView: React.FC<SetupViewProps> = ({
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                Default Sales Tax Rate (%)
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                min="0"
-                max="100"
-                value={taxRate}
-                onChange={(e) => setTaxRate(Number(e.target.value))}
-                className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-900 font-mono text-right"
-              />
             </div>
           </div>
 

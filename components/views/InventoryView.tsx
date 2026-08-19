@@ -9,6 +9,7 @@ import {
   Supplier,
   PurchaseOrder,
   StockTransfer,
+  BusinessSettings,
 } from '../../lib/types';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { Modal } from '../common/Modal';
@@ -66,6 +67,7 @@ interface InventoryViewProps {
   onQuarantineProduct?: (productId: string, isQuarantine: boolean) => Promise<void>;
   onUpdateProductReorderPoint?: (productId: string, newPoint: number) => Promise<void>;
   currencySymbol: string;
+  settings?: BusinessSettings;
   activeSubTab?: string;
   onSubTabChange?: (sub: string) => void;
 }
@@ -85,6 +87,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   onQuarantineProduct,
   onUpdateProductReorderPoint,
   currencySymbol,
+  settings,
   activeSubTab = 'stock-levels',
   onSubTabChange,
 }) => {
@@ -531,11 +534,19 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       Supplier: p.supplierName,
       Cost: `${currencySymbol}${p.costPrice.toFixed(2)}`,
       Retail: `${currencySymbol}${p.retailPrice.toFixed(2)}`,
+      'Tax %': p.taxRate !== undefined ? `${p.taxRate}%` : `${settings?.taxRate || 8.5}%`,
       Stock: p.stockQuantity,
       'Total Valuation': `${currencySymbol}${(p.costPrice * p.stockQuantity).toFixed(2)}`,
       Status: p.status,
     }));
-    exportToPDF('Stock_Levels_Report', 'Master Stock Levels Valuation Report', data);
+    exportToPDF(
+      'Stock_Levels_Report',
+      'Master Stock Levels Valuation Report',
+      data,
+      settings?.businessName || 'Inventory 360 Enterprise',
+      settings?.logoUrl,
+      settings?.taxNumber
+    );
     showToast('Stock Valuation Report PDF downloaded!');
   };
 
@@ -557,7 +568,13 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   };
 
   const handleDownloadSlip = (po: PurchaseOrder) => {
-    downloadPOSlipPDF(po, currencySymbol, 'Inventory 360 Enterprise');
+    downloadPOSlipPDF(
+      po,
+      currencySymbol,
+      settings?.businessName || 'Inventory 360 Enterprise',
+      settings?.logoUrl,
+      settings?.taxNumber
+    );
     showToast(`Purchase Order Slip PDF downloaded for ${po.poNumber}!`);
   };
 

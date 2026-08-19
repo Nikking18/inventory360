@@ -148,6 +148,7 @@ export const SellView: React.FC<SellViewProps> = ({
 
     const uniqueItemKey = `${product.id}__var_${variant.id}`;
     const variantFullName = `${product.name} (${variant.name})`;
+    const itemTaxRate = product.taxRate !== undefined ? product.taxRate : taxRate;
 
     setCart((prev) => {
       const existing = prev.find((item) => item.productId === uniqueItemKey);
@@ -163,11 +164,13 @@ export const SellView: React.FC<SellViewProps> = ({
           ...prev,
           {
             productId: uniqueItemKey,
+            variantId: variant.id,
             productName: variantFullName,
             sku: variant.sku || product.sku,
             unitPrice: variant.retailPrice || product.retailPrice,
             unitCost: variant.costPrice || product.costPrice,
             quantity: Math.min(maxStock, quantity),
+            taxRate: itemTaxRate,
             total: (variant.retailPrice || product.retailPrice) * Math.min(maxStock, quantity),
           },
         ];
@@ -193,6 +196,8 @@ export const SellView: React.FC<SellViewProps> = ({
     const maxStock = prod ? prod.stockQuantity : product.stockQuantity;
     if (maxStock <= 0) return;
 
+    const itemTaxRate = product.taxRate !== undefined ? product.taxRate : taxRate;
+
     setCart((prev) => {
       const existing = prev.find((item) => item.productId === product.id);
       if (existing) {
@@ -213,6 +218,7 @@ export const SellView: React.FC<SellViewProps> = ({
             unitPrice: product.retailPrice,
             unitCost: product.costPrice,
             quantity: Math.min(maxStock, quantity),
+            taxRate: itemTaxRate,
             total: product.retailPrice * Math.min(maxStock, quantity),
           },
         ];
@@ -258,9 +264,14 @@ export const SellView: React.FC<SellViewProps> = ({
     setDiscountAmount(0);
   };
 
-  // Calculations
+  // Calculations (Respecting Individual Item Tax Rates)
   const subtotal = cart.reduce((acc, item) => acc + item.total, 0);
-  const calculatedTax = (subtotal - discountAmount) * (taxRate / 100);
+  const discountRatio = subtotal > 0 ? Math.max(0, (subtotal - discountAmount) / subtotal) : 1;
+  const calculatedTax = cart.reduce((acc, item) => {
+    const rate = item.taxRate !== undefined ? item.taxRate : taxRate;
+    const discountedItemTotal = item.total * discountRatio;
+    return acc + discountedItemTotal * (rate / 100);
+  }, 0);
   const total = Math.max(0, subtotal - discountAmount + calculatedTax);
   const totalCOGS = cart.reduce((acc, item) => acc + item.quantity * item.unitCost, 0);
   const grossProfit = total - totalCOGS;

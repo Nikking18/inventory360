@@ -1295,6 +1295,7 @@ export default function AppMain() {
                     if (subTab) setActiveSubTab(subTab);
                   }}
                   currencySymbol={settings.currencySymbol}
+                  settings={settings}
                   onPrintReceipt={handlePrintReceipt}
                 />
               )}
@@ -1372,6 +1373,7 @@ export default function AppMain() {
                   onQuarantineProduct={handleQuarantineProduct}
                   onUpdateProductReorderPoint={handleUpdateProductReorderPoint}
                   currencySymbol={settings.currencySymbol}
+                  settings={settings}
                   activeSubTab={activeSubTab}
                   onSubTabChange={setActiveSubTab}
                 />

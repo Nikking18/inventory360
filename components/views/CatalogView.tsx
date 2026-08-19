@@ -133,6 +133,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [retailPrice, setRetailPrice] = useState<number>(0);
   const [stockQuantity, setStockQuantity] = useState<number>(0);
   const [reorderPoint, setReorderPoint] = useState<number>(10);
+  const [taxRate, setTaxRate] = useState<number | string>('');
   const [supplierId, setSupplierId] = useState('');
   const [imageUrl, setImageUrl] = useState('');
 
@@ -166,6 +167,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     setRetailPrice(0);
     setStockQuantity(0);
     setReorderPoint(10);
+    setTaxRate('');
     setSupplierId(suppliers[0]?.id || '');
     setImageUrl('');
     setVariants([]);
@@ -190,6 +192,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     setRetailPrice(p.retailPrice);
     setStockQuantity(p.stockQuantity);
     setReorderPoint(p.reorderPoint);
+    setTaxRate(p.taxRate !== undefined ? p.taxRate : '');
     setSupplierId(p.supplierId);
     setImageUrl(p.imageUrl || '');
     setVariants(p.variants || []);
@@ -405,6 +408,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       retailPrice: numRetailPrice,
       stockQuantity: numStock,
       reorderPoint: numReorderPoint,
+      taxRate: taxRate !== '' && !isNaN(Number(taxRate)) ? Number(taxRate) : undefined,
       locationQuantities: editingProduct?.locationQuantities || {
         [locations[0]?.id || 'loc_downtown']: numStock,
       },
@@ -830,7 +834,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                             {formatCurrency(p.costPrice, currencySymbol)}
                           </td>
                           <td className="p-2.5 text-right font-mono font-bold text-slate-900">
-                            {formatCurrency(p.retailPrice, currencySymbol)}
+                            <div>{formatCurrency(p.retailPrice, currencySymbol)}</div>
+                            <div className="text-[9px] font-normal text-slate-500 font-mono">
+                              {p.taxRate !== undefined ? `${p.taxRate}% Tax` : 'Std Tax'}
+                            </div>
                           </td>
                           <td className="p-2.5 text-right font-mono font-bold text-slate-900">
                             {p.stockQuantity}
@@ -1624,6 +1631,55 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     onChange={(e) => setReorderPoint(Number(e.target.value))}
                     className="w-full bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono text-right"
                   />
+                </div>
+              </div>
+
+              {/* Individual Item Tax Rate */}
+              <div className="p-3 bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[10px] font-bold uppercase text-slate-700">
+                    Individual Item Tax / GST Rate (%)
+                  </label>
+                  <span className="text-[10px] text-slate-500">
+                    Leave blank to use store default rate
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    placeholder="Store Default (e.g. 8.5%)"
+                    value={taxRate}
+                    onChange={(e) => setTaxRate(e.target.value)}
+                    className="w-full sm:w-48 bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono text-right"
+                  />
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {[0, 5, 12, 18, 28].map((rate) => (
+                      <button
+                        key={rate}
+                        type="button"
+                        onClick={() => setTaxRate(rate)}
+                        className={`px-2 py-1 text-[10px] font-bold uppercase border transition-colors ${
+                          taxRate === rate || taxRate === String(rate)
+                            ? 'bg-slate-900 text-white border-slate-900'
+                            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                        }`}
+                      >
+                        {rate === 0 ? '0% (Exempt)' : `${rate}%`}
+                      </button>
+                    ))}
+                    {taxRate !== '' && (
+                      <button
+                        type="button"
+                        onClick={() => setTaxRate('')}
+                        className="px-2 py-1 text-[10px] font-bold uppercase text-rose-600 hover:underline"
+                      >
+                        Reset Default
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 

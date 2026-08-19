@@ -34,9 +34,14 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
           {receiptFormat === '58mm' && (
             <div className="max-w-[210px] mx-auto p-2 border-b border-dashed border-black text-[9px] leading-tight space-y-2">
               <div className="text-center border-b border-dashed border-black pb-1.5 space-y-0.5">
+                {settings.logoUrl && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={settings.logoUrl} alt="Logo" className="max-h-8 max-w-[120px] mx-auto object-contain mb-1" />
+                )}
                 <h1 className="font-extrabold text-[12px] tracking-tight uppercase">
                   {settings.businessName || 'INVENTORY 360'}
                 </h1>
+                {settings.taxNumber && <p className="text-[8px] font-bold">GSTIN/TAX: {settings.taxNumber}</p>}
                 {settings.address && <p className="text-[8px] truncate">{settings.address}</p>}
                 {settings.phone && <p className="text-[8px]">Tel: {settings.phone}</p>}
                 <div className="pt-0.5 border-t border-dotted border-gray-400 mt-0.5">
@@ -78,7 +83,7 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span>Tax ({settings.taxRate}%):</span>
+                  <span>Tax:</span>
                   <span>{formatCurrency(sale.tax, settings.currencySymbol)}</span>
                 </div>
                 <div className="flex justify-between font-extrabold text-[11px] border-t border-b border-black py-0.5 my-0.5">
@@ -105,9 +110,16 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
             <div className="max-w-[320px] mx-auto p-3.5 border border-dashed border-black text-xs space-y-2.5">
               {/* Header */}
               <div className="text-center border-b border-black pb-2 space-y-1">
+                {settings.logoUrl && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={settings.logoUrl} alt="Logo" className="max-h-12 max-w-[180px] mx-auto object-contain mb-1.5" />
+                )}
                 <h1 className="font-extrabold text-base tracking-tight uppercase">
                   {settings.businessName || 'INVENTORY 360'}
                 </h1>
+                {settings.taxNumber && (
+                  <p className="text-[10px] font-bold text-gray-800">GSTIN / TAX ID: {settings.taxNumber}</p>
+                )}
                 {settings.address && <p className="text-[11px]">{settings.address}</p>}
                 <p className="text-[10px]">
                   {settings.phone && `Tel: ${settings.phone}`} {settings.email && `| ${settings.email}`}
@@ -141,7 +153,9 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
                     <div className="flex justify-between items-start">
                       <div className="w-1/2 pr-1">
                         <p className="font-bold leading-tight">{item.productName}</p>
-                        <p className="text-[9px] text-gray-600">SKU: {item.sku}</p>
+                        <p className="text-[9px] text-gray-600">
+                          SKU: {item.sku} {item.taxRate !== undefined && `(${item.taxRate}% Tax)`}
+                        </p>
                       </div>
                       <div className="w-1/4 text-right text-[10px]">
                         {item.quantity} × {formatCurrency(item.unitPrice, settings.currencySymbol)}
@@ -167,7 +181,7 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span>TAX ({settings.taxRate}%):</span>
+                  <span>TAXES / GST:</span>
                   <span>{formatCurrency(sale.tax, settings.currencySymbol)}</span>
                 </div>
                 <div className="flex justify-between font-extrabold text-sm border-t border-b border-black py-1 my-1">
@@ -206,13 +220,19 @@ export const PrintReceipt: React.FC<PrintReceiptProps> = ({
             <div className="max-w-[760px] mx-auto p-8 border-2 border-black text-xs space-y-6">
               {/* Top Business Header */}
               <div className="flex justify-between items-start border-b-2 border-black pb-5">
-                <div>
-                  <h1 className="font-extrabold text-2xl uppercase tracking-tight">
-                    {settings.businessName || 'INVENTORY 360'}
-                  </h1>
-                  <p className="text-sm font-semibold text-gray-800 mt-1">{settings.address}</p>
-                  <p className="text-xs text-gray-700">Phone: {settings.phone} | Email: {settings.email}</p>
-                  {settings.taxRate > 0 && <p className="text-xs text-gray-700">Tax Reg / GST: TAX-{settings.taxRate}%</p>}
+                <div className="flex items-center gap-4">
+                  {settings.logoUrl && (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={settings.logoUrl} alt="Logo" className="max-h-16 max-w-[140px] object-contain border border-gray-200 p-1" />
+                  )}
+                  <div>
+                    <h1 className="font-extrabold text-2xl uppercase tracking-tight">
+                      {settings.businessName || 'INVENTORY 360'}
+                    </h1>
+                    <p className="text-sm font-semibold text-gray-800 mt-1">{settings.address}</p>
+                    <p className="text-xs text-gray-700">Phone: {settings.phone} | Email: {settings.email}</p>
+                    {settings.taxNumber && <p className="text-xs font-bold text-gray-800">GSTIN / TAX ID: {settings.taxNumber}</p>}
+                  </div>
                 </div>
                 <div className="text-right space-y-1">
                   <div className="inline-block bg-black text-white px-3 py-1 font-bold text-base uppercase tracking-wider">

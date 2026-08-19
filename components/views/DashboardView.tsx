@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../../context/I18nContext';
-import { Product, Sale, PurchaseOrder, Location, Customer } from '../../lib/types';
+import { Product, Sale, PurchaseOrder, Location, Customer, BusinessSettings } from '../../lib/types';
 import { formatCurrency } from '../../lib/utils';
 import {
   Chart as ChartJS,
@@ -41,6 +41,8 @@ import {
   Store,
   Globe,
   Tag,
+  Building2,
+  ShieldCheck,
 } from 'lucide-react';
 
 ChartJS.register(
@@ -65,6 +67,7 @@ interface DashboardViewProps {
   onLocationChange: (locId: string) => void;
   onNavigate: (tab: any, subTab?: string) => void;
   currencySymbol: string;
+  settings?: BusinessSettings;
   onPrintReceipt?: (sale: Sale) => void;
 }
 
@@ -78,6 +81,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onLocationChange,
   onNavigate,
   currencySymbol,
+  settings,
   onPrintReceipt,
 }) => {
   const [timeframe, setTimeframe] = useState<'today' | 'week' | 'month'>('month');
@@ -409,19 +413,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     <div className="space-y-8 text-slate-900 font-mono">
       {/* Page Title & Timeframe Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 bg-slate-900" />
-            <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">
-              {t('system_overview', 'Executive Dashboard')}
-            </span>
+        <div className="flex items-center gap-3">
+          {settings?.logoUrl && (
+            <div className="w-12 h-12 bg-white border border-slate-300 p-1 flex items-center justify-center shadow-2xs shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+          )}
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <div className="w-2 h-2 bg-slate-900" />
+              <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">
+                {settings?.businessName ? settings.businessName.toUpperCase() : t('system_overview', 'Executive Dashboard')}
+              </span>
+              {settings?.taxNumber && (
+                <span className="text-[9px] font-mono font-bold bg-slate-100 text-slate-700 px-2 py-0.5 border border-slate-300">
+                  GSTIN / TAX: {settings.taxNumber}
+                </span>
+              )}
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-heading tracking-tight">
+              {t('dashboard', 'Store Operations Overview')}
+            </h1>
+            <p className="text-xs text-slate-600 mt-0.5 font-mono">
+              {t('welcome', 'Real-time telemetry across revenue, buyers, billing invoices, and financial transactions.')}
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 font-heading tracking-tight">
-            {t('dashboard', 'Store Operations Overview')}
-          </h1>
-          <p className="text-xs text-slate-600 mt-1 font-mono">
-            {t('welcome', 'Real-time telemetry across revenue, buyers, billing invoices, and financial transactions.')}
-          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto font-mono text-xs">

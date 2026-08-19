@@ -157,25 +157,48 @@ export function exportToExcel<T extends Record<string, any>>(filename: string, r
   URL.revokeObjectURL(url);
 }
 
-export function exportToPDF<T extends Record<string, any>>(filename: string, title: string, rows: T[]): void {
+export function exportToPDF<T extends Record<string, any>>(
+  filename: string,
+  title: string,
+  rows: T[],
+  businessName: string = 'Inventory 360 Enterprise',
+  logoUrl?: string,
+  taxNumber?: string
+): void {
   if (!rows || !rows.length) return;
   const keys = Object.keys(rows[0]);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  const leftMargin = 36;
+  const rightMargin = 806;
+
+  let headerTextX = leftMargin;
+  if (logoUrl && (logoUrl.startsWith('data:image') || logoUrl.startsWith('http') || logoUrl.startsWith('blob:'))) {
+    try {
+      doc.addImage(logoUrl, 'PNG', leftMargin, 20, 32, 32);
+      headerTextX = leftMargin + 40;
+    } catch {}
+  }
 
   // Clean Print-Friendly Header
-  doc.setFontSize(15);
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text(title.toUpperCase(), 36, 36);
+  doc.text(businessName.toUpperCase(), headerTextX, 32);
 
-  doc.setFontSize(8);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(50, 50, 50);
+  doc.text(title.toUpperCase(), headerTextX, 46);
+
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(80, 80, 80);
-  doc.text(`Official Inventory Record | Generated: ${new Date().toLocaleString()} | Total Records: ${rows.length}`, 36, 48);
+  doc.setTextColor(90, 90, 90);
+  const taxInfo = taxNumber ? ` | GSTIN/TAX ID: ${taxNumber}` : '';
+  doc.text(`Official Inventory Record | Generated: ${new Date().toLocaleString()} | Total Records: ${rows.length}${taxInfo}`, headerTextX, 58);
 
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(1);
-  doc.line(36, 54, 806, 54);
+  doc.line(leftMargin, 66, rightMargin, 66);
 
   const tableData = rows.map((r) =>
     keys.map((k) => {
@@ -186,7 +209,7 @@ export function exportToPDF<T extends Record<string, any>>(filename: string, tit
   );
 
   autoTable(doc, {
-    startY: 64,
+    startY: 74,
     head: [keys.map((k) => k.toUpperCase())],
     body: tableData,
     theme: 'grid',
@@ -207,7 +230,7 @@ export function exportToPDF<T extends Record<string, any>>(filename: string, tit
     alternateRowStyles: {
       fillColor: [250, 250, 250],
     },
-    margin: { left: 36, right: 36 },
+    margin: { left: leftMargin, right: 36 },
   });
 
   doc.save(`${filename}.pdf`);
@@ -230,11 +253,14 @@ export function downloadPOSlipPDF(
       sku: string;
       unitCost: number;
       orderedQuantity: number;
+      taxRate?: number;
       total: number;
     }>;
   },
   currencySymbol: string,
-  businessName: string = 'Inventory 360 Enterprise'
+  businessName: string = 'Inventory 360 Enterprise',
+  logoUrl?: string,
+  taxNumber?: string
 ): void {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const pageWidth = 595.28;
@@ -245,32 +271,47 @@ export function downloadPOSlipPDF(
   // Safe ASCII representation for currency in jsPDF default fonts
   const curr = currencySymbol && currencySymbol.trim() ? currencySymbol : '$';
 
+  let brandX = leftMargin;
+  if (logoUrl && (logoUrl.startsWith('data:image') || logoUrl.startsWith('http') || logoUrl.startsWith('blob:'))) {
+    try {
+      doc.addImage(logoUrl, 'PNG', leftMargin, 26, 38, 38);
+      brandX = leftMargin + 46;
+    } catch {}
+  }
+
   // 1. Clean Print-Friendly Top Header (No dark background fills)
-  doc.setFontSize(18);
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text(businessName.toUpperCase(), leftMargin, 42);
+  doc.text(businessName.toUpperCase(), brandX, 38);
 
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 80, 80);
-  doc.text('OFFICIAL PURCHASE ORDER & REQUISITION SLIP', leftMargin, 55);
+  doc.text('OFFICIAL PURCHASE ORDER & REQUISITION SLIP', brandX, 50);
+
+  if (taxNumber) {
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(60, 60, 60);
+    doc.text(`GSTIN / TAX ID: ${taxNumber}`, brandX, 62);
+  }
 
   // Document Badge (Right aligned)
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text('PURCHASE ORDER', rightMargin, 42, { align: 'right' });
+  doc.text('PURCHASE ORDER', rightMargin, 38, { align: 'right' });
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(30, 30, 30);
-  doc.text(`P.O. #: ${po.poNumber}`, rightMargin, 55, { align: 'right' });
+  doc.text(`P.O. #: ${po.poNumber}`, rightMargin, 51, { align: 'right' });
 
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 100, 100);
-  doc.text(`Date Issued: ${new Date(po.createdAt).toLocaleDateString()} | Status: ${po.status.toUpperCase()}`, rightMargin, 67, { align: 'right' });
+  doc.text(`Issued: ${new Date(po.createdAt).toLocaleDateString()} | Status: ${po.status.toUpperCase()}`, rightMargin, 63, { align: 'right' });
 
   // Top Rule
   doc.setDrawColor(0, 0, 0);
@@ -327,18 +368,19 @@ export function downloadPOSlipPDF(
   doc.text(`Expected Date: ${po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : 'ASAP / Immediate'}`, rightCardX + 10, cardY + 44);
   doc.text('Attn: Warehouse Inbound & Receiving Dock', rightCardX + 10, cardY + 54);
 
-  // 3. Line Items Table (High-contrast, light header, print-ready)
+  // 3. Line Items Table (Includes Item-Level Tax % column)
   const tableData = po.items.map((item, idx) => [
     idx + 1,
     `${item.productName}\nSKU: ${item.sku}`,
     `${curr}${item.unitCost.toFixed(2)}`,
+    item.taxRate !== undefined ? `${item.taxRate}%` : 'Standard',
     item.orderedQuantity,
     `${curr}${item.total.toFixed(2)}`,
   ]);
 
   autoTable(doc, {
     startY: 158,
-    head: [['#', 'ITEM DESCRIPTION & SKU', 'UNIT PRICE', 'ORDER QTY', 'LINE TOTAL']],
+    head: [['#', 'ITEM DESCRIPTION & SKU', 'UNIT PRICE', 'TAX RATE', 'ORDER QTY', 'LINE TOTAL']],
     body: tableData,
     theme: 'grid',
     headStyles: {
@@ -351,10 +393,11 @@ export function downloadPOSlipPDF(
     },
     columnStyles: {
       0: { cellWidth: 25, halign: 'center' },
-      1: { cellWidth: 255 },
-      2: { cellWidth: 75, halign: 'right' },
-      3: { cellWidth: 68, halign: 'right' },
-      4: { cellWidth: 100, halign: 'right' },
+      1: { cellWidth: 215 },
+      2: { cellWidth: 70, halign: 'right' },
+      3: { cellWidth: 58, halign: 'center' },
+      4: { cellWidth: 65, halign: 'right' },
+      5: { cellWidth: 90, halign: 'right' },
     },
     bodyStyles: {
       fontSize: 8,
@@ -403,7 +446,7 @@ export function downloadPOSlipPDF(
   doc.text('Subtotal:', totalsX + 10, finalY + 16);
   doc.text(`${curr}${po.subtotal.toFixed(2)}`, rightMargin - 10, finalY + 16, { align: 'right' });
 
-  doc.text('Estimated Tax (8.5%):', totalsX + 10, finalY + 30);
+  doc.text('Taxes / GST Total:', totalsX + 10, finalY + 30);
   doc.text(`${curr}${(po.tax || 0).toFixed(2)}`, rightMargin - 10, finalY + 30, { align: 'right' });
 
   doc.setDrawColor(0, 0, 0);

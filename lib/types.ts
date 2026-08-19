@@ -27,6 +27,7 @@ export interface Product {
   supplierName: string;
   imageUrl?: string;
   status: StockStatus;
+  taxRate?: number; // Item-specific tax rate percentage (e.g. 0, 5, 12, 18, 28)
   locationQuantities: Record<string, number>; // locationId -> qty
   locationReorderPoints?: Record<string, number>; // locationId -> reorder point
   variants?: ProductVariant[];
@@ -108,6 +109,8 @@ export interface SaleItem {
   unitPrice: number;
   unitCost: number;
   quantity: number;
+  taxRate?: number;
+  taxAmount?: number;
   total: number;
 }
 
@@ -138,6 +141,8 @@ export interface POItem {
   unitCost: number;
   orderedQuantity: number;
   receivedQuantity: number;
+  taxRate?: number;
+  taxAmount?: number;
   total: number;
 }
 
@@ -260,6 +265,8 @@ export interface BusinessSettings {
   language?: string;
   theme?: 'dark' | 'light';
   taxRate: number; // e.g. 8.5 for 8.5%
+  taxNumber?: string; // Tax ID / GSTIN / VAT registration number
+  logoUrl?: string; // Base64 data URL or external URL
   primaryLocationId: string;
   address: string;
   phone: string;
