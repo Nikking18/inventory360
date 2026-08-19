@@ -1,130 +1,81 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { NavItemKey } from '../Sidebar';
-import {
-  Sparkles,
-  ArrowRight,
-  ArrowLeft,
-  X,
-  Minimize2,
-  Maximize2,
-  LayoutDashboard,
-  ShoppingBag,
-  Globe,
-  Package,
-  Boxes,
-  Users,
-  Settings,
-  Lightbulb,
-  CheckCircle2,
-  Bot,
-  MessageSquare,
-} from 'lucide-react';
+import { X } from 'lucide-react';
 
 export interface TourStep {
   id: string;
-  stepNumber: string;
   title: string;
   tabKey: NavItemKey;
   subTabKey?: string;
-  badge: string;
-  icon: React.ElementType;
-  bubbleMessage: string;
-  proTip: string;
-  highlights: string[];
+  elementId: string;
+  description: string;
+  placement?: 'right' | 'left' | 'top' | 'bottom' | 'center';
 }
 
 const TOUR_STEPS: TourStep[] = [
   {
     id: 'dashboard',
-    stepNumber: '01',
-    title: 'Executive Dashboard & Live Metrics',
+    title: 'Getting started',
     tabKey: 'home',
     subTabKey: 'retail-dashboard',
-    badge: 'Overview Hub',
-    icon: LayoutDashboard,
-    bubbleMessage:
-      'Welcome to your central control room! Here you can monitor live gross revenue, net profit margins, inventory valuation, and urgent stock alert counters.',
-    proTip: 'Use the outlet dropdown in the top bar to inspect performance for specific retail stores or warehouses.',
-    highlights: ['Real-time revenue & gross profit', 'Inventory & retail valuation', 'Quick POS launch & recent sales'],
+    elementId: '#tour-dashboard-metrics',
+    description: 'Welcome to Inventory 360! Track gross revenue, profit margins, inventory valuation, and recent sales in real time. 🚀',
+    placement: 'bottom',
   },
   {
     id: 'pos',
-    stepNumber: '02',
-    title: 'Lightning Point of Sale (POS Terminal)',
+    title: 'Point of Sale (POS)',
     tabKey: 'sell',
     subTabKey: 'quick-sale',
-    badge: 'Sales POS',
-    icon: ShoppingBag,
-    bubbleMessage:
-      'This is your high-speed checkout lane! Scan barcodes with sub-50ms latency, apply custom item taxes or discounts, and print instant thermal receipts.',
-    proTip: 'Cashiers can easily split payments between Cash, Card, and Digital Wallets on the checkout sidebar.',
-    highlights: ['Barcode/SKU instant search', 'Split payment & change calculator', '58mm, 80mm & A4 receipt printing'],
+    elementId: '#tour-pos-terminal',
+    description: 'Process lightning-fast checkouts with barcode lookup, custom item taxes, cashier discounts, and thermal receipts! ⚡',
+    placement: 'bottom',
   },
   {
     id: 'fulfillment',
-    stepNumber: '03',
-    title: 'Omnichannel Orders & Fulfillment',
+    title: 'Omnichannel Orders',
     tabKey: 'fulfillment',
     subTabKey: 'all-orders',
-    badge: 'Channels & Dispatch',
-    icon: Globe,
-    bubbleMessage:
-      'Manage all multi-channel sales from Shopify, Amazon, WooCommerce, and In-Store POS in one synchronized dispatch registry.',
-    proTip: 'Click "Generate Pick List" in Pending Dispatch to print a consolidated warehouse picking slip.',
-    highlights: ['Multi-channel order sync', 'Batch pick list PDF generation', 'Courier tracking & dispatch flow'],
+    elementId: '#tour-fulfillment-orders',
+    description: 'Manage sales across Shopify, Amazon, and In-Store POS with 1-click batch pick lists and dispatch tracking! 📦',
+    placement: 'bottom',
   },
   {
     id: 'catalog',
-    stepNumber: '04',
-    title: 'Master Catalog, Variants & Pricing',
+    title: 'Master Catalog',
     tabKey: 'catalog',
     subTabKey: 'products',
-    badge: 'Product Master',
-    icon: Package,
-    bubbleMessage:
-      'Your master SKU registry. Track unit cost, retail price, real-time profit margins, barcode indexes, and automated low-stock reorder thresholds.',
-    proTip: 'Set realistic Reorder Points so the system can alert you before popular items run out of stock.',
-    highlights: ['Real-time profit margin calculator', 'Strict SKU/Barcode validation', 'CSV bulk import & export'],
+    elementId: '#tour-catalog-table',
+    description: 'Maintain SKUs, calculate real-time gross profit margins, set reorder points, and bulk import CSV catalogs! 🏷️',
+    placement: 'bottom',
   },
   {
     id: 'inventory',
-    stepNumber: '05',
-    title: 'Multi-Outlet Stock & Purchase Orders',
+    title: 'Multi-Outlet Inventory',
     tabKey: 'inventory',
     subTabKey: 'stock-levels',
-    badge: 'Inventory Hub',
-    icon: Boxes,
-    bubbleMessage:
-      'Gain total control over multi-location stock levels. Transfer goods between store outlets and generate supplier purchase orders with 1 click.',
-    proTip: 'Generate restock POs with 1 click directly from the low-stock alert screen.',
-    highlights: ['Multi-location inventory tracking', 'Inter-outlet stock transfers', 'Supplier POs & stock receiving'],
+    elementId: '#tour-inventory-hub',
+    description: 'Transfer stock between store outlets and warehouses, track lots, and generate supplier purchase orders! 🔄',
+    placement: 'bottom',
   },
   {
     id: 'customers',
-    stepNumber: '06',
-    title: 'Customer Directory & Order History',
+    title: 'Customer Directory',
     tabKey: 'customers',
-    badge: 'Customer CRM',
-    icon: Users,
-    bubbleMessage:
-      'Strengthen customer loyalty by tracking lifetime spend, order frequency, loyalty points, and full transaction ledgers.',
-    proTip: 'Select or create a customer at checkout to automatically update their purchase history profile.',
-    highlights: ['Customer lifetime value tracking', 'Quick contact directory', 'Individual sales ledger'],
+    elementId: '#tour-customer-crm',
+    description: 'Track customer lifetime purchase revenue, order history ledgers, and contact information with ease! 👥',
+    placement: 'bottom',
   },
   {
     id: 'setup',
-    stepNumber: '07',
-    title: 'Data Sovereignty, Auto-Save & Settings',
+    title: 'Data & Auto-Save',
     tabKey: 'setup',
     subTabKey: 'data',
-    badge: 'Local Control',
-    icon: Settings,
-    bubbleMessage:
-      '100% data ownership. Set up automated background JSON backups directly to your local machine folder without annoying browser popups.',
-    proTip: 'Select a local folder under Setup > Data & Backup to activate scheduled background auto-saves.',
-    highlights: ['Automated local JSON backups', '1-click full database restore', 'Tax ID, currency & branding setup'],
+    elementId: '#tour-setup-workspace',
+    description: '100% data sovereignty. Set up silent scheduled auto-saves directly to your local computer folder! 💾',
+    placement: 'bottom',
   },
 ];
 
@@ -140,239 +91,231 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
   onNavigateTab,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [bubblePos, setBubblePos] = useState<{
+    top?: number;
+    left?: number;
+    arrowSide?: 'top' | 'bottom' | 'left' | 'right';
+  } | null>(null);
 
-  // When tour opens, navigate to current step
+  const bubbleRef = useRef<HTMLDivElement | null>(null);
+
+  // Update target element positioning
+  const updatePosition = useCallback(() => {
+    if (!isOpen) return;
+    const step = TOUR_STEPS[currentStepIndex];
+    const el = document.querySelector(step.elementId);
+
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setTargetRect(rect);
+
+      // Bubble dimensions (default max-w is ~360px, height ~240px)
+      const bubbleWidth = bubbleRef.current?.offsetWidth || 360;
+      const bubbleHeight = bubbleRef.current?.offsetHeight || 220;
+      const padding = 16;
+      const arrowOffset = 12;
+
+      let top = rect.bottom + arrowOffset;
+      let left = Math.max(padding, Math.min(rect.left, window.innerWidth - bubbleWidth - padding));
+      let arrowSide: 'top' | 'bottom' | 'left' | 'right' = 'top';
+
+      // If bottom overflows viewport, place on top
+      if (top + bubbleHeight > window.innerHeight - padding) {
+        if (rect.top - bubbleHeight - arrowOffset > padding) {
+          top = rect.top - bubbleHeight - arrowOffset;
+          arrowSide = 'bottom';
+        } else {
+          // Center vertically if neither fits nicely
+          top = Math.max(padding, (window.innerHeight - bubbleHeight) / 2);
+          left = Math.max(padding, (window.innerWidth - bubbleWidth) / 2);
+        }
+      }
+
+      setBubblePos({ top, left, arrowSide });
+    } else {
+      setTargetRect(null);
+      setBubblePos(null);
+    }
+  }, [isOpen, currentStepIndex]);
+
+  // Navigate tab on step change
   useEffect(() => {
     if (isOpen) {
-      setCurrentStepIndex(0);
-      setIsMinimized(false);
-      const step = TOUR_STEPS[0];
+      const step = TOUR_STEPS[currentStepIndex];
       onNavigateTab(step.tabKey, step.subTabKey);
-    }
-  }, [isOpen]);
 
-  // Keyboard accessibility
+      // Small delay to allow tab DOM to render
+      const timer = setTimeout(() => {
+        updatePosition();
+      }, 100);
+
+      const retryTimer = setTimeout(() => {
+        updatePosition();
+      }, 300);
+
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(retryTimer);
+      };
+    }
+  }, [isOpen, currentStepIndex, onNavigateTab, updatePosition]);
+
+  // Window resize & scroll listeners
   useEffect(() => {
     if (!isOpen) return;
+
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
       } else if (e.key === 'ArrowRight') {
         if (currentStepIndex < TOUR_STEPS.length - 1) {
-          handleGoToStep(currentStepIndex + 1);
+          setCurrentStepIndex((prev) => prev + 1);
         }
       } else if (e.key === 'ArrowLeft') {
         if (currentStepIndex > 0) {
-          handleGoToStep(currentStepIndex - 1);
+          setCurrentStepIndex((prev) => prev - 1);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, currentStepIndex]);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, currentStepIndex, onClose, updatePosition]);
 
   if (!isOpen) return null;
 
   const currentStep = TOUR_STEPS[currentStepIndex];
-  const StepIcon = currentStep.icon;
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === TOUR_STEPS.length - 1;
-  const progressPercent = ((currentStepIndex + 1) / TOUR_STEPS.length) * 100;
-
-  const handleGoToStep = (index: number) => {
-    if (index < 0 || index >= TOUR_STEPS.length) return;
-    setCurrentStepIndex(index);
-    const step = TOUR_STEPS[index];
-    onNavigateTab(step.tabKey, step.subTabKey);
-  };
 
   const handleNext = () => {
     if (isLastStep) {
       onClose();
     } else {
-      handleGoToStep(currentStepIndex + 1);
+      setCurrentStepIndex((prev) => prev + 1);
     }
   };
 
   const handlePrev = () => {
     if (!isFirstStep) {
-      handleGoToStep(currentStepIndex - 1);
+      setCurrentStepIndex((prev) => prev - 1);
     }
   };
 
-  // Minimized Floating Speech Bubble Pill
-  if (isMinimized) {
-    return (
-      <div className="fixed bottom-6 right-6 z-50 font-mono animate-in fade-in zoom-in-95 duration-200">
-        <button
-          type="button"
-          onClick={() => setIsMinimized(false)}
-          className="group relative flex items-center gap-3 bg-slate-900/95 hover:bg-slate-900 text-white border-2 border-emerald-400/80 px-4 py-2.5 rounded-full shadow-2xl shadow-emerald-950/50 backdrop-blur-md transition-all hover:scale-105"
-        >
-          {/* Pulsing Avatar Bubble */}
-          <div className="relative w-8 h-8 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-extrabold shadow-md shrink-0">
-            <Bot className="w-4 h-4" />
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-300 rounded-full animate-ping" />
-          </div>
-
-          <div className="flex flex-col text-left">
-            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest leading-none">
-              Tour Step {currentStep.stepNumber}/07
-            </span>
-            <span className="text-xs font-bold text-white uppercase tracking-wider mt-0.5 max-w-[140px] truncate">
-              {currentStep.title}
-            </span>
-          </div>
-
-          <span className="p-1 text-slate-400 group-hover:text-white transition-colors">
-            <Maximize2 className="w-3.5 h-3.5" />
-          </span>
-        </button>
-      </div>
-    );
-  }
-
-  // Full Conversational Speech Bubble Floating Widget
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-mono max-w-md w-[calc(100vw-3rem)] animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-200">
-      <div className="relative">
-        {/* Floating AI Guide Mascot Bubble Header */}
-        <div className="flex items-center justify-between px-2 mb-2">
-          <div className="flex items-center gap-2">
-            <div className="relative w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-300 text-slate-950 flex items-center justify-center font-bold shadow-lg ring-2 ring-emerald-400/40">
-              <Bot className="w-4.5 h-4.5" />
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-900 rounded-full" />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-white uppercase tracking-wider">
-                  Interactive Guide
-                </span>
-                <span className="text-[9px] font-extrabold px-1.5 py-0.2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full uppercase">
-                  Step {currentStep.stepNumber} of 07
-                </span>
-              </div>
-            </div>
-          </div>
+    <div className="fixed inset-0 z-50 overflow-hidden font-sans select-none pointer-events-auto">
+      {/* 1. Backdrop with Spotlight Cutout */}
+      <div
+        className="fixed inset-0 bg-black/65 transition-opacity duration-200"
+        onClick={onClose}
+      />
 
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setIsMinimized(true)}
-              className="p-1.5 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 rounded-full transition-colors"
-              title="Minimize to floating pill"
-            >
-              <Minimize2 className="w-3.5 h-3.5" />
-            </button>
+      {/* Target Element Highlight Outline */}
+      {targetRect && (
+        <div
+          className="fixed pointer-events-none rounded-xl transition-all duration-300 ease-out z-50 ring-4 ring-indigo-500/70 shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]"
+          style={{
+            top: `${targetRect.top - 4}px`,
+            left: `${targetRect.left - 4}px`,
+            width: `${targetRect.width + 8}px`,
+            height: `${targetRect.height + 8}px`,
+          }}
+        />
+      )}
+
+      {/* 2. Floating Speech Bubble Card matching exact reference design */}
+      <div
+        ref={bubbleRef}
+        className="fixed z-50 max-w-[360px] w-[calc(100vw-2rem)] transition-all duration-200 ease-out"
+        style={
+          bubblePos?.top !== undefined && bubblePos?.left !== undefined
+            ? { top: `${bubblePos.top}px`, left: `${bubblePos.left}px` }
+            : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+        }
+      >
+        <div className="relative bg-white text-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+          {/* Triangular Pointer Arrow */}
+          {bubblePos?.arrowSide === 'top' && (
+            <div className="absolute -top-2.5 left-8 w-5 h-5 bg-white rotate-45 border-t border-l border-slate-100 shadow-xs" />
+          )}
+          {bubblePos?.arrowSide === 'bottom' && (
+            <div className="absolute -bottom-2.5 left-8 w-5 h-5 bg-white rotate-45 border-b border-r border-slate-100 shadow-xs" />
+          )}
+
+          {/* Header with Title & Close (X) */}
+          <div className="flex items-start justify-between gap-4">
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight leading-snug">
+              {currentStep.title}
+            </h3>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-rose-400 bg-slate-800/80 hover:bg-slate-700 rounded-full transition-colors"
-              title="Close Tour (Esc)"
+              className="text-slate-400 hover:text-slate-700 p-0.5 rounded-md hover:bg-slate-100 transition-colors -mr-1 -mt-1"
+              title="Close tour"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-5 h-5" />
             </button>
           </div>
-        </div>
 
-        {/* Speech Bubble Container with Rounded Curves & Glow */}
-        <div className="relative bg-slate-900/95 text-white border-2 border-emerald-500/40 shadow-2xl shadow-slate-950/80 backdrop-blur-xl rounded-3xl p-5 space-y-4">
-          {/* Top Progress Bar */}
-          <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-emerald-400 to-teal-300 h-1.5 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
+          {/* Description */}
+          <p className="text-sm text-slate-600 leading-relaxed mt-3 mb-6 font-normal">
+            {currentStep.description}
+          </p>
 
-          {/* Module Title Banner */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 shadow-inner">
-              <StepIcon className="w-4.5 h-4.5" />
-            </div>
-            <div>
-              <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">
-                {currentStep.badge}
-              </span>
-              <h3 className="text-sm font-extrabold text-white uppercase tracking-wider font-heading leading-tight">
-                {currentStep.title}
-              </h3>
-            </div>
-          </div>
+          {/* Footer: Back + Dots & Fraction + Next */}
+          <div className="flex items-center justify-between gap-3 pt-2">
+            {/* Back Button */}
+            <button
+              type="button"
+              disabled={isFirstStep}
+              onClick={handlePrev}
+              className={`px-4 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
+                isFirstStep
+                  ? 'opacity-40 cursor-not-allowed border-slate-200 text-slate-400 bg-white'
+                  : 'border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100 bg-white'
+              }`}
+            >
+              Back
+            </button>
 
-          {/* Conversational Speech Bubble Dialogue Text */}
-          <div className="relative bg-slate-800/80 border border-slate-700/70 p-3.5 rounded-2xl">
-            <p className="text-xs text-slate-200 leading-relaxed font-sans font-medium">
-              "{currentStep.bubbleMessage}"
-            </p>
-          </div>
-
-          {/* Feature Highlights Pill Grid */}
-          <div className="space-y-1.5">
-            {currentStep.highlights.map((h, i) => (
-              <div key={i} className="flex items-center gap-2 text-[11px] text-slate-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="truncate">{h}</span>
+            {/* Step Dots & Fraction Indicator */}
+            <div className="flex flex-col items-center justify-center gap-1.5">
+              <div className="flex items-center gap-1.5">
+                {TOUR_STEPS.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setCurrentStepIndex(idx)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      currentStepIndex === idx
+                        ? 'bg-indigo-600 scale-125'
+                        : 'bg-slate-300 hover:bg-slate-400'
+                    }`}
+                    title={`Step ${idx + 1}`}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
-
-          {/* Thought Bubble / Pro-Tip Box */}
-          <div className="p-3 bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2.5 rounded-2xl shadow-inner">
-            <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <div className="text-[11px] leading-snug">
-              <span className="font-bold uppercase tracking-wider text-amber-400 mr-1.5">Pro-Tip:</span>
-              <span className="text-amber-100/90">{currentStep.proTip}</span>
-            </div>
-          </div>
-
-          {/* Bottom Actions & Step Dots */}
-          <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
-            {/* Step Bubble Dots */}
-            <div className="flex items-center gap-1.5">
-              {TOUR_STEPS.map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleGoToStep(idx)}
-                  className={`h-2 rounded-full transition-all ${
-                    currentStepIndex === idx
-                      ? 'bg-emerald-400 w-5'
-                      : 'bg-slate-700 hover:bg-slate-500 w-2'
-                  }`}
-                  title={`Jump to Step ${idx + 1}`}
-                />
-              ))}
+              <span className="text-[11px] font-medium text-slate-400 tracking-wider">
+                {currentStepIndex + 1}/{TOUR_STEPS.length}
+              </span>
             </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={isFirstStep}
-                onClick={handlePrev}
-                className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1 rounded-full border transition-all ${
-                  isFirstStep
-                    ? 'opacity-30 cursor-not-allowed border-slate-800 text-slate-600'
-                    : 'bg-slate-800 hover:bg-slate-700 text-white border-slate-600'
-                }`}
-              >
-                <ArrowLeft className="w-3 h-3" />
-                <span>Prev</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleNext}
-                className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 rounded-full shadow-md shadow-emerald-950/40 transition-all hover:scale-102 active:scale-98"
-              >
-                <span>{isLastStep ? 'Finish Tour 🎉' : 'Next Step'}</span>
-                {!isLastStep && <ArrowRight className="w-3.5 h-3.5" />}
-              </button>
-            </div>
+            {/* Next / Finish Button */}
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-4 py-1.5 text-sm font-medium rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100 bg-white transition-colors"
+            >
+              {isLastStep ? 'Finish' : 'Next'}
+            </button>
           </div>
         </div>
       </div>

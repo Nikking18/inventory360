@@ -284,7 +284,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
   }, [pendingOrders]);
 
   return (
-    <div className="space-y-6 text-slate-900 font-mono">
+    <div id="tour-fulfillment-orders" className="space-y-6 text-slate-900 font-mono">
       {/* 1. TOP SUB-NAVIGATION BAR (3 DISTINCT PAGES) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div className="flex flex-wrap items-center gap-2">
