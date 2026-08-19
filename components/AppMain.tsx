@@ -337,35 +337,27 @@ export default function AppMain() {
     };
   }, []);
 
-  // Handle browser back button (popstate) so pressing back while in dashboard smoothly returns to Landing Portal
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      if (event.state?.view === 'workspace') {
-        setShowLanding(false);
-        if (event.state.tab) setActiveTab(event.state.tab);
-        if (event.state.subTab) setActiveSubTab(event.state.subTab);
-      } else {
-        setShowLanding(true);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
   const openWorkspace = (tab: NavItemKey = 'home', subTab: string = 'retail-dashboard') => {
     setShowLanding(false);
     setActiveTab(tab);
     setActiveSubTab(subTab);
+    try {
+      localStorage.setItem('inventory360_show_landing', 'false');
+      localStorage.setItem('inventory360_active_tab', tab);
+      localStorage.setItem('inventory360_active_subtab', subTab);
+    } catch {}
     if (typeof window !== 'undefined') {
-      window.history.pushState({ view: 'workspace', tab, subTab }, '', '/#app');
+      window.location.hash = `#/${tab}/${subTab}`;
     }
   };
 
   const closeToLanding = () => {
     setShowLanding(true);
-    if (typeof window !== 'undefined' && window.location.hash) {
-      window.history.pushState({ view: 'landing' }, '', '/');
+    try {
+      localStorage.setItem('inventory360_show_landing', 'true');
+    } catch {}
+    if (typeof window !== 'undefined') {
+      window.location.hash = '#/landing';
     }
   };
 
