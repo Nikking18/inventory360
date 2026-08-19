@@ -160,14 +160,9 @@ export const LandingView: React.FC<LandingViewProps> = ({
 
           {/* Center Navigation Anchors */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-mono font-semibold text-slate-600">
-            <a href="#features" className="hover:text-slate-900 transition-colors">Features</a>
-            <a href="#preview" className="hover:text-slate-900 transition-colors">POS &amp; Matrix</a>
-            <a href="#case-studies" className="hover:text-slate-900 transition-colors">Case Studies</a>
-            <a href="#reviews" className="hover:text-slate-900 transition-colors">Reviews</a>
             <Link href="/blog" className="hover:text-slate-900 transition-colors">
               Blog &amp; Guides
             </Link>
-            <a href="#faqs" className="hover:text-slate-900 transition-colors">FAQs</a>
           </nav>
 
           {/* Right Action CTAs */}

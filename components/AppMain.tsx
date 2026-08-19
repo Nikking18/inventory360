@@ -1459,31 +1459,27 @@ export default function AppMain() {
 
           {/* Printable Receipt Hidden Render Target */}
           <PrintReceipt sale={printableSale} settings={settings} receiptFormat={receiptFormat} />
-
-          {/* Data Policy & Backup Notice Modal */}
-          <DataPolicyModal
-            isOpen={showDataPolicyNotice}
-            onClose={() => setShowDataPolicyNotice(false)}
-            onGoToBackup={() => {
-              setShowDataPolicyNotice(false);
-              setShowLanding(false);
-              setActiveTab('setup');
-              setActiveSubTab('data');
-            }}
-          />
-
-          {/* Interactive Product Walkthrough Tour */}
-          <ProductTourModal
-            isOpen={isTourOpen}
-            onClose={() => setIsTourOpen(false)}
-            onNavigateTab={(tab, subTab) => {
-              setShowLanding(false);
-              setActiveTab(tab as NavItemKey);
-              if (subTab) setActiveSubTab(subTab);
-            }}
-          />
         </div>
       )}
+
+      {/* Data Policy & Backup Notice Modal */}
+      <DataPolicyModal
+        isOpen={showDataPolicyNotice}
+        onClose={() => setShowDataPolicyNotice(false)}
+        onGoToBackup={() => {
+          setShowDataPolicyNotice(false);
+          openWorkspace('setup', 'data');
+        }}
+      />
+
+      {/* Interactive Product Walkthrough Tour */}
+      <ProductTourModal
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        onNavigateTab={(tab, subTab) => {
+          openWorkspace(tab as NavItemKey, subTab || 'retail-dashboard');
+        }}
+      />
     </I18nProvider>
   );
 }
