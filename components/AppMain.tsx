@@ -94,11 +94,11 @@ const DEFAULT_SUB_FOR_TAB: Record<string, string> = {
 
 function getInitialRouteState(): { tab: NavItemKey; subTab: string; showLanding: boolean } {
   if (typeof window === 'undefined') {
-    return { tab: 'home', subTab: 'retail-dashboard', showLanding: false };
+    return { tab: 'home', subTab: 'retail-dashboard', showLanding: true };
   }
 
   const hash = window.location.hash.replace(/^#\/?/, '');
-  if (hash === 'landing') {
+  if (hash === 'landing' || hash === '') {
     return { tab: 'home', subTab: 'retail-dashboard', showLanding: true };
   }
 
@@ -114,23 +114,22 @@ function getInitialRouteState(): { tab: NavItemKey; subTab: string; showLanding:
   // Check localStorage if no specific hash present
   try {
     const savedLanding = localStorage.getItem('inventory360_show_landing');
-    if (savedLanding === 'true') {
-      return { tab: 'home', subTab: 'retail-dashboard', showLanding: true };
-    }
-    const savedTab = localStorage.getItem('inventory360_active_tab') as NavItemKey;
-    const savedSub = localStorage.getItem('inventory360_active_subtab');
-    if (savedTab && VALID_TABS.includes(savedTab)) {
-      return {
-        tab: savedTab,
-        subTab: savedSub || DEFAULT_SUB_FOR_TAB[savedTab] || '',
-        showLanding: false,
-      };
+    if (savedLanding === 'false') {
+      const savedTab = localStorage.getItem('inventory360_active_tab') as NavItemKey;
+      const savedSub = localStorage.getItem('inventory360_active_subtab');
+      if (savedTab && VALID_TABS.includes(savedTab)) {
+        return {
+          tab: savedTab,
+          subTab: savedSub || DEFAULT_SUB_FOR_TAB[savedTab] || '',
+          showLanding: false,
+        };
+      }
     }
   } catch {
     // Ignore storage errors
   }
 
-  return { tab: 'home', subTab: 'retail-dashboard', showLanding: false };
+  return { tab: 'home', subTab: 'retail-dashboard', showLanding: true };
 }
 
 export default function AppMain() {
@@ -191,11 +190,15 @@ export default function AppMain() {
       localStorage.setItem('inventory360_active_subtab', activeSubTab);
     } catch {}
 
-    const targetHash = showLanding
-      ? '#/landing'
-      : `/#/${activeTab}${activeSubTab ? '/' + activeSubTab : ''}`;
-    if (window.location.hash !== targetHash) {
-      window.history.replaceState(null, '', targetHash);
+    if (showLanding) {
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    } else {
+      const targetHash = `#/${activeTab}${activeSubTab ? '/' + activeSubTab : ''}`;
+      if (window.location.hash !== targetHash) {
+        window.history.replaceState(null, '', `/${targetHash}`);
+      }
     }
   }, [showLanding, activeTab, activeSubTab]);
 
@@ -388,7 +391,9 @@ export default function AppMain() {
       localStorage.setItem('inventory360_show_landing', 'true');
     } catch {}
     if (typeof window !== 'undefined') {
-      window.location.hash = '#/landing';
+      if (window.location.hash) {
+        window.history.pushState(null, '', window.location.pathname + window.location.search);
+      }
     }
   };
 
