@@ -369,6 +369,33 @@ export default function AppMain() {
     }
   };
 
+  // Helper to notify other tabs/windows of database writes
+  const broadcastSync = () => {
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        const bc = new BroadcastChannel('inventory360_realtime_sync');
+        bc.postMessage({ type: 'DATA_UPDATED', timestamp: Date.now() });
+        bc.close();
+      } catch {}
+    }
+  };
+
+  // Listen for real-time changes from other tabs
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return;
+    const bc = new BroadcastChannel('inventory360_realtime_sync');
+    bc.onmessage = (event) => {
+      if (event.data?.type === 'DATA_UPDATED') {
+        loadAllData();
+      }
+    };
+    return () => {
+      try {
+        bc.close();
+      } catch {}
+    };
+  }, []);
+
   // HANDLERS FOR PRODUCTS
   const handleAddProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newProduct: Product = {
@@ -379,6 +406,7 @@ export default function AppMain() {
     };
     await putToStore('products', newProduct);
     setProducts((prev) => [newProduct, ...prev]);
+    broadcastSync();
   };
 
   const handleUpdateProduct = async (updatedProduct: Product) => {
@@ -389,17 +417,20 @@ export default function AppMain() {
     };
     await putToStore('products', productWithTimestamp);
     setProducts((prev) => prev.map((p) => (p.id === updatedProduct.id ? productWithTimestamp : p)));
+    broadcastSync();
   };
 
   const handleDeleteProduct = async (id: string) => {
     await deleteFromStore('products', id);
     setProducts((prev) => prev.filter((p) => p.id !== id));
+    broadcastSync();
   };
 
   const handleBulkDeleteProducts = async (ids: string[]) => {
     if (!ids || ids.length === 0) return;
     await deleteManyFromStore('products', ids);
     setProducts((prev) => prev.filter((p) => !ids.includes(p.id)));
+    broadcastSync();
   };
 
   // HANDLERS FOR CATEGORIES
@@ -410,22 +441,26 @@ export default function AppMain() {
     };
     await putToStore('categories', newCat);
     setCategories((prev) => [...prev, newCat]);
+    broadcastSync();
   };
 
   const handleUpdateCategory = async (updatedCat: Category) => {
     await putToStore('categories', updatedCat);
     setCategories((prev) => prev.map((c) => (c.id === updatedCat.id ? updatedCat : c)));
+    broadcastSync();
   };
 
   const handleDeleteCategory = async (id: string) => {
     await deleteFromStore('categories', id);
     setCategories((prev) => prev.filter((c) => c.id !== id));
+    broadcastSync();
   };
 
   const handleBulkDeleteCategories = async (ids: string[]) => {
     if (!ids || ids.length === 0) return;
     await deleteManyFromStore('categories', ids);
     setCategories((prev) => prev.filter((c) => !ids.includes(c.id)));
+    broadcastSync();
   };
 
   // HANDLERS FOR SUPPLIERS
@@ -436,22 +471,26 @@ export default function AppMain() {
     };
     await putToStore('suppliers', newSup);
     setSuppliers((prev) => [...prev, newSup]);
+    broadcastSync();
   };
 
   const handleUpdateSupplier = async (updatedSup: Supplier) => {
     await putToStore('suppliers', updatedSup);
     setSuppliers((prev) => prev.map((s) => (s.id === updatedSup.id ? updatedSup : s)));
+    broadcastSync();
   };
 
   const handleDeleteSupplier = async (id: string) => {
     await deleteFromStore('suppliers', id);
     setSuppliers((prev) => prev.filter((s) => s.id !== id));
+    broadcastSync();
   };
 
   const handleBulkDeleteSuppliers = async (ids: string[]) => {
     if (!ids || ids.length === 0) return;
     await deleteManyFromStore('suppliers', ids);
     setSuppliers((prev) => prev.filter((s) => !ids.includes(s.id)));
+    broadcastSync();
   };
 
   // HANDLERS FOR CUSTOMERS
@@ -466,6 +505,7 @@ export default function AppMain() {
     };
     await putToStore('customers', newCust);
     setCustomers((prev) => [newCust, ...prev]);
+    broadcastSync();
   };
 
   // HANDLERS FOR SALES & POS
@@ -491,10 +531,18 @@ export default function AppMain() {
         const prod = updatedProds[idx];
         const prevStock = prod.stockQuantity;
         const newStock = Math.max(0, prevStock - item.quantity);
+        const saleLocId = newSale.locationId || locations[0]?.id || 'loc_downtown';
+        const currentLocQty = prod.locationQuantities?.[saleLocId] ?? prevStock;
+
+        const updatedLocQuantities = {
+          ...(prod.locationQuantities || {}),
+          [saleLocId]: Math.max(0, currentLocQty - item.quantity),
+        };
 
         const updatedProd: Product = {
           ...prod,
           stockQuantity: newStock,
+          locationQuantities: updatedLocQuantities,
           status: calculateStockStatus({ ...prod, stockQuantity: newStock }),
           lastSoldAt: newSale.createdAt,
           updatedAt: new Date().toISOString(),
@@ -504,7 +552,7 @@ export default function AppMain() {
         await putToStore('products', updatedProd);
 
         const mov: StockMovement = {
-          id: `sm_${Date.now()}_${Math.random()}`,
+          id: `sm_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
           productId: prod.id,
           productName: prod.name,
           sku: prod.sku,
@@ -512,8 +560,8 @@ export default function AppMain() {
           quantityChange: -item.quantity,
           previousStock: prevStock,
           newStock: newStock,
-          locationId: newSale.locationId,
-          locationName: newSale.locationName,
+          locationId: saleLocId,
+          locationName: newSale.locationName || 'Downtown Flagship',
           referenceId: newSale.saleNumber,
           notes: `POS Sale #${newSale.saleNumber}`,
           createdAt: new Date().toISOString(),
@@ -542,6 +590,7 @@ export default function AppMain() {
       }
     }
 
+    broadcastSync();
     return newSale;
   };
 
@@ -563,10 +612,18 @@ export default function AppMain() {
         const prod = updatedProds[idx];
         const prevStock = prod.stockQuantity;
         const newStock = prevStock + item.quantity;
+        const refundLocId = sale.locationId || locations[0]?.id || 'loc_downtown';
+        const currentLocQty = prod.locationQuantities?.[refundLocId] ?? prevStock;
+
+        const updatedLocQuantities = {
+          ...(prod.locationQuantities || {}),
+          [refundLocId]: currentLocQty + item.quantity,
+        };
 
         const updatedProd: Product = {
           ...prod,
           stockQuantity: newStock,
+          locationQuantities: updatedLocQuantities,
           status: calculateStockStatus({ ...prod, stockQuantity: newStock }),
           updatedAt: new Date().toISOString(),
         };
@@ -575,7 +632,7 @@ export default function AppMain() {
         await putToStore('products', updatedProd);
 
         const mov: StockMovement = {
-          id: `sm_${Date.now()}_ref_${Math.random()}`,
+          id: `sm_${Date.now()}_ref_${Math.random().toString(36).substr(2, 4)}`,
           productId: prod.id,
           productName: prod.name,
           sku: prod.sku,
@@ -583,8 +640,8 @@ export default function AppMain() {
           quantityChange: item.quantity,
           previousStock: prevStock,
           newStock: newStock,
-          locationId: sale.locationId,
-          locationName: sale.locationName,
+          locationId: refundLocId,
+          locationName: sale.locationName || 'Downtown Flagship',
           referenceId: sale.saleNumber,
           notes: `Refund for sale #${sale.saleNumber}`,
           createdAt: new Date().toISOString(),
@@ -596,6 +653,7 @@ export default function AppMain() {
 
     setProducts(updatedProds);
     setMovements((prev) => [...newMovements, ...prev]);
+    broadcastSync();
   };
 
   // HANDLER FOR PURCHASE ORDERS
@@ -608,6 +666,7 @@ export default function AppMain() {
     };
     await putToStore('purchaseOrders', newPO);
     setPurchaseOrders((prev) => [newPO, ...prev]);
+    broadcastSync();
   };
 
   const handleReceivePO = async (poId: string, receivedItemsMap?: Record<string, number>) => {
@@ -649,10 +708,18 @@ export default function AppMain() {
           const prod = updatedProds[idx];
           const prevStock = prod.stockQuantity;
           const newStock = prevStock + addedQty;
+          const poLocId = po.locationId || locations[0]?.id || 'loc_downtown';
+          const currentLocQty = prod.locationQuantities?.[poLocId] ?? prevStock;
+
+          const updatedLocQuantities = {
+            ...(prod.locationQuantities || {}),
+            [poLocId]: currentLocQty + addedQty,
+          };
 
           const updatedProd: Product = {
             ...prod,
             stockQuantity: newStock,
+            locationQuantities: updatedLocQuantities,
             status: calculateStockStatus({ ...prod, stockQuantity: newStock }),
             updatedAt: new Date().toISOString(),
           };
@@ -669,8 +736,8 @@ export default function AppMain() {
             quantityChange: addedQty,
             previousStock: prevStock,
             newStock: newStock,
-            locationId: po.locationId,
-            locationName: po.locationName,
+            locationId: poLocId,
+            locationName: po.locationName || 'Downtown Flagship',
             referenceId: po.poNumber,
             lotNumber: prod.lotNumber,
             notes: `Received PO #${po.poNumber} (${addedQty} qty) from ${po.supplierName}`,
@@ -684,6 +751,7 @@ export default function AppMain() {
 
     setProducts(updatedProds);
     setMovements((prev) => [...newMovements, ...prev]);
+    broadcastSync();
   };
 
   // Bulk Auto-Generate POs for Low Stock
@@ -744,6 +812,7 @@ export default function AppMain() {
     }
 
     setPurchaseOrders((prev) => [...newPOs, ...prev]);
+    broadcastSync();
   };
 
   const handleSyncAllChannels = async () => {
@@ -755,6 +824,7 @@ export default function AppMain() {
     }));
     await putManyToStore('salesChannels', updated);
     setSalesChannels(updated);
+    broadcastSync();
   };
 
   const handleUpdateFulfillmentStatus = async (
@@ -787,10 +857,18 @@ export default function AppMain() {
           const prod = updatedProds[pIdx];
           const prevStock = prod.stockQuantity;
           const newStock = Math.max(0, prevStock - item.quantity);
+          const shipLocId = order.assignedLocationId || locations[0]?.id || 'loc_downtown';
+          const currentLocQty = prod.locationQuantities?.[shipLocId] ?? prevStock;
+
+          const updatedLocQuantities = {
+            ...(prod.locationQuantities || {}),
+            [shipLocId]: Math.max(0, currentLocQty - item.quantity),
+          };
 
           const updatedProd: Product = {
             ...prod,
             stockQuantity: newStock,
+            locationQuantities: updatedLocQuantities,
             status: calculateStockStatus({ ...prod, stockQuantity: newStock }),
             updatedAt: new Date().toISOString(),
           };
@@ -807,8 +885,8 @@ export default function AppMain() {
             quantityChange: -item.quantity,
             previousStock: prevStock,
             newStock: newStock,
-            locationId: order.assignedLocationId,
-            locationName: order.assignedLocationName,
+            locationId: shipLocId,
+            locationName: order.assignedLocationName || 'Downtown Flagship',
             referenceId: order.orderNumber,
             notes: `Dispatched order #${order.orderNumber} via ${carrier || 'Courier'} (Tracking: ${trackingNumber || 'N/A'})`,
             createdAt: new Date().toISOString(),
@@ -822,6 +900,7 @@ export default function AppMain() {
       setProducts(updatedProds);
       setMovements((prev) => [...newMovements, ...prev]);
     }
+    broadcastSync();
   };
 
   // HANDLER FOR STOCK ADJUSTMENT
@@ -866,6 +945,7 @@ export default function AppMain() {
     };
     await putToStore('stockMovements', mov);
     setMovements((prev) => [mov, ...prev]);
+    broadcastSync();
   };
 
   // HANDLER FOR STOCK TRANSFER
@@ -950,6 +1030,7 @@ export default function AppMain() {
 
     setProducts(updatedProds);
     setMovements((prev) => [...newMovements, ...prev]);
+    broadcastSync();
   };
 
   // HANDLER FOR LOT QUARANTINE / RELEASE
@@ -985,6 +1066,7 @@ export default function AppMain() {
     };
     await putToStore('stockMovements', mov);
     setMovements((prev) => [mov, ...prev]);
+    broadcastSync();
   };
 
   // HANDLER FOR UPDATING PRODUCT REORDER POINT
@@ -1001,12 +1083,14 @@ export default function AppMain() {
 
     await putToStore('products', updatedProd);
     setProducts((prev) => prev.map((prod) => (prod.id === productId ? updatedProd : prod)));
+    broadcastSync();
   };
 
   // HANDLERS FOR SETTINGS & LOCATIONS
   const handleUpdateSettings = async (newSettings: BusinessSettings) => {
     await putToStore('settings', newSettings);
     setSettings(newSettings);
+    broadcastSync();
   };
 
   const handleAddLocation = async (locData: Omit<Location, 'id'>) => {
@@ -1016,6 +1100,19 @@ export default function AppMain() {
     };
     await putToStore('locations', newLoc);
     setLocations((prev) => [...prev, newLoc]);
+    broadcastSync();
+  };
+
+  const handleUpdateLocation = async (updatedLoc: Location) => {
+    await putToStore('locations', updatedLoc);
+    setLocations((prev) => prev.map((l) => (l.id === updatedLoc.id ? updatedLoc : l)));
+    broadcastSync();
+  };
+
+  const handleDeleteLocation = async (id: string) => {
+    await deleteFromStore('locations', id);
+    setLocations((prev) => prev.filter((l) => l.id !== id));
+    broadcastSync();
   };
 
   const handleUpdateReceiptFormat = (fmt: '80mm' | '58mm' | 'A4') => {
