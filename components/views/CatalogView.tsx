@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from '../../context/I18nContext';
 import { Product, Category, Supplier, Location, ProductVariant } from '../../lib/types';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, round2 } from '../../lib/utils';
 import { Modal } from '../common/Modal';
 import { LabelPrintModal } from '../LabelPrintModal';
 import {
@@ -1706,6 +1706,30 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   />
                 </div>
               </div>
+
+              {/* Real-time Unit Economics: Profit, Markup & Margin */}
+              {retailPrice > 0 && (
+                <div className="p-2 bg-emerald-50/60 border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
+                  <div className="flex items-center gap-1.5 text-emerald-900">
+                    <span className="font-bold uppercase text-[10px]">Unit Profit:</span>
+                    <span className="font-bold">{formatCurrency(round2(retailPrice - costPrice), currencySymbol)}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-600">
+                      Margin:{' '}
+                      <strong className="text-emerald-800 font-bold">
+                        {costPrice > 0 ? round2(((retailPrice - costPrice) / retailPrice) * 100) : 100}%
+                      </strong>
+                    </span>
+                    <span className="text-slate-600">
+                      Markup:{' '}
+                      <strong className="text-emerald-800 font-bold">
+                        {costPrice > 0 ? round2(((retailPrice - costPrice) / costPrice) * 100) : 100}%
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Individual Item Tax Rate */}
               <div className="p-3 bg-slate-50 border border-slate-200 space-y-2">

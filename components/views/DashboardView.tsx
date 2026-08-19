@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../../context/I18nContext';
 import { Product, Sale, PurchaseOrder, Location, Customer, BusinessSettings } from '../../lib/types';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, round2 } from '../../lib/utils';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -128,18 +128,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // High-level Calculations
   const totalRevenue = useMemo(() => {
-    return timeframeSales.reduce((acc, s) => acc + s.total, 0);
+    return round2(timeframeSales.reduce((acc, s) => acc + s.total, 0));
   }, [timeframeSales]);
 
   const totalOrders = timeframeSales.length;
-  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  const avgOrderValue = totalOrders > 0 ? round2(totalRevenue / totalOrders) : 0;
 
   const totalInventoryValue = useMemo(() => {
-    return filteredProducts.reduce((acc, p) => acc + p.stockQuantity * p.costPrice, 0);
+    return round2(filteredProducts.reduce((acc, p) => acc + (p.stockQuantity || 0) * (p.costPrice || 0), 0));
   }, [filteredProducts]);
 
   const totalRetailValuation = useMemo(() => {
-    return filteredProducts.reduce((acc, p) => acc + p.stockQuantity * p.retailPrice, 0);
+    return round2(filteredProducts.reduce((acc, p) => acc + (p.stockQuantity || 0) * (p.retailPrice || 0), 0));
   }, [filteredProducts]);
 
   // Stock health counts

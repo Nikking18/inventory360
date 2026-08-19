@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from '../../context/I18nContext';
 import { Product, Sale, PurchaseOrder, Location, Category } from '../../lib/types';
-import { formatCurrency, formatDateTime } from '../../lib/utils';
+import { formatCurrency, formatDateTime, round2 } from '../../lib/utils';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -139,19 +139,20 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
     });
   }, [purchaseOrders, selectedLocation, search]);
 
-  // Aggregate metrics
-  const totalStockCostValuation = products.reduce((acc, p) => acc + (p.costPrice || 0) * (p.stockQuantity || 0), 0);
-  const totalStockRetailValuation = products.reduce((acc, p) => acc + (p.retailPrice || 0) * (p.stockQuantity || 0), 0);
-  const totalPotentialProfitOnHand = totalStockRetailValuation - totalStockCostValuation;
+  // Aggregate metrics with accurate financial rounding
+  const totalStockCostValuation = round2(products.reduce((acc, p) => acc + (p.costPrice || 0) * (p.stockQuantity || 0), 0));
+  const totalStockRetailValuation = round2(products.reduce((acc, p) => acc + (p.retailPrice || 0) * (p.stockQuantity || 0), 0));
+  const totalPotentialProfitOnHand = round2(Math.max(0, totalStockRetailValuation - totalStockCostValuation));
   const totalUnitsOnHand = products.reduce((acc, p) => acc + (p.stockQuantity || 0), 0);
 
-  const totalSalesRevenue = filteredSales.reduce((acc, s) => acc + s.total, 0);
-  const totalSalesTax = filteredSales.reduce((acc, s) => acc + (s.tax || 0), 0);
-  const totalSalesDiscount = filteredSales.reduce((acc, s) => acc + (s.discount || 0), 0);
-  const totalSalesCOGS = filteredSales.reduce((acc, s) => acc + (s.costOfGoodsSold || 0), 0);
-  const totalGrossProfit = filteredSales.reduce((acc, s) => acc + (s.grossProfit || s.total - (s.costOfGoodsSold || 0)), 0);
-  const averageOrderValue = filteredSales.length > 0 ? totalSalesRevenue / filteredSales.length : 0;
-  const grossMarginPercent = totalSalesRevenue > 0 ? (totalGrossProfit / totalSalesRevenue) * 100 : 0;
+  const totalSalesRevenue = round2(filteredSales.reduce((acc, s) => acc + s.total, 0));
+  const totalSalesTax = round2(filteredSales.reduce((acc, s) => acc + (s.tax || 0), 0));
+  const totalSalesDiscount = round2(filteredSales.reduce((acc, s) => acc + (s.discount || 0), 0));
+  const totalSalesCOGS = round2(filteredSales.reduce((acc, s) => acc + (s.costOfGoodsSold || 0), 0));
+  const totalGrossProfit = round2(filteredSales.reduce((acc, s) => acc + (s.grossProfit !== undefined ? s.grossProfit : Math.max(0, s.subtotal - (s.discount || 0)) - (s.costOfGoodsSold || 0)), 0));
+  const averageOrderValue = filteredSales.length > 0 ? round2(totalSalesRevenue / filteredSales.length) : 0;
+  const netSalesRevenue = Math.max(0, totalSalesRevenue - totalSalesTax);
+  const grossMarginPercent = netSalesRevenue > 0 ? round2((totalGrossProfit / netSalesRevenue) * 100) : 0;
 
   // Turnover rate = COGS / Total Stock Cost
   const turnoverRate = totalStockCostValuation > 0 ? (totalSalesCOGS / totalStockCostValuation).toFixed(2) : '0.00';
@@ -160,14 +161,14 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
   const deadStockProducts = products.filter(
     (p) => p.status === 'Dead Stock' || (p.stockQuantity > 50 && !filteredSales.some((s) => s.items.some((i) => i.productId === p.id)))
   );
-  const deadStockValuation = deadStockProducts.reduce((acc, p) => acc + p.costPrice * p.stockQuantity, 0);
-  const lowStockProducts = products.filter((p) => p.stockQuantity > 0 && p.stockQuantity <= p.reorderPoint);
-  const outOfStockProducts = products.filter((p) => p.stockQuantity <= 0);
+  const deadStockValuation = round2(deadStockProducts.reduce((acc, p) => acc + (p.costPrice || 0) * (p.stockQuantity || 0), 0));
+  const lowStockProducts = products.filter((p) => (p.stockQuantity || 0) > 0 && (p.stockQuantity || 0) <= (p.reorderPoint || 10));
+  const outOfStockProducts = products.filter((p) => (p.stockQuantity || 0) <= 0);
 
   // Purchase Order Metrics
-  const totalPOSpend = filteredPOs.reduce((acc, po) => acc + po.total, 0);
-  const receivedPOSpend = filteredPOs.filter((po) => po.status === 'Received').reduce((acc, po) => acc + po.total, 0);
-  const pendingPOSpend = filteredPOs.filter((po) => po.status !== 'Received' && po.status !== 'Cancelled').reduce((acc, po) => acc + po.total, 0);
+  const totalPOSpend = round2(filteredPOs.reduce((acc, po) => acc + po.total, 0));
+  const receivedPOSpend = round2(filteredPOs.filter((po) => po.status === 'Received').reduce((acc, po) => acc + po.total, 0));
+  const pendingPOSpend = round2(filteredPOs.filter((po) => po.status !== 'Received' && po.status !== 'Cancelled').reduce((acc, po) => acc + po.total, 0));
 
   // Group Product Revenue / Profit Aggregations
   const productPerformanceMap = useMemo(() => {

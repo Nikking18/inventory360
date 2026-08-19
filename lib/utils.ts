@@ -6,11 +6,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Standard financial rounding helper to eliminate floating point inaccuracies (e.g., 0.1 + 0.2 = 0.30000000000000004)
+ */
+export function round2(num: number): number {
+  return Math.round((Number(num || 0) + Number.EPSILON) * 100) / 100;
+}
+
 export function formatCurrency(amount: number, symbol = '$'): string {
+  const rounded = round2(amount);
   const formatted = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount || 0);
+  }).format(rounded);
   return `${symbol}${formatted}`;
 }
 

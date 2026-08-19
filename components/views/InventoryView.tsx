@@ -11,7 +11,7 @@ import {
   StockTransfer,
   BusinessSettings,
 } from '../../lib/types';
-import { formatCurrency, formatDateTime } from '../../lib/utils';
+import { formatCurrency, formatDateTime, round2 } from '../../lib/utils';
 import { Modal } from '../common/Modal';
 import {
   Boxes,
@@ -161,17 +161,17 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
   const outOfStockItems = products.filter((p) => p.stockQuantity === 0);
   const totalStockUnits = products.reduce((acc, p) => acc + (p.stockQuantity || 0), 0);
-  const totalCostValuation = products.reduce(
-    (acc, p) => acc + (p.costPrice || 0) * (p.stockQuantity || 0),
-    0
+  const totalCostValuation = round2(
+    products.reduce((acc, p) => acc + (p.costPrice || 0) * (p.stockQuantity || 0), 0)
   );
-  const totalRetailValuation = products.reduce(
-    (acc, p) => acc + (p.retailPrice || 0) * (p.stockQuantity || 0),
-    0
+  const totalRetailValuation = round2(
+    products.reduce((acc, p) => acc + (p.retailPrice || 0) * (p.stockQuantity || 0), 0)
   );
-  const totalRestockCostRequired = lowStockItems.reduce(
-    (acc, p) => acc + p.costPrice * Math.max(10, p.reorderPoint * 2 - p.stockQuantity),
-    0
+  const totalRestockCostRequired = round2(
+    lowStockItems.reduce(
+      (acc, p) => acc + (p.costPrice || 0) * Math.max(10, (p.reorderPoint || 10) * 2 - (p.stockQuantity || 0)),
+      0
+    )
   );
 
   // Filtered Stock Levels
@@ -310,7 +310,11 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
     if (!prod) return;
 
-    const lineTotal = poUnitCost * poOrderQty;
+    const lineTotal = round2(poUnitCost * poOrderQty);
+    const applicableTaxRate = settings?.taxRate !== undefined ? settings.taxRate : 8.5;
+    const poTax = round2(lineTotal * (applicableTaxRate / 100));
+    const poGrandTotal = round2(lineTotal + poTax);
+
     const poPayload: Omit<PurchaseOrder, 'id' | 'poNumber' | 'createdAt'> = {
       supplierId: sup.id,
       supplierName: sup.name,
@@ -326,8 +330,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         },
       ],
       subtotal: lineTotal,
-      tax: lineTotal * 0.085,
-      total: lineTotal * 1.085,
+      tax: poTax,
+      total: poGrandTotal,
       status: 'Sent',
       expectedDate: poExpectedDate,
       locationId: targetLoc?.id || 'loc_downtown',

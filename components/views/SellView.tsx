@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../../context/I18nContext';
 import { Product, Sale, SaleItem, Customer, Location, ProductVariant } from '../../lib/types';
-import { formatCurrency, formatDateTime } from '../../lib/utils';
+import { formatCurrency, formatDateTime, round2 } from '../../lib/utils';
 import {
   Search,
   Barcode,
@@ -265,31 +265,34 @@ export const SellView: React.FC<SellViewProps> = ({
     setDiscountInput('');
   };
 
-  // Calculations (Separating Individual Item Tax from Main Store HST/GST Tax)
-  const subtotal = cart.reduce((acc, item) => acc + item.total, 0);
+  // Calculations (Separating Individual Item Tax from Main Store HST/GST Tax with Precision Rounding)
+  const subtotal = useMemo(() => {
+    return round2(cart.reduce((acc, item) => acc + item.total, 0));
+  }, [cart]);
 
-  const effectiveDiscount = React.useMemo(() => {
+  const effectiveDiscount = useMemo(() => {
     if (discountInput === '' || isNaN(Number(discountInput))) return 0;
     const val = Math.max(0, Number(discountInput));
     if (discountMode === 'percent') {
-      return (subtotal * Math.min(100, val)) / 100;
+      return round2((subtotal * Math.min(100, val)) / 100);
     }
-    return Math.min(subtotal, val);
+    return round2(Math.min(subtotal, val));
   }, [discountInput, discountMode, subtotal]);
 
-  const discountRatio = subtotal > 0 ? Math.max(0, (subtotal - effectiveDiscount) / subtotal) : 1;
+  const discountRatio = subtotal > 0 ? (subtotal - effectiveDiscount) / subtotal : 1;
 
   // 1. Individual Item-Specific Taxes (Excise / Surcharge / Category Specific Tax on Product)
-  const totalItemTax = React.useMemo(() => {
-    return cart.reduce((acc, item) => {
+  const totalItemTax = useMemo(() => {
+    const raw = cart.reduce((acc, item) => {
       const itemSpecificRate = item.taxRate !== undefined && !isNaN(item.taxRate) ? item.taxRate : 0;
       const discountedItemTotal = item.total * discountRatio;
       return acc + discountedItemTotal * (itemSpecificRate / 100);
     }, 0);
+    return round2(raw);
   }, [cart, discountRatio]);
 
   // Breakdown of items with individual taxes
-  const itemTaxBreakdown = React.useMemo(() => {
+  const itemTaxBreakdown = useMemo(() => {
     const map = new Map<number, number>();
     cart.forEach((item) => {
       if (item.taxRate !== undefined && item.taxRate > 0) {
@@ -298,22 +301,22 @@ export const SellView: React.FC<SellViewProps> = ({
         map.set(item.taxRate, (map.get(item.taxRate) || 0) + taxVal);
       }
     });
-    return Array.from(map.entries()).map(([rate, amount]) => ({ rate, amount }));
+    return Array.from(map.entries()).map(([rate, amount]) => ({ rate, amount: round2(amount) }));
   }, [cart, discountRatio]);
 
-  // 2. Main Store HST / GST / Sales Tax (Base tax rate applied across taxable sale)
-  const mainHSTGSTTax = React.useMemo(() => {
+  // 2. Main Store HST / GST / Sales Tax (Base tax rate applied across taxable net subtotal)
+  const mainHSTGSTTax = useMemo(() => {
     const taxableSubtotal = Math.max(0, subtotal - effectiveDiscount);
     const storeTaxRate = taxRate !== undefined && !isNaN(taxRate) ? taxRate : 0;
-    return taxableSubtotal * (storeTaxRate / 100);
+    return round2(taxableSubtotal * (storeTaxRate / 100));
   }, [subtotal, effectiveDiscount, taxRate]);
 
   // 3. Combined Total Taxes
-  const calculatedTax = totalItemTax + mainHSTGSTTax;
+  const calculatedTax = round2(totalItemTax + mainHSTGSTTax);
 
-  const total = Math.max(0, subtotal - effectiveDiscount + calculatedTax);
-  const totalCOGS = cart.reduce((acc, item) => acc + item.quantity * item.unitCost, 0);
-  const grossProfit = total - totalCOGS;
+  const total = round2(Math.max(0, subtotal - effectiveDiscount) + calculatedTax);
+  const totalCOGS = round2(cart.reduce((acc, item) => acc + item.quantity * item.unitCost, 0));
+  const grossProfit = round2(Math.max(0, subtotal - effectiveDiscount) - totalCOGS);
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
