@@ -162,16 +162,20 @@ export function exportToPDF<T extends Record<string, any>>(filename: string, tit
   const keys = Object.keys(rows[0]);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
 
-  // Header Title
+  // Clean Print-Friendly Header
   doc.setFontSize(15);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text(title.toUpperCase(), 40, 40);
+  doc.setTextColor(0, 0, 0);
+  doc.text(title.toUpperCase(), 36, 36);
 
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 116, 139);
-  doc.text(`Official Inventory Record | Generated: ${new Date().toLocaleString()} | Total Records: ${rows.length}`, 40, 55);
+  doc.setTextColor(80, 80, 80);
+  doc.text(`Official Inventory Record | Generated: ${new Date().toLocaleString()} | Total Records: ${rows.length}`, 36, 48);
+
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(1);
+  doc.line(36, 54, 806, 54);
 
   const tableData = rows.map((r) =>
     keys.map((k) => {
@@ -182,24 +186,28 @@ export function exportToPDF<T extends Record<string, any>>(filename: string, tit
   );
 
   autoTable(doc, {
-    startY: 70,
+    startY: 64,
     head: [keys.map((k) => k.toUpperCase())],
     body: tableData,
     theme: 'grid',
     headStyles: {
-      fillColor: [15, 23, 42],
-      textColor: [255, 255, 255],
+      fillColor: [243, 244, 246],
+      textColor: [0, 0, 0],
       fontStyle: 'bold',
       fontSize: 8,
+      lineWidth: 0.5,
+      lineColor: [180, 180, 180],
     },
     bodyStyles: {
-      fontSize: 8,
-      textColor: [30, 41, 59],
+      fontSize: 7.5,
+      textColor: [20, 20, 20],
+      lineWidth: 0.5,
+      lineColor: [225, 225, 225],
     },
     alternateRowStyles: {
-      fillColor: [248, 250, 252],
+      fillColor: [250, 250, 250],
     },
-    margin: { left: 40, right: 40 },
+    margin: { left: 36, right: 36 },
   });
 
   doc.save(`${filename}.pdf`);
@@ -229,162 +237,217 @@ export function downloadPOSlipPDF(
   businessName: string = 'Inventory 360 Enterprise'
 ): void {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+  const pageWidth = 595.28;
+  const leftMargin = 36;
+  const rightMargin = 559;
+  const printableWidth = rightMargin - leftMargin;
 
-  // Top Dark Accent Header Bar
-  doc.setFillColor(15, 23, 42); // slate-900
-  doc.rect(0, 0, 595.28, 70, 'F');
+  // Safe ASCII representation for currency in jsPDF default fonts
+  const curr = currencySymbol && currencySymbol.trim() ? currencySymbol : '$';
 
-  doc.setFontSize(16);
+  // 1. Clean Print-Friendly Top Header (No dark background fills)
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text(businessName.toUpperCase(), 40, 35);
+  doc.setTextColor(0, 0, 0);
+  doc.text(businessName.toUpperCase(), leftMargin, 42);
 
   doc.setFontSize(8.5);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(52, 211, 153); // emerald-400
-  doc.text('OFFICIAL PURCHASE ORDER & REQUISITION SLIP', 40, 52);
+  doc.setTextColor(80, 80, 80);
+  doc.text('OFFICIAL PURCHASE ORDER & REQUISITION SLIP', leftMargin, 55);
 
-  // PO Meta Right Aligned
-  doc.setFontSize(14);
+  // Document Badge (Right aligned)
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text(po.poNumber, 555, 35, { align: 'right' });
+  doc.setTextColor(0, 0, 0);
+  doc.text('PURCHASE ORDER', rightMargin, 42, { align: 'right' });
 
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(203, 213, 225);
-  doc.text(`Issued: ${new Date(po.createdAt).toLocaleDateString()}`, 555, 52, { align: 'right' });
-
-  // Info Cards Section
-  const cardY = 90;
-  // Card 1: Vendor
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(226, 232, 240);
-  doc.rect(40, cardY, 245, 60, 'FD');
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(30, 30, 30);
+  doc.text(`P.O. #: ${po.poNumber}`, rightMargin, 55, { align: 'right' });
 
   doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Date Issued: ${new Date(po.createdAt).toLocaleDateString()} | Status: ${po.status.toUpperCase()}`, rightMargin, 67, { align: 'right' });
+
+  // Top Rule
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(1.25);
+  doc.line(leftMargin, 74, rightMargin, 74);
+
+  // 2. Info Cards Section (Vendor & Ship-To side-by-side)
+  const cardY = 84;
+  const cardWidth = (printableWidth - 14) / 2;
+  const cardHeight = 64;
+
+  // Card 1: Vendor / Supplier
+  doc.setFillColor(250, 250, 250);
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.75);
+  doc.rect(leftMargin, cardY, cardWidth, cardHeight, 'FD');
+
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(100, 116, 139);
-  doc.text('VENDOR / SUPPLIER INFORMATION', 50, cardY + 16);
+  doc.setTextColor(90, 90, 90);
+  doc.text('VENDOR / SUPPLIER DETAILS', leftMargin + 10, cardY + 14);
 
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text(po.supplierName, 50, cardY + 34);
+  doc.setTextColor(0, 0, 0);
+  doc.text(po.supplierName, leftMargin + 10, cardY + 30, { maxWidth: cardWidth - 20 });
 
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(71, 85, 105);
-  doc.text('Approved Procurement Partner', 50, cardY + 48);
+  doc.setTextColor(70, 70, 70);
+  doc.text('Approved Commercial Vendor Partner', leftMargin + 10, cardY + 44);
+  doc.text('Payment Terms: Net 30 Days', leftMargin + 10, cardY + 54);
 
-  // Card 2: Destination
-  doc.setFillColor(248, 250, 252);
-  doc.rect(310, cardY, 245, 60, 'FD');
+  // Card 2: Ship-To Destination
+  const rightCardX = leftMargin + cardWidth + 14;
+  doc.setFillColor(250, 250, 250);
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.75);
+  doc.rect(rightCardX, cardY, cardWidth, cardHeight, 'FD');
 
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(100, 116, 139);
-  doc.text('RECEIVING DESTINATION NODE', 320, cardY + 16);
+  doc.setTextColor(90, 90, 90);
+  doc.text('SHIP TO / RECEIVING DESTINATION', rightCardX + 10, cardY + 14);
 
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text(po.locationName || 'Downtown Flagship', 320, cardY + 34);
+  doc.setTextColor(0, 0, 0);
+  doc.text(po.locationName || 'Downtown Flagship / Main Hub', rightCardX + 10, cardY + 30, { maxWidth: cardWidth - 20 });
 
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(71, 85, 105);
-  doc.text(`Expected Date: ${po.expectedDate || 'ASAP'} | Status: ${po.status}`, 320, cardY + 48);
+  doc.setTextColor(70, 70, 70);
+  doc.text(`Expected Date: ${po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : 'ASAP / Immediate'}`, rightCardX + 10, cardY + 44);
+  doc.text('Attn: Warehouse Inbound & Receiving Dock', rightCardX + 10, cardY + 54);
 
-  // Items Table
+  // 3. Line Items Table (High-contrast, light header, print-ready)
   const tableData = po.items.map((item, idx) => [
     idx + 1,
     `${item.productName}\nSKU: ${item.sku}`,
-    `${currencySymbol}${item.unitCost.toFixed(2)}`,
+    `${curr}${item.unitCost.toFixed(2)}`,
     item.orderedQuantity,
-    `${currencySymbol}${item.total.toFixed(2)}`,
+    `${curr}${item.total.toFixed(2)}`,
   ]);
 
   autoTable(doc, {
-    startY: 165,
-    head: [['#', 'PRODUCT DESCRIPTION & SKU', 'UNIT COST', 'ORDERED QTY', 'LINE TOTAL']],
+    startY: 158,
+    head: [['#', 'ITEM DESCRIPTION & SKU', 'UNIT PRICE', 'ORDER QTY', 'LINE TOTAL']],
     body: tableData,
     theme: 'grid',
     headStyles: {
-      fillColor: [15, 23, 42],
-      textColor: [255, 255, 255],
+      fillColor: [243, 244, 246], // Light gray header, crystal clear on paper
+      textColor: [0, 0, 0],
       fontStyle: 'bold',
       fontSize: 8,
+      lineWidth: 0.5,
+      lineColor: [180, 180, 180],
     },
     columnStyles: {
       0: { cellWidth: 25, halign: 'center' },
-      1: { cellWidth: 260 },
-      2: { cellWidth: 70, halign: 'right' },
-      3: { cellWidth: 70, halign: 'right' },
-      4: { cellWidth: 90, halign: 'right' },
+      1: { cellWidth: 255 },
+      2: { cellWidth: 75, halign: 'right' },
+      3: { cellWidth: 68, halign: 'right' },
+      4: { cellWidth: 100, halign: 'right' },
     },
     bodyStyles: {
-      fontSize: 8.5,
-      textColor: [30, 41, 59],
+      fontSize: 8,
+      textColor: [20, 20, 20],
+      lineWidth: 0.5,
+      lineColor: [225, 225, 225],
     },
     alternateRowStyles: {
-      fillColor: [248, 250, 252],
+      fillColor: [252, 252, 252],
     },
-    margin: { left: 40, right: 40 },
+    margin: { left: leftMargin, right: pageWidth - rightMargin },
   });
 
-  // Totals Summary Box
-  const finalY = (doc as any).lastAutoTable.finalY + 15;
+  // 4. Financial Summary & Notes
+  const finalY = (doc as any).lastAutoTable.finalY + 12;
+  const notesWidth = 300;
+  const totalsWidth = printableWidth - notesWidth - 14;
+  const totalsX = leftMargin + notesWidth + 14;
 
-  if (po.notes) {
-    doc.setFillColor(248, 250, 252);
-    doc.setDrawColor(226, 232, 240);
-    doc.rect(40, finalY, 300, 50, 'FD');
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(71, 85, 105);
-    doc.text('Notes / Delivery Instructions:', 48, finalY + 15);
-    doc.setFont('helvetica', 'normal');
-    doc.text(po.notes, 48, finalY + 30, { maxWidth: 285 });
-  }
+  // Notes Box (Left)
+  doc.setFillColor(250, 250, 250);
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.75);
+  doc.rect(leftMargin, finalY, notesWidth, 68, 'FD');
 
-  // Financial summary box
-  const totalsX = 360;
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(226, 232, 240);
-  doc.rect(totalsX, finalY, 195, 65, 'FD');
-
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(71, 85, 105);
-  doc.text('Subtotal:', totalsX + 12, finalY + 18);
-  doc.text(`${currencySymbol}${po.subtotal.toFixed(2)}`, totalsX + 183, finalY + 18, { align: 'right' });
-
-  doc.text('Est. Tax (8.5%):', totalsX + 12, finalY + 34);
-  doc.text(`${currencySymbol}${(po.tax || 0).toFixed(2)}`, totalsX + 183, finalY + 34, { align: 'right' });
-
-  doc.setDrawColor(15, 23, 42);
-  doc.line(totalsX + 12, finalY + 42, totalsX + 183, finalY + 42);
-
-  doc.setFontSize(10);
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text('Total Payable:', totalsX + 12, finalY + 56);
-  doc.text(`${currencySymbol}${po.total.toFixed(2)}`, totalsX + 183, finalY + 56, { align: 'right' });
+  doc.setTextColor(80, 80, 80);
+  doc.text('TERMS & DELIVERY INSTRUCTIONS:', leftMargin + 10, finalY + 14);
 
-  // Signatures
-  const sigY = Math.max(finalY + 95, 720);
-  doc.setDrawColor(15, 23, 42);
-  doc.line(40, sigY, 240, sigY);
-  doc.line(355, sigY, 555, sigY);
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(40, 40, 40);
+  const notesContent = po.notes || 'Please include Packing Slip with this PO # on all packages. Items must be inspected upon dock delivery before invoice sign-off.';
+  doc.text(notesContent, leftMargin + 10, finalY + 28, { maxWidth: notesWidth - 20 });
+
+  // Totals Box (Right)
+  doc.setFillColor(250, 250, 250);
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.75);
+  doc.rect(totalsX, finalY, totalsWidth, 68, 'FD');
 
   doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(100, 116, 139);
-  doc.text('AUTHORIZED PURCHASING OFFICER SIGNATURE', 40, sigY + 14);
-  doc.text('RECEIVING WAREHOUSE INSPECTION & STAMP', 355, sigY + 14);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(70, 70, 70);
+  doc.text('Subtotal:', totalsX + 10, finalY + 16);
+  doc.text(`${curr}${po.subtotal.toFixed(2)}`, rightMargin - 10, finalY + 16, { align: 'right' });
 
-  // Directly prompt download
+  doc.text('Estimated Tax (8.5%):', totalsX + 10, finalY + 30);
+  doc.text(`${curr}${(po.tax || 0).toFixed(2)}`, rightMargin - 10, finalY + 30, { align: 'right' });
+
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.75);
+  doc.line(totalsX + 10, finalY + 38, rightMargin - 10, finalY + 38);
+
+  doc.setFontSize(9.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text('TOTAL AMOUNT:', totalsX + 10, finalY + 54);
+  doc.text(`${curr}${po.total.toFixed(2)}`, rightMargin - 10, finalY + 54, { align: 'right' });
+
+  // 5. Signatures & Approvals (Positioned near bottom)
+  const sigY = Math.max(finalY + 105, 735);
+
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.75);
+  doc.line(leftMargin, sigY, leftMargin + 210, sigY);
+  doc.line(rightMargin - 210, sigY, rightMargin, sigY);
+
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text('AUTHORIZED PURCHASING OFFICER', leftMargin, sigY + 12);
+  doc.text('RECEIVING & INSPECTION ACCEPTANCE', rightMargin - 210, sigY + 12);
+
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text('Authorized Signature & Date', leftMargin, sigY + 22);
+  doc.text('Receiver Signature, Date & Stamp', rightMargin - 210, sigY + 22);
+
+  // 6. Running Footer
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.5);
+  doc.line(leftMargin, 795, rightMargin, 795);
+
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(120, 120, 120);
+  doc.text('Inventory360 Enterprise ERP - Official Procurement Document', leftMargin, 807);
+  doc.text(`Page 1 of 1 | Printed: ${new Date().toLocaleString()}`, rightMargin, 807, { align: 'right' });
+
+  // Directly save / download PDF
   doc.save(`PO_Slip_${po.poNumber}.pdf`);
 }
 
