@@ -72,11 +72,71 @@ import { SupportedLanguage, LANGUAGES } from '../lib/i18n';
 import { CURRENCIES } from '../lib/currencies';
 import { I18nProvider } from '../context/I18nContext';
 
+const VALID_TABS: NavItemKey[] = [
+  'home',
+  'sell',
+  'fulfillment',
+  'reporting',
+  'catalog',
+  'inventory',
+  'customers',
+  'setup',
+];
+
+const DEFAULT_SUB_FOR_TAB: Record<string, string> = {
+  reporting: 'retail-dashboard',
+  inventory: 'stock-levels',
+  catalog: 'all-products',
+  fulfillment: 'all-orders',
+  setup: 'general',
+};
+
+function getInitialRouteState(): { tab: NavItemKey; subTab: string; showLanding: boolean } {
+  if (typeof window === 'undefined') {
+    return { tab: 'home', subTab: 'retail-dashboard', showLanding: false };
+  }
+
+  const hash = window.location.hash.replace(/^#\/?/, '');
+  if (hash === 'landing') {
+    return { tab: 'home', subTab: 'retail-dashboard', showLanding: true };
+  }
+
+  if (hash) {
+    const parts = hash.split('/');
+    const tabCandidate = (parts[0] === 'dashboard' ? 'home' : parts[0]) as NavItemKey;
+    const sub = parts[1] || DEFAULT_SUB_FOR_TAB[tabCandidate] || '';
+    if (VALID_TABS.includes(tabCandidate)) {
+      return { tab: tabCandidate, subTab: sub, showLanding: false };
+    }
+  }
+
+  // Check localStorage if no specific hash present
+  try {
+    const savedLanding = localStorage.getItem('inventory360_show_landing');
+    if (savedLanding === 'true') {
+      return { tab: 'home', subTab: 'retail-dashboard', showLanding: true };
+    }
+    const savedTab = localStorage.getItem('inventory360_active_tab') as NavItemKey;
+    const savedSub = localStorage.getItem('inventory360_active_subtab');
+    if (savedTab && VALID_TABS.includes(savedTab)) {
+      return {
+        tab: savedTab,
+        subTab: savedSub || DEFAULT_SUB_FOR_TAB[savedTab] || '',
+        showLanding: false,
+      };
+    }
+  } catch {
+    // Ignore storage errors
+  }
+
+  return { tab: 'home', subTab: 'retail-dashboard', showLanding: false };
+}
+
 export default function AppMain() {
-  const [activeTab, setActiveTab] = useState<NavItemKey>('home');
-  const [activeSubTab, setActiveSubTab] = useState<string>('retail-dashboard');
-  // Default to Main Page (Landing Portal). When user clicks Dashboard, show them the dashboard and left panel!
-  const [showLanding, setShowLanding] = useState<boolean>(true);
+  const initialRoute = getInitialRouteState();
+  const [activeTab, setActiveTab] = useState<NavItemKey>(initialRoute.tab);
+  const [activeSubTab, setActiveSubTab] = useState<string>(initialRoute.subTab);
+  const [showLanding, setShowLanding] = useState<boolean>(initialRoute.showLanding);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [showDataPolicyNotice, setShowDataPolicyNotice] = useState<boolean>(false);
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
@@ -99,76 +159,40 @@ export default function AppMain() {
   const [printableSale, setPrintableSale] = useState<Sale | null>(null);
   const [receiptFormat, setReceiptFormat] = useState<'80mm' | '58mm' | 'A4'>('80mm');
 
-  // Route persistence: Restore page from hash or localStorage on load
+  // Route persistence: Listen for browser back/forward and hash changes
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const savedFormat = localStorage.getItem('inventory360_receipt_format');
-    if (savedFormat === '80mm' || savedFormat === '58mm' || savedFormat === 'A4') {
-      setReceiptFormat(savedFormat);
-    }
-
-    const parseRoute = () => {
-      const hash = window.location.hash.replace(/^#\/?/, '');
-      const validTabs: NavItemKey[] = [
-        'home',
-        'sell',
-        'fulfillment',
-        'reporting',
-        'catalog',
-        'inventory',
-        'customers',
-        'setup',
-      ];
-
-      if (hash === 'landing') {
-        setShowLanding(true);
-        return;
+    try {
+      const savedFormat = localStorage.getItem('inventory360_receipt_format');
+      if (savedFormat === '80mm' || savedFormat === '58mm' || savedFormat === 'A4') {
+        setReceiptFormat(savedFormat);
       }
+    } catch {}
 
-      if (hash) {
-        const parts = hash.split('/');
-        const tab = (parts[0] === 'dashboard' ? 'home' : parts[0]) as NavItemKey;
-        const sub = parts[1] || '';
-        if (validTabs.includes(tab)) {
-          setActiveTab(tab);
-          if (sub) setActiveSubTab(sub);
-          setShowLanding(false);
-          return;
-        }
-      }
-
-      // Check localStorage if no specific hash
-      const savedLanding = localStorage.getItem('inventory360_show_landing');
-      if (savedLanding === 'false') {
-        const savedTab = localStorage.getItem('inventory360_active_tab') as NavItemKey;
-        const savedSub = localStorage.getItem('inventory360_active_subtab');
-        if (savedTab && validTabs.includes(savedTab)) {
-          setActiveTab(savedTab);
-          if (savedSub) setActiveSubTab(savedSub);
-          setShowLanding(false);
-        }
-      }
+    const handleHashChange = () => {
+      const current = getInitialRouteState();
+      setActiveTab(current.tab);
+      if (current.subTab) setActiveSubTab(current.subTab);
+      setShowLanding(current.showLanding);
     };
 
-    parseRoute();
-
-    const onHashChange = () => {
-      parseRoute();
-    };
-
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Sync state to URL hash and localStorage
+  // Sync active state to URL hash and localStorage seamlessly
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem('inventory360_show_landing', String(showLanding));
-    localStorage.setItem('inventory360_active_tab', activeTab);
-    localStorage.setItem('inventory360_active_subtab', activeSubTab);
+    try {
+      localStorage.setItem('inventory360_show_landing', String(showLanding));
+      localStorage.setItem('inventory360_active_tab', activeTab);
+      localStorage.setItem('inventory360_active_subtab', activeSubTab);
+    } catch {}
 
-    const targetHash = showLanding ? '#/landing' : `/#/${activeTab}${activeSubTab ? '/' + activeSubTab : ''}`;
+    const targetHash = showLanding
+      ? '#/landing'
+      : `/#/${activeTab}${activeSubTab ? '/' + activeSubTab : ''}`;
     if (window.location.hash !== targetHash) {
       window.history.replaceState(null, '', targetHash);
     }
