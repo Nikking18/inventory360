@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Zap,
 } from 'lucide-react';
+import { BlogContentRenderer } from '../../../components/common/BlogContentRenderer';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -99,18 +100,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       '@id': `https://inventory360-five.vercel.app/blog/${post.slug}`,
     },
     'keywords': post.keywords.join(', '),
-  };
-
-  // Convert markdown format to HTML
-  const formatMarkdownToHTML = (markdown: string) => {
-    return markdown
-      .replace(/^### (.*$)/gim, '<h3 class="text-xl font-bold text-slate-900 mt-8 mb-3 font-heading">$1</h3>')
-      .replace(/^#### (.*$)/gim, '<h4 class="text-base font-bold text-slate-900 mt-6 mb-2 font-heading">$1</h4>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 text-slate-900 font-mono text-xs">$1</code>')
-      .replace(/^> (.*$)/gim, '<blockquote class="p-4 my-4 bg-slate-50 border-l-4 border-slate-900 text-slate-800 text-xs italic leading-relaxed">$1</blockquote>')
-      .replace(/---/g, '<hr class="my-6 border-slate-200" />');
   };
 
   return (
@@ -263,10 +252,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </div>
 
             {/* Render Content */}
-            <div
-              className="space-y-4 prose prose-slate max-w-none text-xs sm:text-sm"
-              dangerouslySetInnerHTML={{ __html: formatMarkdownToHTML(post.content) }}
-            />
+            <div className="pt-2">
+              <BlogContentRenderer content={post.content} />
+            </div>
 
             {/* Keyword Tags */}
             <div className="pt-6 border-t border-slate-200 space-y-2">

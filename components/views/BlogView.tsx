@@ -22,6 +22,7 @@ import {
   BarChart3,
   Check,
 } from 'lucide-react';
+import { BlogContentRenderer } from '../common/BlogContentRenderer';
 
 interface BlogViewProps {
   activeSubTab?: string;
@@ -179,58 +180,8 @@ export const BlogView: React.FC<BlogViewProps> = ({
           )}
 
           {/* Article Body Content */}
-          <div className="prose prose-slate max-w-none font-sans text-sm text-slate-800 leading-relaxed space-y-4 pt-2 border-t border-slate-200">
-            {selectedPost.content.split('\n\n').map((paragraph, idx) => {
-              if (paragraph.startsWith('### ')) {
-                return (
-                  <h3 key={idx} className="text-base sm:text-lg font-bold text-slate-900 font-heading pt-4 pb-1 border-b border-slate-200">
-                    {paragraph.replace('### ', '')}
-                  </h3>
-                );
-              }
-              if (paragraph.startsWith('#### ')) {
-                return (
-                  <h4 key={idx} className="text-sm font-bold text-slate-900 font-heading pt-2">
-                    {paragraph.replace('#### ', '')}
-                  </h4>
-                );
-              }
-              if (paragraph.startsWith('> ')) {
-                return (
-                  <blockquote key={idx} className="p-3 bg-emerald-50 border-l-4 border-emerald-600 text-emerald-900 text-xs font-mono my-3">
-                    {paragraph.replace('> ', '')}
-                  </blockquote>
-                );
-              }
-              if (paragraph.startsWith('* ') || paragraph.startsWith('- ')) {
-                const items = paragraph.split('\n').filter((l) => l.trim().length > 0);
-                return (
-                  <ul key={idx} className="list-disc pl-5 space-y-1 text-xs font-mono text-slate-700">
-                    {items.map((it, i) => (
-                      <li key={i}>{it.replace(/^[\*\-]\s+/, '')}</li>
-                    ))}
-                  </ul>
-                );
-              }
-              if (paragraph.startsWith('1. ') || paragraph.startsWith('2. ')) {
-                const items = paragraph.split('\n').filter((l) => l.trim().length > 0);
-                return (
-                  <ol key={idx} className="list-decimal pl-5 space-y-1.5 text-xs font-mono text-slate-700">
-                    {items.map((it, i) => (
-                      <li key={i}>{it.replace(/^\d+\.\s+/, '')}</li>
-                    ))}
-                  </ol>
-                );
-              }
-              if (paragraph.trim() === '---') {
-                return <hr key={idx} className="border-slate-200 my-4" />;
-              }
-              return (
-                <p key={idx} className="text-xs sm:text-sm text-slate-700 font-mono leading-relaxed">
-                  {paragraph}
-                </p>
-              );
-            })}
+          <div className="pt-2 border-t border-slate-200">
+            <BlogContentRenderer content={selectedPost.content} />
           </div>
 
           {/* Keywords Tag Cloud */}
