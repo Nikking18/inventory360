@@ -157,7 +157,7 @@ export const SellView: React.FC<SellViewProps> = ({
         const newQty = Math.min(maxStock, existing.quantity + quantity);
         return prev.map((item) =>
           item.productId === uniqueItemKey
-            ? { ...item, quantity: newQty, total: newQty * item.unitPrice }
+            ? { ...item, quantity: newQty, total: round2(newQty * item.unitPrice) }
             : item
         );
       } else {
@@ -172,7 +172,7 @@ export const SellView: React.FC<SellViewProps> = ({
             unitCost: variant.costPrice || product.costPrice,
             quantity: Math.min(maxStock, quantity),
             taxRate: itemTaxRate,
-            total: (variant.retailPrice || product.retailPrice) * Math.min(maxStock, quantity),
+            total: round2((variant.retailPrice || product.retailPrice) * Math.min(maxStock, quantity)),
           },
         ];
       }
@@ -206,7 +206,7 @@ export const SellView: React.FC<SellViewProps> = ({
         const newQty = Math.min(maxStock, existing.quantity + quantity);
         return prev.map((item) =>
           item.productId === product.id
-            ? { ...item, quantity: newQty, total: newQty * item.unitPrice }
+            ? { ...item, quantity: newQty, total: round2(newQty * item.unitPrice) }
             : item
         );
       } else {
@@ -220,7 +220,7 @@ export const SellView: React.FC<SellViewProps> = ({
             unitCost: product.costPrice,
             quantity: Math.min(maxStock, quantity),
             taxRate: itemTaxRate,
-            total: product.retailPrice * Math.min(maxStock, quantity),
+            total: round2(product.retailPrice * Math.min(maxStock, quantity)),
           },
         ];
       }
@@ -247,7 +247,7 @@ export const SellView: React.FC<SellViewProps> = ({
             return {
               ...item,
               quantity: newQty,
-              total: newQty * item.unitPrice,
+              total: round2(newQty * item.unitPrice),
             };
           }
           return item;
@@ -705,7 +705,7 @@ export const SellView: React.FC<SellViewProps> = ({
                   const hasItemTax = item.taxRate !== undefined && !isNaN(item.taxRate);
                   const itemSpecificTaxRate = hasItemTax ? item.taxRate! : 0;
                   const itemDiscountedTotal = item.total * discountRatio;
-                  const itemTaxAmount = itemDiscountedTotal * (itemSpecificTaxRate / 100);
+                  const itemTaxAmount = round2(itemDiscountedTotal * (itemSpecificTaxRate / 100));
 
                   return (
                     <div
