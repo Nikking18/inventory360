@@ -495,52 +495,55 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
   // Direct PDF & Spreadsheet Export Handlers
   const handleExportStockCSV = () => {
+    const symbol = currencySymbol && currencySymbol.trim() ? currencySymbol : '$';
     const data = filteredProducts.map((p) => ({
       SKU: p.sku,
       'Product Name': p.name,
-      Category: p.categoryName,
-      Supplier: p.supplierName,
-      'Cost Price ($)': p.costPrice.toFixed(2),
-      'Retail Price ($)': p.retailPrice.toFixed(2),
+      Category: p.categoryName || 'General',
+      Supplier: p.supplierName || 'Primary Supplier',
+      'Cost Price': `${symbol}${p.costPrice.toFixed(2)}`,
+      'Retail Price': `${symbol}${p.retailPrice.toFixed(2)}`,
       'Stock On Hand': p.stockQuantity,
       'Reorder Threshold': p.reorderPoint,
-      'Total Cost Valuation ($)': (p.costPrice * p.stockQuantity).toFixed(2),
-      'Total Retail Valuation ($)': (p.retailPrice * p.stockQuantity).toFixed(2),
+      'Total Cost Valuation': `${symbol}${(p.costPrice * p.stockQuantity).toFixed(2)}`,
+      'Total Retail Valuation': `${symbol}${(p.retailPrice * p.stockQuantity).toFixed(2)}`,
       'Inventory Status': p.status,
     }));
-    exportToCSV('Master_Stock_Levels_Report', data, language);
+    exportToCSV('Master_Stock_Levels_Report', data, language, currencySymbol);
     showToast('Stock Levels exported to CSV!');
   };
 
   const handleExportStockExcel = () => {
+    const symbol = currencySymbol && currencySymbol.trim() ? currencySymbol : '$';
     const data = filteredProducts.map((p) => ({
       SKU: p.sku,
       'Product Name': p.name,
-      Category: p.categoryName,
-      Supplier: p.supplierName,
-      'Cost Price ($)': p.costPrice.toFixed(2),
-      'Retail Price ($)': p.retailPrice.toFixed(2),
+      Category: p.categoryName || 'General',
+      Supplier: p.supplierName || 'Primary Supplier',
+      'Cost Price': `${symbol}${p.costPrice.toFixed(2)}`,
+      'Retail Price': `${symbol}${p.retailPrice.toFixed(2)}`,
       'Stock On Hand': p.stockQuantity,
       'Reorder Threshold': p.reorderPoint,
-      'Cost Valuation ($)': (p.costPrice * p.stockQuantity).toFixed(2),
-      'Retail Valuation ($)': (p.retailPrice * p.stockQuantity).toFixed(2),
+      'Total Cost Valuation': `${symbol}${(p.costPrice * p.stockQuantity).toFixed(2)}`,
+      'Total Retail Valuation': `${symbol}${(p.retailPrice * p.stockQuantity).toFixed(2)}`,
       'Inventory Status': p.status,
     }));
-    exportToExcel('Master_Stock_Levels_Report', data, language);
+    exportToExcel('Master_Stock_Levels_Report', data, language, currencySymbol);
     showToast('Stock Levels exported to Excel!');
   };
 
   const handleExportStockPDF = () => {
+    const symbol = currencySymbol && currencySymbol.trim() ? currencySymbol : '$';
     const data = filteredProducts.map((p) => ({
       SKU: p.sku,
-      Product: p.name,
-      Category: p.categoryName,
-      Supplier: p.supplierName,
-      Cost: `${currencySymbol}${p.costPrice.toFixed(2)}`,
-      Retail: `${currencySymbol}${p.retailPrice.toFixed(2)}`,
+      'Product Name': p.name,
+      Category: p.categoryName || 'General',
+      Supplier: p.supplierName || 'Primary Supplier',
+      'Cost Price': `${symbol}${p.costPrice.toFixed(2)}`,
+      'Retail Price': `${symbol}${p.retailPrice.toFixed(2)}`,
       'Tax %': p.taxRate !== undefined ? `${p.taxRate}%` : `${settings?.taxRate || 8.5}%`,
-      Stock: p.stockQuantity,
-      'Total Valuation': `${currencySymbol}${(p.costPrice * p.stockQuantity).toFixed(2)}`,
+      'Stock On Hand': p.stockQuantity,
+      'Total Valuation': `${symbol}${(p.costPrice * p.stockQuantity).toFixed(2)}`,
       Status: p.status,
     }));
     exportToPDF(
@@ -550,7 +553,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       settings?.businessName || 'Inventory 360 Enterprise',
       settings?.logoUrl,
       settings?.taxNumber,
-      language
+      language,
+      currencySymbol
     );
     showToast('Stock Valuation Report PDF downloaded!');
   };
@@ -568,7 +572,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       'Resulting Stock': m.newStock,
       'Audit Notes / Reason': m.notes || 'System Ledger',
     }));
-    exportToCSV('Stock_Movements_Audit_Ledger', data, language);
+    exportToCSV('Stock_Movements_Audit_Ledger', data, language, currencySymbol);
     showToast('Movements ledger exported to CSV!');
   };
 

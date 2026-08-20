@@ -334,54 +334,160 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
     };
   }, [filteredPOs]);
 
+  // Contextual data builders for each subtab export
+  const getExportDataset = (isPDF: boolean): { title: string; filename: string; data: Record<string, any>[] } => {
+    const symbol = currencySymbol && currencySymbol.trim() ? currencySymbol : '$';
+
+    if (activeSubTab === 'sales-report') {
+      return {
+        title: 'Sales Audit & Transaction Ledger',
+        filename: `SalesReport_${selectedLocation}_${dateRange}`,
+        data: filteredSales.map((s) => ({
+          'Sale #': s.saleNumber || s.id,
+          'Date & Time': formatDateTime(s.createdAt),
+          Customer: s.customerName || 'Walk-In Customer',
+          Channel: s.channel || 'In-Store POS',
+          Location: s.locationName || 'Main Store',
+          'Payment Method': s.paymentMethod || 'Cash',
+          'Items Count': s.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0,
+          Subtotal: isPDF ? formatCurrency(s.subtotal, symbol) : `${symbol}${s.subtotal.toFixed(2)}`,
+          Tax: isPDF ? formatCurrency(s.tax, symbol) : `${symbol}${s.tax.toFixed(2)}`,
+          Total: isPDF ? formatCurrency(s.total, symbol) : `${symbol}${s.total.toFixed(2)}`,
+          Status: s.status || 'Completed',
+        })),
+      };
+    }
+
+    if (activeSubTab === 'inventory-report') {
+      return {
+        title: 'Inventory Valuation & Stock Status',
+        filename: `InventoryValuation_${selectedLocation}`,
+        data: products.map((p) => ({
+          SKU: p.sku,
+          'Product Name': p.name,
+          Category: p.categoryName || 'General',
+          Supplier: p.supplierName || 'Primary Supplier',
+          'Cost Price': isPDF ? formatCurrency(p.costPrice, symbol) : `${symbol}${p.costPrice.toFixed(2)}`,
+          'Retail Price': isPDF ? formatCurrency(p.retailPrice, symbol) : `${symbol}${p.retailPrice.toFixed(2)}`,
+          'Tax %': p.taxRate !== undefined ? `${p.taxRate}%` : '8.5%',
+          'Stock On Hand': p.stockQuantity,
+          'Total Cost Valuation': isPDF ? formatCurrency(p.costPrice * p.stockQuantity, symbol) : `${symbol}${(p.costPrice * p.stockQuantity).toFixed(2)}`,
+          'Total Retail Valuation': isPDF ? formatCurrency(p.retailPrice * p.stockQuantity, symbol) : `${symbol}${(p.retailPrice * p.stockQuantity).toFixed(2)}`,
+          Status: p.status,
+        })),
+      };
+    }
+
+    if (activeSubTab === 'purchase-report') {
+      return {
+        title: 'Purchase Orders & Procurement Ledger',
+        filename: `ProcurementLedger_${selectedLocation}`,
+        data: filteredPOs.map((po) => ({
+          'PO #': po.poNumber,
+          'Issued Date': po.createdAt ? new Date(po.createdAt).toLocaleDateString() : 'N/A',
+          Supplier: po.supplierName,
+          Location: po.locationName || 'Main Hub',
+          'Expected Date': po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : 'ASAP',
+          'Items Count': po.items?.reduce((sum, it) => sum + (it.orderedQuantity || 1), 0) || 0,
+          Subtotal: isPDF ? formatCurrency(po.subtotal, symbol) : `${symbol}${po.subtotal.toFixed(2)}`,
+          Tax: isPDF ? formatCurrency(po.tax || 0, symbol) : `${symbol}${(po.tax || 0).toFixed(2)}`,
+          Total: isPDF ? formatCurrency(po.total, symbol) : `${symbol}${po.total.toFixed(2)}`,
+          Status: po.status,
+        })),
+      };
+    }
+
+    if (activeSubTab === 'tax-report') {
+      return {
+        title: 'Tax Collection & Audit Report',
+        filename: `TaxAuditReport_${selectedLocation}_${dateRange}`,
+        data: filteredSales.map((s) => ({
+          'Sale #': s.saleNumber || s.id,
+          'Date & Time': formatDateTime(s.createdAt),
+          Location: s.locationName || 'Main Store',
+          'Gross Sales': isPDF ? formatCurrency(s.total, symbol) : `${symbol}${s.total.toFixed(2)}`,
+          'Taxable Amount': isPDF ? formatCurrency(s.subtotal, symbol) : `${symbol}${s.subtotal.toFixed(2)}`,
+          'Tax Collected': isPDF ? formatCurrency(s.tax, symbol) : `${symbol}${s.tax.toFixed(2)}`,
+          'Payment Method': s.paymentMethod || 'Cash',
+        })),
+      };
+    }
+
+    if (activeSubTab === 'turnover-velocity') {
+      return {
+        title: 'Sales Velocity & Stock Turnover Report',
+        filename: `SalesVelocityReport_${selectedLocation}`,
+        data: performanceList.map((i) => ({
+          'Product Name': i.product.name,
+          SKU: i.product.sku,
+          Category: i.product.categoryName || 'General',
+          'Units Sold': i.units,
+          'Stock On Hand': i.product.stockQuantity,
+          'Total Revenue': isPDF ? formatCurrency(i.revenue, symbol) : `${symbol}${i.revenue.toFixed(2)}`,
+          'Gross Profit': isPDF ? formatCurrency(i.profit, symbol) : `${symbol}${i.profit.toFixed(2)}`,
+          'Gross Margin %': i.revenue > 0 ? `${((i.profit / i.revenue) * 100).toFixed(1)}%` : '0.0%',
+        })),
+      };
+    }
+
+    if (activeSubTab === 'profit-report') {
+      return {
+        title: 'Product Profitability & Margins Report',
+        filename: `ProfitabilityReport_${selectedLocation}`,
+        data: performanceList.map((i) => ({
+          'Product Name': i.product.name,
+          SKU: i.product.sku,
+          Category: i.product.categoryName || 'General',
+          'Units Sold': i.units,
+          'Total Revenue': isPDF ? formatCurrency(i.revenue, symbol) : `${symbol}${i.revenue.toFixed(2)}`,
+          'Total COGS': isPDF ? formatCurrency(i.cogs, symbol) : `${symbol}${i.cogs.toFixed(2)}`,
+          'Gross Profit': isPDF ? formatCurrency(i.profit, symbol) : `${symbol}${i.profit.toFixed(2)}`,
+          'Gross Margin %': i.revenue > 0 ? `${((i.profit / i.revenue) * 100).toFixed(1)}%` : '0.0%',
+        })),
+      };
+    }
+
+    // Default: Retail Dashboard
+    return {
+      title: 'FINANCIAL & ANALYTICS REPORT',
+      filename: `FinancialAnalyticsReport_${selectedLocation}`,
+      data: performanceList.map((i) => ({
+        'Product Name': i.product.name,
+        SKU: i.product.sku,
+        Category: i.product.categoryName || 'General',
+        'Units Sold': i.units,
+        'Total Revenue': isPDF ? formatCurrency(i.revenue, symbol) : `${symbol}${i.revenue.toFixed(2)}`,
+        'Total COGS': isPDF ? formatCurrency(i.cogs, symbol) : `${symbol}${i.cogs.toFixed(2)}`,
+        'Gross Profit': isPDF ? formatCurrency(i.profit, symbol) : `${symbol}${i.profit.toFixed(2)}`,
+        'Gross Margin %': i.revenue > 0 ? `${((i.profit / i.revenue) * 100).toFixed(1)}%` : '0.0%',
+      })),
+    };
+  };
+
   // Export handlers
   const handleExportCSV = () => {
-    const data = performanceList.map((i) => ({
-      'Product Name': i.product.name,
-      SKU: i.product.sku,
-      Category: i.product.categoryName || 'General',
-      'Units Sold': i.units,
-      'Total Revenue': i.revenue,
-      'Total COGS': i.cogs,
-      'Gross Profit': i.profit,
-      'Gross Margin %': i.revenue > 0 ? ((i.profit / i.revenue) * 100).toFixed(1) : '0.0',
-    }));
-    exportToCSV(`Report_${activeSubTab}_${selectedLocation}`, data, language);
+    const { filename, data } = getExportDataset(false);
+    exportToCSV(filename, data, language, currencySymbol);
     setShowExportMenu(false);
   };
 
   const handleExportExcel = () => {
-    const data = performanceList.map((i) => ({
-      'Product Name': i.product.name,
-      SKU: i.product.sku,
-      Category: i.product.categoryName || 'General',
-      'Units Sold': i.units,
-      'Total Revenue': i.revenue,
-      'Total COGS': i.cogs,
-      'Gross Profit': i.profit,
-      'Gross Margin %': i.revenue > 0 ? ((i.profit / i.revenue) * 100).toFixed(1) : '0.0',
-    }));
-    exportToExcel(`Report_${activeSubTab}_${selectedLocation}`, data, language);
+    const { filename, data } = getExportDataset(false);
+    exportToExcel(filename, data, language, currencySymbol);
     setShowExportMenu(false);
   };
 
   const handleExportPDF = () => {
-    const data = performanceList.map((i) => ({
-      'Product Name': i.product.name,
-      SKU: i.product.sku,
-      'Units Sold': i.units,
-      'Total Revenue': formatCurrency(i.revenue, currencySymbol),
-      'Gross Profit': formatCurrency(i.profit, currencySymbol),
-      'Margin %': i.revenue > 0 ? `${((i.profit / i.revenue) * 100).toFixed(1)}%` : '0.0%',
-    }));
+    const { title, filename, data } = getExportDataset(true);
     exportToPDF(
-      `Report_${activeSubTab}`,
-      `FINANCIAL & ANALYTICS REPORT (${activeSubTab.toUpperCase().replace('-', ' ')})`,
+      filename,
+      title,
       data,
       'Inventory 360 Enterprise',
       undefined,
       undefined,
-      language
+      language,
+      currencySymbol
     );
     setShowExportMenu(false);
   };
