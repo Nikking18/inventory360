@@ -81,7 +81,7 @@ export async function importWorkspaceJSON(jsonString: string): Promise<boolean> 
 
     const { data } = parsed;
 
-    // Validate that data object contains expected store structures
+    // Validate that data object contains recognized store structures
     const validStoreKeys = ['products', 'categories', 'suppliers', 'customers', 'locations', 'sales', 'purchaseOrders', 'stockMovements', 'expenses', 'settings'];
     const hasValidKey = validStoreKeys.some((key) => key in data && Array.isArray(data[key]));
     if (!hasValidKey) {
@@ -91,17 +91,180 @@ export async function importWorkspaceJSON(jsonString: string): Promise<boolean> 
 
     await clearAllStores();
 
-    if (Array.isArray(data.products) && data.products.length) await putManyToStore('products', data.products);
-    if (Array.isArray(data.categories) && data.categories.length) await putManyToStore('categories', data.categories);
-    if (Array.isArray(data.suppliers) && data.suppliers.length) await putManyToStore('suppliers', data.suppliers);
-    if (Array.isArray(data.customers) && data.customers.length) await putManyToStore('customers', data.customers);
-    if (Array.isArray(data.locations) && data.locations.length) await putManyToStore('locations', data.locations);
-    if (Array.isArray(data.sales) && data.sales.length) await putManyToStore('sales', data.sales);
-    if (Array.isArray(data.purchaseOrders) && data.purchaseOrders.length) await putManyToStore('purchaseOrders', data.purchaseOrders);
-    if (Array.isArray(data.stockMovements) && data.stockMovements.length) await putManyToStore('stockMovements', data.stockMovements);
-    if (Array.isArray(data.expenses) && data.expenses.length) await putManyToStore('expenses', data.expenses);
+    // 1. Sanitize Products
+    if (Array.isArray(data.products) && data.products.length) {
+      const sanitizedProducts = data.products
+        .filter((p: any) => p && typeof p === 'object' && p.id && (p.name || p.title))
+        .map((p: any) => ({
+          id: String(p.id),
+          name: String(p.name || p.title).trim(),
+          sku: String(p.sku || `SKU-${Date.now()}`).trim(),
+          barcode: p.barcode ? String(p.barcode).trim() : '',
+          description: p.description ? String(p.description) : undefined,
+          costPrice: Math.max(0, Number(p.costPrice) || 0),
+          retailPrice: Math.max(0, Number(p.retailPrice) || 0),
+          stockQuantity: Number.isFinite(Number(p.stockQuantity)) ? Number(p.stockQuantity) : 0,
+          reorderPoint: Number(p.reorderPoint) >= 0 ? Number(p.reorderPoint) : 10,
+          taxRate: p.taxRate !== undefined && !isNaN(Number(p.taxRate)) ? Number(p.taxRate) : undefined,
+          categoryId: p.categoryId ? String(p.categoryId) : undefined,
+          supplierId: p.supplierId ? String(p.supplierId) : undefined,
+          imageUrl: p.imageUrl ? String(p.imageUrl) : undefined,
+          variants: Array.isArray(p.variants) ? p.variants : [],
+          customFields: p.customFields && typeof p.customFields === 'object' ? p.customFields : {},
+          lots: Array.isArray(p.lots) ? p.lots : [],
+          createdAt: p.createdAt || new Date().toISOString(),
+          updatedAt: p.updatedAt || new Date().toISOString(),
+        }));
+      if (sanitizedProducts.length) await putManyToStore('products', sanitizedProducts);
+    }
+
+    // 2. Sanitize Categories
+    if (Array.isArray(data.categories) && data.categories.length) {
+      const sanitizedCategories = data.categories
+        .filter((c: any) => c && typeof c === 'object' && c.id && c.name)
+        .map((c: any) => ({
+          id: String(c.id),
+          name: String(c.name).trim(),
+          description: c.description ? String(c.description).trim() : undefined,
+        }));
+      if (sanitizedCategories.length) await putManyToStore('categories', sanitizedCategories);
+    }
+
+    // 3. Sanitize Suppliers
+    if (Array.isArray(data.suppliers) && data.suppliers.length) {
+      const sanitizedSuppliers = data.suppliers
+        .filter((s: any) => s && typeof s === 'object' && s.id && s.name)
+        .map((s: any) => ({
+          id: String(s.id),
+          name: String(s.name).trim(),
+          contactPerson: s.contactPerson ? String(s.contactPerson).trim() : 'Primary Representative',
+          email: s.email ? String(s.email).trim() : '',
+          phone: s.phone ? String(s.phone).trim() : '',
+          address: s.address ? String(s.address).trim() : '',
+          leadTimeDays: Number(s.leadTimeDays) >= 0 ? Number(s.leadTimeDays) : 5,
+        }));
+      if (sanitizedSuppliers.length) await putManyToStore('suppliers', sanitizedSuppliers);
+    }
+
+    // 4. Sanitize Customers
+    if (Array.isArray(data.customers) && data.customers.length) {
+      const sanitizedCustomers = data.customers
+        .filter((c: any) => c && typeof c === 'object' && c.id && c.name)
+        .map((c: any) => ({
+          id: String(c.id),
+          name: String(c.name).trim(),
+          email: c.email ? String(c.email).trim() : '',
+          phone: c.phone ? String(c.phone).trim() : '',
+          totalSpent: Math.max(0, Number(c.totalSpent) || 0),
+          orderCount: Math.max(0, Number(c.orderCount) || 0),
+          balance: Number(c.balance) || 0,
+          creditLimit: Number(c.creditLimit) || 0,
+          createdAt: c.createdAt || new Date().toISOString(),
+        }));
+      if (sanitizedCustomers.length) await putManyToStore('customers', sanitizedCustomers);
+    }
+
+    // 5. Sanitize Locations
+    if (Array.isArray(data.locations) && data.locations.length) {
+      const sanitizedLocations = data.locations
+        .filter((l: any) => l && typeof l === 'object' && l.id && l.name)
+        .map((l: any) => ({
+          id: String(l.id),
+          name: String(l.name).trim(),
+          code: String(l.code || l.id).trim().toUpperCase(),
+          type: (['Store', 'Warehouse', 'Fulfillment Center'].includes(l.type) ? l.type : 'Store') as any,
+          isDefault: Boolean(l.isDefault),
+        }));
+      if (sanitizedLocations.length) await putManyToStore('locations', sanitizedLocations);
+    }
+
+    // 6. Sanitize Sales
+    if (Array.isArray(data.sales) && data.sales.length) {
+      const sanitizedSales = data.sales
+        .filter((s: any) => s && typeof s === 'object' && s.id && Array.isArray(s.items))
+        .map((s: any) => ({
+          id: String(s.id),
+          saleNumber: String(s.saleNumber || `SAL-${Date.now()}`),
+          items: s.items,
+          subtotal: Math.max(0, Number(s.subtotal) || 0),
+          tax: Math.max(0, Number(s.tax) || 0),
+          discount: Math.max(0, Number(s.discount) || 0),
+          itemTax: Math.max(0, Number(s.itemTax) || 0),
+          total: Math.max(0, Number(s.total) || 0),
+          costOfGoodsSold: Math.max(0, Number(s.costOfGoodsSold) || 0),
+          grossProfit: Number(s.grossProfit) || 0,
+          paymentMethod: String(s.paymentMethod || 'Cash'),
+          status: (['Completed', 'Refunded', 'Pending'].includes(s.status) ? s.status : 'Completed') as any,
+          locationId: String(s.locationId || 'loc_1'),
+          locationName: String(s.locationName || 'Main Store'),
+          customerName: s.customerName ? String(s.customerName) : undefined,
+          channel: String(s.channel || 'In-Store POS'),
+          createdAt: s.createdAt || new Date().toISOString(),
+        }));
+      if (sanitizedSales.length) await putManyToStore('sales', sanitizedSales);
+    }
+
+    // 7. Sanitize Purchase Orders
+    if (Array.isArray(data.purchaseOrders) && data.purchaseOrders.length) {
+      const sanitizedPOs = data.purchaseOrders
+        .filter((po: any) => po && typeof po === 'object' && po.id && Array.isArray(po.items))
+        .map((po: any) => ({
+          id: String(po.id),
+          poNumber: String(po.poNumber || `PO-${Date.now()}`),
+          supplierId: String(po.supplierId || ''),
+          supplierName: String(po.supplierName || 'Primary Supplier'),
+          locationId: String(po.locationId || 'loc_1'),
+          items: po.items,
+          totalCost: Math.max(0, Number(po.totalCost) || 0),
+          status: (['Draft', 'Ordered', 'Received', 'Cancelled'].includes(po.status) ? po.status : 'Draft') as any,
+          createdAt: po.createdAt || new Date().toISOString(),
+        }));
+      if (sanitizedPOs.length) await putManyToStore('purchaseOrders', sanitizedPOs);
+    }
+
+    // 8. Sanitize Stock Movements
+    if (Array.isArray(data.stockMovements) && data.stockMovements.length) {
+      const sanitizedMovements = data.stockMovements
+        .filter((m: any) => m && typeof m === 'object' && m.id && m.productId)
+        .map((m: any) => ({
+          id: String(m.id),
+          productId: String(m.productId),
+          productName: String(m.productName || 'Product'),
+          locationId: String(m.locationId || 'loc_1'),
+          quantityDelta: Number(m.quantityDelta) || 0,
+          movementType: String(m.movementType || 'Manual Adjustment') as any,
+          timestamp: m.timestamp || new Date().toISOString(),
+        }));
+      if (sanitizedMovements.length) await putManyToStore('stockMovements', sanitizedMovements);
+    }
+
+    // 9. Sanitize Expenses
+    if (Array.isArray(data.expenses) && data.expenses.length) {
+      const sanitizedExpenses = data.expenses
+        .filter((e: any) => e && typeof e === 'object' && e.id && e.amount)
+        .map((e: any) => ({
+          id: String(e.id),
+          description: String(e.description || 'General Expense'),
+          amount: Math.max(0, Number(e.amount) || 0),
+          category: String(e.category || 'Operations'),
+          date: e.date || new Date().toISOString(),
+        }));
+      if (sanitizedExpenses.length) await putManyToStore('expenses', sanitizedExpenses);
+    }
+
+    // 10. Sanitize Settings
     if (Array.isArray(data.settings) && data.settings.length) {
-      const formattedSettings = data.settings.map((s: any) => ({ id: 'settings', ...s }));
+      const first = data.settings[0] || {};
+      const formattedSettings = [
+        {
+          id: 'settings',
+          businessName: String(first.businessName || 'Inventory 360'),
+          currencySymbol: String(first.currencySymbol || '$'),
+          taxRate: Math.max(0, Number(first.taxRate) || 0),
+          language: String(first.language || 'en'),
+          autoSave: first.autoSave && typeof first.autoSave === 'object' ? first.autoSave : undefined,
+        },
+      ];
       await putManyToStore('settings', formattedSettings);
     }
 
