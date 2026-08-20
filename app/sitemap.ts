@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { BLOG_POSTS } from '../lib/blogData';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://inventory360-five.vercel.app';
+  const baseUrl = 'https://inventory360.shop';
   const currentDate = new Date().toISOString();
 
   const blogUrls: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({

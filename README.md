@@ -2,7 +2,7 @@
 
 > **Local-First Point of Sale (POS) & Multi-Outlet Inventory Management System**
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-inventory360--five.vercel.app-10B981?style=for-the-badge&logo=vercel&logoColor=white)](https://inventory360-five.vercel.app/)
+[![Live Production](https://img.shields.io/badge/🌐_Live_Domain-inventory360.shop-10B981?style=for-the-badge&logo=vercel&logoColor=white)](https://inventory360.shop/)
 [![Next.js 15](https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -11,10 +11,10 @@ Inventory 360 is a high-performance, local-first retail enterprise management we
 
 ---
 
-## 🌐 Live Application Link
+## 🌐 Official Website & Production App
 
-🚀 **Test the live production deployment on Vercel:**  
-👉 **[https://inventory360-five.vercel.app/](https://inventory360-five.vercel.app/)**
+🚀 **Official Production Domain:**  
+👉 **[https://inventory360.shop/](https://inventory360.shop/)**
 
 ---
 

@@ -184,7 +184,7 @@ A common critique of early web-based offline systems was the danger of a user ac
 Transitioning your retail operations from an expensive, laggy cloud ERP to a local-first system is straightforward:
 
 1. **Export Existing Catalog & Customers**: Download your existing inventory list (SKU, Name, Barcode, Cost Price, Retail Price, Stock) and Customer database from your current provider as CSV files.
-2. **Initialize Workspace**: Open [Inventory 360](https://inventory360-five.vercel.app), navigate to **Catalog**, and use the **Import CSV** wizard to map your columns and load your entire catalog in seconds.
+2. **Initialize Workspace**: Open [Inventory 360](https://inventory360.shop), navigate to **Catalog**, and use the **Import CSV** wizard to map your columns and load your entire catalog in seconds.
 3. **Configure Currency, Taxes & Thermal Printers**: Set your store name, tax rates, and preferred thermal receipt width (80mm standard or 58mm mobile) in **Setup**.
 4. **Establish Automated Local Backups**: Connect a local backup directory on your main counter terminal for automated background data protection.
 5. **Begin Zero-Latency Selling**: Launch the **Sell POS** terminal and enjoy sub-15ms barcode lookups and 100% offline uptime immunity.
@@ -378,7 +378,7 @@ Where:
 
 ### 9. Executing Real-Time Velocity Analytics in Inventory 360
 
-[Inventory 360](https://inventory360-five.vercel.app) automates this complete mathematical framework locally in your browser:
+[Inventory 360](https://inventory360.shop) automates this complete mathematical framework locally in your browser:
 
 1. **Live Velocity Calculations**: The **Reporting > Turnover & Velocity** dashboard continuously calculates units sold per day, trailing 30-day COGS, and days of supply remaining for every active SKU.
 2. **1-Click Low Stock Procurement**: When stock dips below your dynamic ROP, the system consolidates required replenishment units into vendor-grouped purchase orders.
@@ -570,7 +570,7 @@ A complete omnichannel fulfillment strategy must account for the **20% to 30% of
 
 ### 8. Step-by-Step Omnichannel Execution in Inventory 360
 
-[Inventory 360](https://inventory360-five.vercel.app) unifies multi-channel sales within a single local-first command hub:
+[Inventory 360](https://inventory360.shop) unifies multi-channel sales within a single local-first command hub:
 
 1. **Centralize Channel Monitoring**: Navigate to **Channels & Orders** on the left panel to monitor orders originating from physical store registers, Shopify, Amazon, and WooCommerce in real time.
 2. **Generate Consolidated Pick Lists**: Select pending orders and click **Generate Pick List (PDF)** to print a warehouse picking manifest formatted with checkboxes and item codes.
@@ -737,7 +737,7 @@ Modern packaging uses **GS1-128 Application Identifiers (AI)** to encode product
 | **(17)** | Expiration Date (\`YYMMDD\`) | \`261130\` | Expires November 30, 2026 |
 | **(21)** | Serial / Unit Identifier | \`SN-883492\` | Unique Individual Package ID |
 
-When scanned at the POS terminal, [Inventory 360](https://inventory360-five.vercel.app) automatically parses the embedded expiration date string, checks against the safety database, and decrements the specific batch ledger in under 15 milliseconds.
+When scanned at the POS terminal, [Inventory 360](https://inventory360.shop) automatically parses the embedded expiration date string, checks against the safety database, and decrements the specific batch ledger in under 15 milliseconds.
 
 ---
 
@@ -764,7 +764,7 @@ Implementing automated FEFO alerts and dynamic markdown schedules reduces this q
 
 ### 8. Step-by-Step Batch & Expiry Execution in Inventory 360
 
-[Inventory 360](https://inventory360-five.vercel.app) provides native, zero-cloud batch and lot tracking with 100% browser-based data sovereignty:
+[Inventory 360](https://inventory360.shop) provides native, zero-cloud batch and lot tracking with 100% browser-based data sovereignty:
 
 1. **Assign Lot & Expiry on Ingestion**: When receiving stock via **Purchases / Inbound POs**, input the supplier \`Lot #\` and \`Expiry Date\`. The system automatically generates FEFO priority queues.
 2. **Review Real-Time Expiration Warnings**: The **Inventory** and **Reporting** modules highlight batches entering the 30, 60, and 90-day threshold zones with color-coded status badges.
@@ -869,7 +869,7 @@ https://id.brand.com/01/00850012345678/10/LOT-9921?17=261130&21=SN-883492
 1. **POS Cashier Scanner**: Strips the structured GS1 Application Identifiers to instantly record the sale, check expiry, and decrement the specific lot.
 2. **Consumer Smartphone**: Resolves the web URL to display nutrition facts, allergen warnings, authentic brand verification, and recycling instructions.
 
-[Inventory 360](https://inventory360-five.vercel.app) is natively GS1 Sunrise 2027 ready, generating standards-compliant Code 128 and 2D vector barcodes locally in your browser.
+[Inventory 360](https://inventory360.shop) is natively GS1 Sunrise 2027 ready, generating standards-compliant Code 128 and 2D vector barcodes locally in your browser.
 
 ---
 
@@ -956,7 +956,7 @@ When the laser scans a barcode, the scanner acts like a high-speed typist enteri
 
 ### 8. Step-by-Step Barcode Generation & Printing in Inventory 360
 
-[Inventory 360](https://inventory360-five.vercel.app) simplifies barcode engineering into a 1-click browser workflow:
+[Inventory 360](https://inventory360.shop) simplifies barcode engineering into a 1-click browser workflow:
 
 1. **Instant Code 128 & QR Generation**: Every product added to your catalog is automatically assigned high-density vector barcode assets.
 2. **1-Click Thermal Label Sheet Printing**: In the **Catalog** or **Inventory** dashboard, select your items and click **Print Barcode Labels**. Choose between standard thermal roll sizes ($2.25\" \\times 1.25\"$) or multi-item letter sheets ($30\\text{-up Avery 5160}$).
@@ -1157,7 +1157,7 @@ When moving inventory between store branches located in different municipal or s
 
 ### 8. Step-by-Step Multi-Location Execution in Inventory 360
 
-[Inventory 360](https://inventory360-five.vercel.app) simplifies complex multi-location distribution into a local-first browser workflow:
+[Inventory 360](https://inventory360.shop) simplifies complex multi-location distribution into a local-first browser workflow:
 
 1. **Define Multiple Physical Branches**: In **Settings > Locations**, create your central warehouse, flagship storefronts, and regional branches with unique location codes.
 2. **Execute Inter-Branch Transfers**: Navigate to **Transfers**, select source and destination locations, add line items, and generate official printable Transfer Packing Slips.
@@ -1243,7 +1243,7 @@ A boutique coffee roaster sells an average of $16\\text{ bags/day}$ of Ethiopian
 
 $$\\text{ROP} = (16 \\times 6) + 24 = 96 + 24 = 120\\text{ Bags}$$
 
-When physical stock on hand drops to **120 bags**, [Inventory 360](https://inventory360-five.vercel.app) automatically flags the SKU for replenishment.
+When physical stock on hand drops to **120 bags**, [Inventory 360](https://inventory360.shop) automatically flags the SKU for replenishment.
 
 ---
 
@@ -1347,7 +1347,7 @@ Issuing separate purchase orders for individual SKUs from the same vendor create
 
 ### 8. Step-by-Step Autonomous Procurement in Inventory 360
 
-[Inventory 360](https://inventory360-five.vercel.app) operationalizes these mathematical formulas directly in your browser:
+[Inventory 360](https://inventory360.shop) operationalizes these mathematical formulas directly in your browser:
 
 1. **Automatic Low-Stock Detection**: The system continuously monitors on-hand balances against dynamic ROP thresholds in real time.
 2. **1-Click Purchase Order Generation**: In **Inventory > Low Stock Alerts**, click **Generate Purchase Order** to automatically group low-stock SKUs by vendor.
@@ -1503,7 +1503,7 @@ When an item enters Tier 4 or 5 status (90+ days without sales), execute this st
 \`\`\`
 
 1. **Tier 1 (Cross-Merchandising)**: Bundle slow-moving phone cases with new smartphone sales.
-2. **Tier 2 (POS Prompt Promotions)**: In [Inventory 360](https://inventory360-five.vercel.app), configure an automated flash promotion that prompts cashiers at checkout lane terminals.
+2. **Tier 2 (POS Prompt Promotions)**: In [Inventory 360](https://inventory360.shop), configure an automated flash promotion that prompts cashiers at checkout lane terminals.
 3. **Tier 3 (Clearance Outlet)**: Move units off prime front-row display shelving to the clearance rack.
 4. **Tier 4 (Bulk Liquidation or Charity Write-off)**: Reclaim 100% of shelf square footage; donate remaining stock to certified charities for an IRS Section 170 non-profit tax write-off.
 
@@ -1521,7 +1521,7 @@ Products transition through lifecycles. A newly launched item that starts as a C
 
 ### 8. Step-by-Step ABC Stratification & Liquidation in Inventory 360
 
-[Inventory 360](https://inventory360-five.vercel.app) automates ABC segmentation with 100% browser-based privacy:
+[Inventory 360](https://inventory360.shop) automates ABC segmentation with 100% browser-based privacy:
 
 1. **Automated ABC Stratification**: In **Reporting > ABC Analysis**, the system calculates annual usage values and instantly visualizes your Class A, B, and C tiers.
 2. **Review Dead Stock Aging Lists**: Filter catalog items by **Days Without Sale (60+, 90+, 180+ Days)** to pinpoint frozen working capital.
@@ -1638,7 +1638,7 @@ The **W3C File System Access API** revolutionized client-side computing by allow
    (Zero popups, zero network calls, 100% native hard drive storage)
 \`\`\`
 
-Once granted, [Inventory 360](https://inventory360-five.vercel.app) writes timestamped, complete system snapshots silently in the background at your selected interval (1h, 6h, 12h, 24h).
+Once granted, [Inventory 360](https://inventory360.shop) writes timestamped, complete system snapshots silently in the background at your selected interval (1h, 6h, 12h, 24h).
 
 ---
 
@@ -1672,7 +1672,7 @@ If a cashier spills coffee onto the POS terminal or the register laptop experien
 \`\`\`
 [ Minute 0:00 ] ➔ Register Laptop Dies / Hardware Failure.
 [ Minute 0:15 ] ➔ Grab any replacement laptop / tablet and open web browser.
-[ Minute 0:30 ] ➔ Navigate to https://inventory360-five.vercel.app.
+[ Minute 0:30 ] ➔ Navigate to https://inventory360.shop.
 [ Minute 0:45 ] ➔ Open Settings > Data & Backup > Click "Restore from JSON".
 [ Minute 0:55 ] ➔ Select latest backup file from USB drive.
 [ Minute 1:00 ] ➔ All 15,000 SKUs, historical sales, and open POs restored. Register live!
@@ -1695,7 +1695,7 @@ Under strict international data privacy frameworks like the European Union **GDP
 
 ### 8. Step-by-Step Automated Backup Configuration in Inventory 360
 
-[Inventory 360](https://inventory360-five.vercel.app) makes enterprise data protection accessible without requiring an IT department:
+[Inventory 360](https://inventory360.shop) makes enterprise data protection accessible without requiring an IT department:
 
 1. **Enable Local File System Auto-Save**: In **Settings > Data & Backup**, click **Select Backup Folder** and choose any directory on your computer, external SSD, or network-attached storage (NAS).
 2. **Select Backup Cadence**: Choose your preferred snapshot frequency (every 1 hour, 6 hours, 12 hours, or 24 hours).
@@ -1893,7 +1893,7 @@ Counter receipt printers feature an **RJ11/RJ12 modular port** on the back panel
 
 ### 8. Step-by-Step Hardware Configuration in Inventory 360
 
-[Inventory 360](https://inventory360-five.vercel.app) makes multi-format printing instantaneous:
+[Inventory 360](https://inventory360.shop) makes multi-format printing instantaneous:
 
 1. **Select Default Print Format**: In **Settings > Store Profile & Printing**, choose between **80mm Standard Thermal**, **58mm Mobile Bluetooth**, or **A4 Full Tax Invoice**.
 2. **Customize Branding & Tax Disclosures**: Enter your business name, address, tax ID, phone number, and custom return policy footer text.
@@ -2242,13 +2242,13 @@ $$\\text{3-Year Cloud SaaS TCO} = (\\text{Monthly Plan} \\times 36) + (\\text{Re
 
 $$\\text{3-Year SaaS TCO} = (\\USD 250 \\times 36) + (\\USD 50 \\times 6 \\times 36) + \\USD 14,400 = \\USD 9,000 + \\USD 10,800 + \\USD 14,400 = \\mathbf{\\USD 34,200}$$
 
-By contrast, **local-first web applications like [Inventory 360](https://inventory360-five.vercel.app)** operate with **$0 monthly subscription overhead**, saving growing merchants tens of thousands of dollars in capital that can be reinvested into inventory purchasing and store expansion.
+By contrast, **local-first web applications like [Inventory 360](https://inventory360.shop)** operate with **$0 monthly subscription overhead**, saving growing merchants tens of thousands of dollars in capital that can be reinvested into inventory purchasing and store expansion.
 
 ---
 
 ### 6. Final Buyer’s Verdict & Recommendation Guide
 
-* **For Fast Checkout Retailers & Multi-Branch Outlets**: Choose **[Inventory 360](https://inventory360-five.vercel.app)** for sub-15ms scanning velocity, 100% offline reliability, driverless thermal printing, and complete local data privacy.
+* **For Fast Checkout Retailers & Multi-Branch Outlets**: Choose **[Inventory 360](https://inventory360.shop)** for sub-15ms scanning velocity, 100% offline reliability, driverless thermal printing, and complete local data privacy.
 * **For Discrete Manufacturers**: Choose **Katana Cloud** for real-time visual Bill of Materials (BOM) routing.
 * **For Global EDI Enterprise Wholesalers**: Choose **Cin7 Omni** for automated big-box electronic data interchange.
     `
@@ -2336,7 +2336,7 @@ Before committing your commercial catalog to any free web application, verify th
 
 #### 1. Inventory 360 (Rank: #1 — Best Overall Free Solution)
 * **License / Model**: 100% Free & Unlimited Client-Side Web Application.
-* **Why It Leads**: Unlike cloud freemium tools, [Inventory 360](https://inventory360-five.vercel.app) imposes **zero SKU caps, zero transaction fees, and zero user limits**. It features sub-15ms local B-tree barcode lookups, camera barcode scanning, 3-state inter-branch stock transfers, automated vendor PO generation, FEFO expiry tracking with 1-click lot quarantine, driverless thermal printing (80mm/58mm/A4), 11-language translated report exports, and automated local background JSON backups via the W3C File System Access API.
+* **Why It Leads**: Unlike cloud freemium tools, [Inventory 360](https://inventory360.shop) imposes **zero SKU caps, zero transaction fees, and zero user limits**. It features sub-15ms local B-tree barcode lookups, camera barcode scanning, 3-state inter-branch stock transfers, automated vendor PO generation, FEFO expiry tracking with 1-click lot quarantine, driverless thermal printing (80mm/58mm/A4), 11-language translated report exports, and automated local background JSON backups via the W3C File System Access API.
 * **Cost**: **$0 / Month Forever**.
 
 #### 2. Odoo Community Edition
@@ -2418,7 +2418,7 @@ Traditional SaaS vendors charge monthly fees because running multi-tenant cloud 
 
 You can run your entire retail store without spending a single dollar:
 
-1. **Launch the App**: Open [https://inventory360-five.vercel.app](https://inventory360-five.vercel.app) in Google Chrome, Microsoft Edge, Safari, or Firefox.
+1. **Launch the App**: Open [https://inventory360.shop](https://inventory360.shop) in Google Chrome, Microsoft Edge, Safari, or Firefox.
 2. **Setup Store Name & Tax ID**: Go to **Settings > Store Profile** to configure your store branding, currency symbol, and receipt footer text.
 3. **Populate Your Catalog**: Click **+ Add Product** in Catalog or import your existing spreadsheet via **Import CSV**.
 4. **Ring Up Sales**: Open **Sell POS**, scan items with your barcode scanner or webcam, take payment, and print formatted 80mm/58mm thermal receipts.

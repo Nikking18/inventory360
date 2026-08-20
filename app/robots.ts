@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
     },
-    sitemap: 'https://inventory360-five.vercel.app/sitemap.xml',
+    sitemap: 'https://inventory360.shop/sitemap.xml',
   };
 }

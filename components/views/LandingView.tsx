@@ -831,12 +831,15 @@ export const LandingView: React.FC<LandingViewProps> = ({
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-bold text-slate-900 uppercase text-[11px]">Direct Links</h4>
+              <h4 className="font-bold text-slate-900 uppercase text-[11px]">Resources &amp; Guides</h4>
               <ul className="space-y-1 text-[11px] text-slate-600">
-                <li><Link href="/blog" className="text-slate-900 font-bold hover:text-emerald-700">Knowledge Base &amp; Blog</Link></li>
+                <li><Link href="/blog" className="text-slate-900 font-bold hover:text-emerald-700">Engineering &amp; ERP Blog</Link></li>
+                <li><Link href="/blog/how-to-use-inventory-360-complete-user-guide-features" className="hover:text-emerald-700 font-medium">Complete User Guide</Link></li>
+                <li><Link href="/blog/10-free-inventory-web-apps-small-business" className="hover:text-emerald-700 font-medium">10 Free Inventory Web Apps</Link></li>
+                <li><Link href="/blog/top-10-inventory-management-web-apps-2026" className="hover:text-emerald-700 font-medium">Top 10 Inventory Apps 2026</Link></li>
+                <li><Link href="/blog/local-first-inventory-management-offline-pos" className="hover:text-emerald-700 font-medium">Local-First Architecture</Link></li>
+                <li><Link href="/blog/automated-purchase-orders-reorder-point-formulas" className="hover:text-emerald-700 font-medium">Dynamic ROP Formulas</Link></li>
                 <li>{onOpenTour && <button onClick={onOpenTour} className="hover:text-emerald-700 font-medium">Interactive Tour</button>}</li>
-                <li><button onClick={onStartFresh} className="hover:text-slate-900 font-medium">New Clean Workspace</button></li>
-                <li><button onClick={onStartDemo} className="hover:text-slate-900 font-medium">Reset Demo Store</button></li>
               </ul>
             </div>
           </div>
