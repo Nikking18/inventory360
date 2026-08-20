@@ -476,7 +476,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
-                {tf === 'today' ? 'Today' : tf === 'week' ? 'Week' : 'Month'}
+                {tf === 'today' ? t('today', 'Today') : tf === 'week' ? t('week', 'Week') : t('month', 'Month')}
               </button>
             ))}
           </div>
@@ -504,10 +504,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="lg:col-span-3 space-y-2 border-b lg:border-b-0 lg:border-r border-slate-200 pb-4 lg:pb-0 lg:pr-6">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">
-                {t('today_revenue', 'Sales Revenue')} ({timeframe})
+                {t('today_revenue', 'Sales Revenue')} ({timeframe === 'today' ? t('today', 'Today') : timeframe === 'week' ? t('week', 'Week') : t('month', 'Month')})
               </span>
               <span className="text-[9px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 uppercase border border-slate-200">
-                {selectedLocation === 'all' ? 'All Outlets' : locations.find((l) => l.id === selectedLocation)?.name || 'Outlet'}
+                {selectedLocation === 'all' ? t('all_locations', 'All Outlets') : locations.find((l) => l.id === selectedLocation)?.name || 'Outlet'}
               </span>
             </div>
             <p className="text-3xl sm:text-4xl font-mono font-bold text-slate-900 tracking-tight">
@@ -534,7 +534,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               )
             ) : (
               <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-xs text-slate-400">
-                Loading Chart...
+                {t('loading_chart', 'Loading Chart...')}
               </div>
             )}
           </div>
@@ -545,11 +545,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
                 {t('total_sales', 'Completed Orders')}
               </span>
-              <p className="text-xl font-bold text-slate-900">{totalOrders} {t('total_orders', 'orders')}</p>
+              <p className="text-xl font-bold text-slate-900">{totalOrders} {t('orders', 'orders')}</p>
             </div>
             <div className="border-t border-slate-200 pt-3 space-y-1">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
-                {t('profit_margin', 'Avg Order Value')}
+                {t('avg_order_value', 'Avg Order Value')}
               </span>
               <p className="text-xl font-bold text-slate-900">
                 {formatCurrency(avgOrderValue, currencySymbol)}
@@ -568,21 +568,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-emerald-600" />
                 <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900">
-                  Recent Buyers
+                  {t('recent_buyers', 'Recent Buyers')}
                 </h3>
               </div>
               <button
                 onClick={() => onNavigate('customers')}
                 className="text-[11px] font-bold uppercase text-slate-600 hover:text-slate-900 flex items-center gap-1 hover:underline"
               >
-                <span>View CRM</span>
+                <span>{t('view_crm', 'View CRM')}</span>
                 <ArrowRight className="w-3 h-3" />
               </button>
             </div>
 
             {recentBuyers.length === 0 ? (
               <div className="p-8 text-center text-xs text-slate-400 italic">
-                No customer purchase records available for this outlet.
+                {t('no_buyers_found', 'No customer purchase records available for this outlet.')}
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -609,7 +609,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           </span>
                         </div>
                         <p className="text-[10px] text-slate-500 truncate mt-0.5">
-                          Latest: <span className="text-slate-700 font-medium">{buyer.latestItemName}</span>
+                          {t('latest_item', 'Latest:')} <span className="text-slate-700 font-medium">{buyer.latestItemName}</span>
                         </p>
                       </div>
                     </div>
@@ -619,7 +619,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         {formatCurrency(buyer.totalSpent, currencySymbol)}
                       </p>
                       <p className="text-[10px] text-slate-500">
-                        {buyer.ordersCount} {buyer.ordersCount === 1 ? 'order' : 'orders'} • {buyer.channel}
+                        {buyer.ordersCount} {buyer.ordersCount === 1 ? t('order', 'order') : t('orders', 'orders')} • {buyer.channel}
                       </p>
                     </div>
                   </div>
@@ -629,12 +629,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Tracking active buyer history</span>
+            <span>{t('tracking_buyers', 'Tracking active buyer history')}</span>
             <button
               onClick={() => onNavigate('customers')}
               className="font-bold text-slate-900 hover:text-emerald-700 uppercase"
             >
-              Add New Customer →
+              {t('add_customer_cta', 'Add New Customer →')}
             </button>
           </div>
         </div>
@@ -646,21 +646,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-sky-600" />
                 <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900">
-                  Recent Invoices
+                  {t('recent_invoices', 'Recent Invoices')}
                 </h3>
               </div>
               <button
                 onClick={() => onNavigate('sell', 'sales-history')}
                 className="text-[11px] font-bold uppercase text-slate-600 hover:text-slate-900 flex items-center gap-1 hover:underline"
               >
-                <span>Sales Ledger</span>
+                <span>{t('sales_ledger', 'Sales Ledger')}</span>
                 <ArrowRight className="w-3 h-3" />
               </button>
             </div>
 
             {recentInvoices.length === 0 ? (
               <div className="p-8 text-center text-xs text-slate-400 italic">
-                No invoices recorded yet for this location.
+                {t('no_invoices_found', 'No invoices recorded yet for this location.')}
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -680,7 +680,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-600 truncate">
-                        {inv.customerName || 'Walk-in Customer'} •{' '}
+                        {inv.customerName || t('walk_in_customer', 'Walk-in Customer')} •{' '}
                         <span className="text-slate-400">
                           {new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
@@ -693,14 +693,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           {formatCurrency(inv.total, currencySymbol)}
                         </p>
                         <p className="text-[9px] text-slate-500">
-                          {inv.items?.length || 1} item{inv.items?.length !== 1 ? 's' : ''}
+                          {inv.items?.length || 1} {inv.items?.length === 1 ? t('item', 'item') : t('items', 'items')}
                         </p>
                       </div>
 
                       {onPrintReceipt && (
                         <button
                           onClick={() => onPrintReceipt(inv)}
-                          title="Print Thermal Receipt / Invoice"
+                          title={t('print_invoice', 'Print Thermal Receipt / Invoice')}
                           className="p-1.5 bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 border border-slate-300 transition-colors shadow-2xs"
                         >
                           <Printer className="w-3.5 h-3.5" />
@@ -714,12 +714,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Instant ESC/POS &amp; Thermal Printing</span>
+            <span>{t('esc_pos_printing', 'Instant ESC/POS & Thermal Printing')}</span>
             <button
               onClick={() => onNavigate('sell', 'quick-sale')}
               className="font-bold text-slate-900 hover:text-sky-700 uppercase"
             >
-              + Create New Sale
+              {t('create_new_sale', '+ Create New Sale')}
             </button>
           </div>
         </div>
@@ -732,10 +732,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <CreditCard className="w-4 h-4 text-slate-900" />
             <div>
               <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900">
-                Recent Transactions &amp; Financial Ledger
+                {t('recent_transactions_ledger', 'Recent Transactions & Financial Ledger')}
               </h3>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                Real-time stream of in-store sales, online marketplace syncs, and profit telemetry.
+                {t('realtime_stream_desc', 'Real-time stream of in-store sales, online marketplace syncs, and profit telemetry.')}
               </p>
             </div>
           </div>
@@ -744,27 +744,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             onClick={() => onNavigate('reporting', 'sales-report')}
             className="text-[11px] font-bold uppercase text-slate-600 hover:text-slate-900 flex items-center gap-1 hover:underline"
           >
-            <span>Full Audit Report</span>
+            <span>{t('full_audit_report', 'Full Audit Report')}</span>
             <ArrowRight className="w-3 h-3" />
           </button>
         </div>
 
         {recentTransactions.length === 0 ? (
           <div className="p-8 text-center text-xs text-slate-400 italic">
-            No transaction records found.
+            {t('no_tx_found', 'No transaction records found.')}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-200 text-[10px] text-slate-500 uppercase bg-slate-50">
-                  <th className="py-2.5 px-3">Timestamp</th>
-                  <th className="py-2.5 px-3">Transaction ID</th>
-                  <th className="py-2.5 px-3">Customer / Channel</th>
-                  <th className="py-2.5 px-3">Outlet Location</th>
-                  <th className="py-2.5 px-3">Method</th>
-                  <th className="py-2.5 px-3 text-right">Profit Margin</th>
-                  <th className="py-2.5 px-3 text-right">Net Amount</th>
+                  <th className="py-2.5 px-3">{t('th_timestamp', 'Timestamp')}</th>
+                  <th className="py-2.5 px-3">{t('th_tx_id', 'Transaction ID')}</th>
+                  <th className="py-2.5 px-3">{t('th_customer_channel', 'Customer / Channel')}</th>
+                  <th className="py-2.5 px-3">{t('th_location', 'Outlet Location')}</th>
+                  <th className="py-2.5 px-3">{t('th_method', 'Method')}</th>
+                  <th className="py-2.5 px-3 text-right">{t('th_profit_margin', 'Profit Margin')}</th>
+                  <th className="py-2.5 px-3 text-right">{t('th_net_amount', 'Net Amount')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

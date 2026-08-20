@@ -255,11 +255,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }`}
               />
               <span className="font-bold uppercase tracking-wider text-slate-800 text-[10px]">
-                {autoSaveConfig?.enabled ? 'Auto-Save Active' : 'Auto-Save Off'}
+                {autoSaveConfig?.enabled ? t('auto_save_active', 'Auto-Save Active') : t('auto_save_off', 'Auto-Save Off')}
               </span>
             </div>
             <span className="text-[9px] font-bold text-slate-500 group-hover:text-emerald-700 uppercase">
-              Manage &rarr;
+              {t('manage', 'Manage')} &rarr;
             </span>
           </div>
 
@@ -283,7 +283,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full py-1.5 px-2 bg-white border border-slate-300 text-slate-800 hover:text-black font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:border-slate-400 transition-colors shadow-2xs"
         >
           <BookOpen className="w-3.5 h-3.5 text-sky-600" />
-          <span>Knowledge &amp; Blog</span>
+          <span>{t('knowledge_blog', 'Knowledge & Blog')}</span>
         </Link>
 
         <button
@@ -291,7 +291,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full py-1.5 px-2 bg-white border border-slate-300 text-slate-800 hover:text-black font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:border-slate-400 transition-colors shadow-2xs"
         >
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Data Policy &amp; Backup</span>
+          <span>{t('data_policy_btn', 'Data Policy & Backup')}</span>
         </button>
 
         <button
@@ -299,7 +299,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full py-1.5 px-2 bg-slate-900 text-white font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:bg-black transition-colors shadow-2xs"
         >
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>Interactive Tour</span>
+          <span>{t('interactive_tour', 'Interactive Tour')}</span>
         </button>
         <div className="flex items-center justify-between pt-1 border-t border-slate-200">
           <div className="flex items-center gap-1.5 text-slate-500">
@@ -311,7 +311,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={onOpenLanding}
               className="text-slate-900 hover:underline flex items-center gap-0.5 uppercase tracking-wider font-bold"
             >
-              <span>Main Portal</span>
+              <span>{t('portal', 'Main Portal')}</span>
               <ArrowUpRight className="w-3 h-3 text-slate-600" />
             </button>
           )}
@@ -369,7 +369,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {businessName || 'ACME Retail & Tech'}
             </p>
             <p className="text-[10px] text-slate-500 font-mono truncate leading-tight mt-0.5 uppercase">
-              {ownerName || 'Business Owner'}
+              {ownerName || t('owner_role', 'Business Owner')}
             </p>
           </div>
         </div>

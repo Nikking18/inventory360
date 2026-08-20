@@ -1,91 +1,89 @@
 # Inventory 360 📦
 
-> **Local-First Point of Sale (POS) & Multi-Outlet Inventory Management System**
+> **Industrial-Grade Local-First Point of Sale (POS) & Multi-Outlet Inventory Management System**
 
 [![Live Production](https://img.shields.io/badge/🌐_Live_Domain-inventory360.shop-10B981?style=for-the-badge&logo=vercel&logoColor=white)](https://inventory360.shop/)
 [![Next.js 15](https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![IndexedDB Local-First](https://img.shields.io/badge/Storage-100%25_Offline_IndexedDB-blueviolet?style=for-the-badge)](https://inventory360.shop/)
+[![Languages](https://img.shields.io/badge/i18n-11_Languages_Supported-amber?style=for-the-badge)](https://inventory360.shop/)
 
-Inventory 360 is a high-performance, local-first retail enterprise management web application designed for fast, offline-durable stock tracking, quick-sale POS terminal operations, purchase order workflows, and multi-outlet financial analytics. Powered by browser IndexedDB.
+Inventory 360 is a zero-latency, local-first retail enterprise web application designed for fast, offline-resilient stock tracking, quick-sale POS terminal operations, matrix product variants, lots & FEFO batch expiry management, multi-channel marketplace synchronization, thermal receipt printing, and multi-outlet financial analytics.
 
 ---
 
-## 🌐 Official Website & Production App
+## 🌐 Official Production Domain
 
-🚀 **Official Production Domain:**  
+🚀 **Launch the Web App:**  
 👉 **[https://inventory360.shop/](https://inventory360.shop/)**
 
 ---
 
-## ✨ Key Features
+## ✨ Core Enterprise Features
 
-### 📊 Executive Dashboard & Live Metrics
-- **Real-Time KPIs**: Track gross revenue, net profit, low-stock alerts, and total inventory valuation.
-- **Interactive Sales Charts**: Visual area charts tracking daily and monthly revenue trends.
-- **Stock Health Badges**: Instant indicators for Healthy, Low Stock, and Out of Stock inventory.
-- **Outlet Selector**: Switch between all outlets or specific store locations seamlessly.
+### 📊 Executive Dashboard & Real-Time Financial Ledger
+- **Live Sales & Profit Telemetry**: Sub-second revenue calculations, profit margins, and average order values (AOV).
+- **Interactive Chart.js Visualizations**: Switch between interactive line and bar charts with daily, weekly, and monthly aggregations.
+- **Recent Buyers & Live Invoices**: Live stream of walk-in and customer transactions with instant ESC/POS thermal receipt reprint.
+- **Multi-Outlet Aggregation**: Seamlessly switch telemetry across all outlets or filter by individual retail branch / warehouse.
 
 ### 🛒 Point of Sale (POS) Terminal
-- **Rapid Item Lookup**: Instant barcode and SKU search with category filter tabs.
-- **Cart Boundary Protection**: Enforces real-time stock limits to prevent selling out-of-stock items.
-- **Customer CRM Integration**: Assign registered customers to sales at checkout.
-- **Multi-Payment Options**: Cash, Card, and Digital Transfer payment processing.
-- **Receipt Printing & Refunds**: Built-in receipt printer target and return refund processing.
+- **Sub-50ms SKU & Barcode Lookup**: High-speed live catalog search with camera barcode scanning support.
+- **Matrix Variant Selector**: Direct POS variant add for color, size, and material combinations.
+- **Flexible Discounts & Dual Tax Rules**: Line-item tax exemptions, custom cashier flat/percent discounts, and automated HST/GST computation.
+- **Multi-Channel Tender**: Cash, Card, Bank Transfer, and marketplace payments with instant split calculation.
+- **ESC/POS & Thermal Printing**: Configurable 58mm / 80mm thermal receipts and standard A4 invoices.
 
-### 📦 Product Master Catalog
-- **Uniqueness Safeguards**: Strict SKU and Barcode collision validation on product creation and editing.
-- **Margin Calculations**: Automated cost vs retail price profit margin tracking.
-- **Location Stock Preservation**: Maintains per-outlet inventory balances on product updates.
-- **Supplier & Category Lookups**: Associate master products with verified suppliers and categories.
+### 📦 Master Product Catalog & Matrix Variants
+- **2D / 3D Variant Matrix Generator**: Instantly generate matrix permutations (e.g. Size × Color) with auto-generated SKUs.
+- **Collision Protection**: Strict client-side validation against duplicate SKUs or barcode collisions.
+- **Automated Profit Margins**: Live calculation of markup percentages, cost of goods sold (COGS), and MSRP pricing.
+- **Custom Tax Overrides**: Assign item-specific tax rates or mark products as tax-exempt.
 
-### 🔄 Multi-Outlet Stock & Transfer Hub
-- **Location Balances**: Real-time stock distribution across main store, warehouse, and outlet locations.
-- **Inter-Outlet Transfers**: Execute stock transfers between locations with dual balance updates.
-- **Low Stock Alerts & PO Generator**: Automated reorder point alerts with a custom Purchase Order creation modal.
-- **Stock Audit Logs**: Detailed history logs recording every stock movement, transfer, and sale.
+### 🔄 Multi-Location Inventory & Stock Transfer Hub
+- **Multi-Outlet Balance Grids**: Real-time stock distribution across main storefronts, pop-ups, and central warehouses.
+- **Inter-Outlet Stock Transfers**: Execute audited stock movements with transfer slips, carrier tracking, and receiving verification.
+- **Lots & FEFO Expiry Tracking**: Batch lot numbers, manufacturing dates, and First-Expired-First-Out (FEFO) alerts to eliminate spoilage.
+- **Automated Purchase Orders (PO)**: 1-click PO generator when inventory dips below minimum reorder thresholds.
 
 ### 👥 Customer Relationship Management (CRM)
-- **Lifetime Value Tracking**: Tracks total orders, lifetime revenue, and last purchase date per customer.
-- **Refund Synchronization**: Automatically adjusts customer revenue and order count on sales returns.
-- **Customer Search**: Quick search filtering by customer name, email address, or phone number.
+- **Customer Lifetime Value (LTV)**: Track total purchases, average spend, loyalty tiers (VIP), and order history per buyer.
+- **Omni-Channel Attribution**: Associate orders with in-store walk-in, Shopify, Amazon, eBay, or WooCommerce channels.
+- **Refund & Return Ledger**: Full restocking return processing that automatically balances store inventory and customer metrics.
 
-### 📈 Advanced Analytics & Financial Reporting
-- **Multi-Period Filtering**: Aggregate financial reports by `Today`, `Week`, `Month`, or `Year`.
-- **Product Profitability Breakdown**: Inspect total units sold, gross revenue, COGS, and net profit per product.
-- **1-Click Exporting**: Export reports directly to **CSV**, **Excel (.xlsx)**, or printable **PDF**.
+### 📈 Reporting & Financial Audit
+- **Comprehensive Ledger Reports**: Export filtered sales, COGS, tax breakdowns, and net margins.
+- **1-Click Export Options**: Export full reports in **CSV**, **Excel (.xlsx)**, or print-ready **PDF**.
+- **Historical Audit Logs**: Complete immutability log for all inventory transfers, adjustments, and price edits.
 
-### 🌟 Interactive Hovering Product Tour
-- **7-Step Guided Tour**: Floating spotlight popup card with step counter pills (`01/07` to `07/07`).
-- **Live Background Sync**: Automatically navigates background tabs as users progress through tour steps.
-- **Direct Feature Triggers**: Interactive action buttons to test POS, Catalog, Inventory, and CRM live.
-- **Collapsible Controls**: Minimize tour into a compact status bar anytime during use.
+### 🌍 11-Language Internationalization (i18n)
+- **Supported Languages**: English (`en`), Spanish (`es`), French (`fr`), German (`de`), Hindi (`hi`), Japanese (`ja`), Chinese (`zh`), Arabic (`ar` with full RTL layout), Portuguese (`pt`), Italian (`it`), and Russian (`ru`).
+- **Global Currency Engine**: Instant live switching between USD ($), EUR (€), GBP (£), CAD (C$), AUD (A$), JPY (¥), INR (₹), BRL (R$), MXN (Mex$), AED (AED), and more.
 
-### ⚙️ Workspace Setup & Internationalization
-- **Multi-Currency**: Instant switching across major global currencies (`$`, `€`, `£`, `₹`, `¥`, etc.).
-- **6-Language Translation**: Full UI translation support for English, Spanish, French, German, Hindi, and Chinese.
-- **Theme Customization**: Dark mode and Light mode interface themes.
-- **IndexedDB Backup & Restore**: Export and import complete schema-validated JSON database backups.
+### 💾 Automated Local File System Backups
+- **Continuous Auto-Save**: Automated periodic snapshots saved directly to your chosen local folder via the HTML5 File System Access API.
+- **Encrypted JSON Export / Import**: 1-click backup and schema-validated restore for total data sovereignty.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Deployment**: [Vercel](https://vercel.com/)
-- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
-- **UI Library**: [React 19](https://react.dev/) & [TypeScript](https://www.typescriptlang.org/)
-- **Storage**: Browser [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) via `idb`
-- **Styling**: Vanilla CSS & [Tailwind CSS](https://tailwindcss.com/)
+- **Deployment**: [Vercel](https://vercel.com/) (Edge CDN with custom domain SSL)
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router, Static Export ready)
+- **UI Architecture**: [React 19](https://react.dev/) & [TypeScript](https://www.typescriptlang.org/)
+- **Storage Layer**: Browser [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) via `idb`
+- **Styling**: Vanilla CSS & Tailwind CSS with curated industrial aesthetics
+- **Charting**: [Chart.js](https://www.chartjs.org/) & `react-chartjs-2`
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **Charts**: [Recharts](https://recharts.org/)
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Local Development Setup
 
 ### Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **npm** or **bun** / **yarn**
+- **Node.js**: v18.18.0 or higher
+- **npm**, **pnpm**, or **yarn**
 
 ### Installation
 
@@ -100,13 +98,13 @@ Inventory 360 is a high-performance, local-first retail enterprise management we
    npm install
    ```
 
-3. **Start the local development server**:
+3. **Start the development server**:
    ```bash
    npm run dev
    ```
    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-4. **Build for production**:
+4. **Build production bundle**:
    ```bash
    npm run build
    npm start
@@ -114,9 +112,12 @@ Inventory 360 is a high-performance, local-first retail enterprise management we
 
 ---
 
-## 🔒 Privacy & Data Ownership
+## 🔒 Privacy, Security & Data Sovereignty
 
-Inventory 360 is built with a **local-first architecture**. All data (products, sales, customers, stock movements, purchase orders, and settings) is stored safely inside your browser's IndexedDB. No external servers or third-party cloud services receive your confidential business data.
+Inventory 360 is built strictly with a **local-first architecture**:
+- **Zero Cloud Tracking**: All retail transactions, inventory catalogs, financial reports, and customer profiles remain in your local browser storage.
+- **100% Offline Capability**: Complete operational continuity without internet connectivity.
+- **Content Security Policy (CSP)**: Hardened HTTP headers preventing XSS and unauthorized script execution.
 
 ---
 

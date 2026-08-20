@@ -497,7 +497,7 @@ export const SellView: React.FC<SellViewProps> = ({
             title="Configure Local POS Thermal & Bill Printer"
           >
             <Printer className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Printer ({localFormat.toUpperCase()})</span>
+            <span>{t('printer', 'Printer')} ({localFormat.toUpperCase()})</span>
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
           </button>
 
@@ -506,7 +506,7 @@ export const SellView: React.FC<SellViewProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-xs"
           >
             <Barcode className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Camera Scanner</span>
+            <span>{t('barcode_scan', 'Camera Scanner')}</span>
           </button>
         </div>
       </div>
@@ -546,7 +546,7 @@ export const SellView: React.FC<SellViewProps> = ({
                     : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                All Categories
+                {t('all_categories', 'All Categories')}
               </button>
               {categories.map((cat) => (
                 <button
@@ -568,8 +568,8 @@ export const SellView: React.FC<SellViewProps> = ({
               {displayItems.length === 0 ? (
                 <div className="col-span-3 p-10 text-center border border-dashed border-slate-300 space-y-2 bg-white">
                   <Search className="w-8 h-8 text-slate-400 mx-auto" />
-                  <p className="text-xs font-bold text-slate-700 uppercase">No Matching Products or Variant SKUs</p>
-                  <p className="text-[11px] text-slate-500">Try searching with a different product name, base SKU, or specific variant code.</p>
+                  <p className="text-xs font-bold text-slate-700 uppercase">{t('no_matching_products', 'No Matching Products or Variant SKUs')}</p>
+                  <p className="text-[11px] text-slate-500">{t('search_hint', 'Try searching with a different product name, base SKU, or specific variant code.')}</p>
                 </div>
               ) : (
                 displayItems.map((item) => {
@@ -599,14 +599,14 @@ export const SellView: React.FC<SellViewProps> = ({
                       {isVariantCard && (
                         <span className="absolute top-2 right-2 bg-emerald-800 text-white text-[8px] font-bold px-1.5 py-0.2 uppercase tracking-wider shadow-xs flex items-center gap-1 z-10">
                           <Tag className="w-2.5 h-2.5" />
-                          <span>Variant</span>
+                          <span>{t('variant', 'Variant')}</span>
                         </span>
                       )}
 
                       {!isVariantCard && (item.variantsCount || 0) > 0 && (
                         <span className="absolute top-2 right-2 bg-slate-900 text-white text-[8.5px] font-bold px-1.5 py-0.5 uppercase tracking-wider shadow-xs flex items-center gap-1 z-10">
                           <Layers className="w-2.5 h-2.5 text-emerald-400" />
-                          <span>{item.variantsCount} Variants</span>
+                          <span>{item.variantsCount} {t('variants', 'Variants')}</span>
                         </span>
                       )}
 
@@ -658,7 +658,7 @@ export const SellView: React.FC<SellViewProps> = ({
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-4 h-4 text-slate-900" />
                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                  Active Cart ({cart.reduce((acc, i) => acc + i.quantity, 0)} Items)
+                  {t('active_cart', 'Active Cart')} ({cart.reduce((acc, i) => acc + i.quantity, 0)} {t('items', 'Items')})
                 </h3>
               </div>
               {cart.length > 0 && (
@@ -666,7 +666,7 @@ export const SellView: React.FC<SellViewProps> = ({
                   onClick={clearCart}
                   className="text-[10px] uppercase font-bold text-rose-700 hover:underline"
                 >
-                  Clear Cart
+                  {t('clear_cart', 'Clear Cart')}
                 </button>
               )}
             </div>
@@ -675,14 +675,14 @@ export const SellView: React.FC<SellViewProps> = ({
             <div className="space-y-1">
               <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1">
                 <User className="w-3 h-3 text-slate-500" />
-                <span>Attach Customer</span>
+                <span>{t('customer', 'Attach Customer')}</span>
               </label>
               <select
                 value={selectedCustomer}
                 onChange={(e) => setSelectedCustomer(e.target.value)}
                 className="w-full text-xs bg-white border border-slate-300 p-2 text-slate-900 focus:outline-none focus:border-slate-900 font-mono"
               >
-                <option value="">Walk-in Customer (General Checkout)</option>
+                <option value="">{t('walk_in_customer', 'Walk-in Customer (General Checkout)')}</option>
                 {customers.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} ({c.email || c.phone})
@@ -697,7 +697,7 @@ export const SellView: React.FC<SellViewProps> = ({
                 <div className="p-8 text-center border border-dashed border-slate-200 space-y-2">
                   <ShoppingBag className="w-6 h-6 text-slate-400 mx-auto" />
                   <p className="text-xs text-slate-500 font-mono">
-                    Cart is currently empty. Click products, variants, or scan barcodes to begin checkout.
+                    {t('cart_empty', 'Cart is currently empty. Click products, variants, or scan barcodes to begin checkout.')}
                   </p>
                 </div>
               ) : (
@@ -717,11 +717,11 @@ export const SellView: React.FC<SellViewProps> = ({
                           <p className="font-bold text-slate-900 truncate">{item.productName}</p>
                           {hasItemTax && item.taxRate! > 0 ? (
                             <span className="text-[9px] font-bold px-1.5 py-0.2 border uppercase bg-indigo-50 text-indigo-800 border-indigo-300">
-                              {item.taxRate}% Item Tax
+                              {item.taxRate}% {t('item_tax', 'Item Tax')}
                             </span>
                           ) : hasItemTax && item.taxRate === 0 ? (
                             <span className="text-[9px] font-bold px-1.5 py-0.2 border uppercase bg-emerald-50 text-emerald-800 border-emerald-300">
-                              0% Item Tax (Exempt)
+                              0% {t('exempt', 'Tax Exempt')}
                             </span>
                           ) : null}
                         </div>
@@ -729,7 +729,7 @@ export const SellView: React.FC<SellViewProps> = ({
                           {formatCurrency(item.unitPrice, currencySymbol)} × {item.quantity} • {item.sku}
                           {hasItemTax && item.taxRate! > 0 && (
                             <span className="ml-1 text-indigo-700 font-semibold font-mono">
-                              (Item Tax: +{formatCurrency(itemTaxAmount, currencySymbol)})
+                              ({t('item_tax', 'Item Tax')}: +{formatCurrency(itemTaxAmount, currencySymbol)})
                             </span>
                           )}
                         </p>
@@ -772,14 +772,14 @@ export const SellView: React.FC<SellViewProps> = ({
             {/* Calculations Summary */}
             <div className="border-t border-slate-200 pt-3 space-y-2 text-xs font-mono">
               <div className="flex justify-between text-slate-600">
-                <span>Subtotal:</span>
+                <span>{t('subtotal', 'Subtotal')}:</span>
                 <span>{formatCurrency(subtotal, currencySymbol)}</span>
               </div>
 
               {/* Cashier Custom Discounts Control */}
               <div className="p-2 bg-slate-50 border border-slate-200 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold uppercase text-[10px] text-slate-700">Cashier Discount:</span>
+                  <span className="font-bold uppercase text-[10px] text-slate-700">{t('custom_discount', 'Cashier Discount')}:</span>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
@@ -851,7 +851,7 @@ export const SellView: React.FC<SellViewProps> = ({
                       onClick={() => setDiscountInput('')}
                       className="px-1.5 py-0.5 text-[9px] font-bold uppercase text-rose-600 hover:underline"
                     >
-                      Clear
+                      {t('clear_cart', 'Clear')}
                     </button>
                   )}
                 </div>
@@ -861,17 +861,17 @@ export const SellView: React.FC<SellViewProps> = ({
               {totalItemTax > 0 && (
                 <div className="space-y-1 bg-indigo-50/70 border border-indigo-200 p-1.5 rounded-xs">
                   <div className="flex justify-between text-indigo-900 font-semibold">
-                    <span>Individual Item Taxes:</span>
+                    <span>{t('item_tax', 'Individual Item Taxes')}:</span>
                     <span>+{formatCurrency(totalItemTax, currencySymbol)}</span>
                   </div>
                   {itemTaxBreakdown.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1 justify-end">
-                      {itemTaxBreakdown.map((t) => (
+                      {itemTaxBreakdown.map((tItem) => (
                         <span
-                          key={t.rate}
+                          key={tItem.rate}
                           className="text-[9px] bg-white border border-indigo-300 px-1 py-0.2 text-indigo-800 font-mono"
                         >
-                          {t.rate}% Item Tax: {formatCurrency(t.amount, currencySymbol)}
+                          {tItem.rate}% {t('item_tax', 'Tax')}: {formatCurrency(tItem.amount, currencySymbol)}
                         </span>
                       ))}
                     </div>
@@ -881,20 +881,12 @@ export const SellView: React.FC<SellViewProps> = ({
 
               {/* Main Store HST / GST Tax */}
               <div className="flex justify-between text-slate-600">
-                <span>Main HST / GST Tax ({taxRate}%):</span>
+                <span>{t('main_tax', 'Main Store Tax')} ({taxRate}%):</span>
                 <span>+{formatCurrency(mainHSTGSTTax, currencySymbol)}</span>
               </div>
 
-              {/* Total Combined Taxes Summary */}
-              {totalItemTax > 0 && (
-                <div className="flex justify-between text-slate-500 text-[10px] border-t border-dotted border-slate-200 pt-1">
-                  <span>Combined Taxes (Item + HST/GST):</span>
-                  <span>{formatCurrency(calculatedTax, currencySymbol)}</span>
-                </div>
-              )}
-
               <div className="flex justify-between text-base font-bold text-slate-900 border-t border-slate-200 pt-2">
-                <span>Total Due:</span>
+                <span>{t('total', 'Total Due')}:</span>
                 <span>{formatCurrency(total, currencySymbol)}</span>
               </div>
             </div>
@@ -902,7 +894,7 @@ export const SellView: React.FC<SellViewProps> = ({
             {/* Payment Method Pills */}
             <div className="space-y-1.5">
               <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                Payment Method
+                {t('payment_method', 'Payment Method')}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {(['Card', 'Cash', 'Bank Transfer'] as const).map((method) => (
@@ -915,7 +907,7 @@ export const SellView: React.FC<SellViewProps> = ({
                         : 'bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200'
                     }`}
                   >
-                    {method}
+                    {method === 'Card' ? t('card', 'Card') : method === 'Cash' ? t('cash', 'Cash') : t('bank_transfer', 'Bank Transfer')}
                   </button>
                 ))}
               </div>
@@ -932,7 +924,7 @@ export const SellView: React.FC<SellViewProps> = ({
               }`}
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Complete Sale &amp; Print Bill</span>
+              <span>{t('complete_sale', 'Complete Sale & Print Bill')}</span>
             </button>
           </div>
         </div>
@@ -943,7 +935,7 @@ export const SellView: React.FC<SellViewProps> = ({
         <div className="bg-white border border-slate-200 p-6 space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-200 pb-3">
             <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
-              Completed POS Transactions ({sales.length})
+              {t('sales_history_title', 'Completed POS Transactions')} ({sales.length})
             </h3>
           </div>
 
@@ -951,22 +943,22 @@ export const SellView: React.FC<SellViewProps> = ({
             <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
-                  <th className="p-2.5">Sale #</th>
-                  <th className="p-2.5">Date &amp; Time</th>
-                  <th className="p-2.5">Customer</th>
-                  <th className="p-2.5">Location</th>
-                  <th className="p-2.5">Payment</th>
-                  <th className="p-2.5 text-right">Items</th>
-                  <th className="p-2.5 text-right">Total</th>
-                  <th className="p-2.5 text-center">Status</th>
-                  <th className="p-2.5 text-center">Receipt</th>
+                  <th className="p-2.5">{t('th_tx_id', 'Sale #')}</th>
+                  <th className="p-2.5">{t('th_timestamp', 'Date & Time')}</th>
+                  <th className="p-2.5">{t('customer', 'Customer')}</th>
+                  <th className="p-2.5">{t('th_location', 'Location')}</th>
+                  <th className="p-2.5">{t('th_method', 'Payment')}</th>
+                  <th className="p-2.5 text-right">{t('items', 'Items')}</th>
+                  <th className="p-2.5 text-right">{t('total', 'Total')}</th>
+                  <th className="p-2.5 text-center">{t('status', 'Status')}</th>
+                  <th className="p-2.5 text-center">{t('receipt', 'Receipt')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {sales.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="p-8 text-center text-slate-500 text-xs">
-                      No sales recorded in the system yet.
+                      {t('no_sales', 'No sales recorded in the system yet.')}
                     </td>
                   </tr>
                 ) : (
@@ -974,7 +966,7 @@ export const SellView: React.FC<SellViewProps> = ({
                     <tr key={s.id} className="hover:bg-slate-50 transition-colors">
                       <td className="p-2.5 font-bold text-slate-900">{s.saleNumber}</td>
                       <td className="p-2.5 text-slate-600">{formatDateTime(s.createdAt)}</td>
-                      <td className="p-2.5 text-slate-800 font-semibold">{s.customerName || 'Walk-in'}</td>
+                      <td className="p-2.5 text-slate-800 font-semibold">{s.customerName || t('walk_in_customer', 'Walk-in')}</td>
                       <td className="p-2.5 text-slate-600">{s.locationName}</td>
                       <td className="p-2.5 text-slate-600">{s.paymentMethod}</td>
                       <td className="p-2.5 text-right text-slate-800">{s.items.reduce((a, b) => a + b.quantity, 0)}</td>
@@ -996,7 +988,7 @@ export const SellView: React.FC<SellViewProps> = ({
                           className="px-2.5 py-1 bg-slate-100 border border-slate-300 text-slate-800 hover:bg-slate-900 hover:text-white text-[10px] font-bold uppercase transition-colors shadow-2xs flex items-center gap-1 mx-auto"
                         >
                           <Printer className="w-3 h-3" />
-                          <span>Print ({localFormat})</span>
+                          <span>{t('print_receipt', 'Print')} ({localFormat})</span>
                         </button>
                       </td>
                     </tr>
@@ -1013,10 +1005,10 @@ export const SellView: React.FC<SellViewProps> = ({
         <div className="bg-white border border-slate-200 p-6 space-y-4 shadow-sm">
           <div className="border-b border-slate-200 pb-3">
             <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
-              Returns &amp; Refund Processing
+              {t('returns_refunds_title', 'Returns & Refund Processing')}
             </h3>
             <p className="text-xs text-slate-600">
-              Refunding a transaction automatically returns stock to the active location inventory ledger.
+              {t('returns', 'Refunding a transaction automatically returns stock to the active location inventory ledger.')}
             </p>
           </div>
 
@@ -1024,12 +1016,12 @@ export const SellView: React.FC<SellViewProps> = ({
             <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
-                  <th className="p-2.5">Sale #</th>
-                  <th className="p-2.5">Date</th>
-                  <th className="p-2.5">Customer</th>
-                  <th className="p-2.5 text-right">Total</th>
-                  <th className="p-2.5 text-center">Status</th>
-                  <th className="p-2.5 text-center">Refund Action</th>
+                  <th className="p-2.5">{t('th_tx_id', 'Sale #')}</th>
+                  <th className="p-2.5">{t('date', 'Date')}</th>
+                  <th className="p-2.5">{t('customer', 'Customer')}</th>
+                  <th className="p-2.5 text-right">{t('total', 'Total')}</th>
+                  <th className="p-2.5 text-center">{t('status', 'Status')}</th>
+                  <th className="p-2.5 text-center">{t('actions', 'Refund Action')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -1037,7 +1029,7 @@ export const SellView: React.FC<SellViewProps> = ({
                   <tr key={s.id} className="hover:bg-slate-50">
                     <td className="p-2.5 font-bold text-slate-900">{s.saleNumber}</td>
                     <td className="p-2.5 text-slate-600">{formatDateTime(s.createdAt)}</td>
-                    <td className="p-2.5 text-slate-800">{s.customerName || 'Walk-in'}</td>
+                    <td className="p-2.5 text-slate-800">{s.customerName || t('walk_in_customer', 'Walk-in')}</td>
                     <td className="p-2.5 text-right font-bold text-slate-900">{formatCurrency(s.total, currencySymbol)}</td>
                     <td className="p-2.5 text-center">
                       <span
