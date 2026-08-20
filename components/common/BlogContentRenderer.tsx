@@ -520,9 +520,9 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
           case 'list':
             if (block.ordered) {
               return (
-                <ol key={idx} className="space-y-3 my-4 pl-1">
+                <ol key={idx} className="space-y-3 my-4 pl-1 list-none">
                   {block.items.map((item, itemIdx) => (
-                    <li key={itemIdx} className="space-y-2">
+                    <li key={itemIdx} className="space-y-2 list-none">
                       <div className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-800">
                         <span className="w-5 h-5 bg-slate-900 text-white text-[10px] font-bold font-mono flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                           {item.num || itemIdx + 1}
@@ -530,9 +530,9 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
                         <span className="leading-relaxed pt-0.5">{renderInline(item.text)}</span>
                       </div>
                       {item.subItems && item.subItems.length > 0 && (
-                        <ul className="pl-8 space-y-1.5 pt-1">
+                        <ul className="pl-8 space-y-1.5 pt-1 list-none">
                           {item.subItems.map((sub, subIdx) => (
-                            <li key={subIdx} className="flex items-start gap-2 text-xs sm:text-sm text-slate-700">
+                            <li key={subIdx} className="flex items-start gap-2 text-xs sm:text-sm text-slate-700 list-none">
                               <span className="w-1.5 h-1.5 bg-emerald-600 shrink-0 mt-2 rotate-45" />
                               <span className="leading-relaxed">{renderInline(sub.text)}</span>
                             </li>
@@ -545,17 +545,17 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
               );
             } else {
               return (
-                <ul key={idx} className="space-y-2.5 my-3 pl-1">
+                <ul key={idx} className="space-y-2.5 my-3 pl-1 list-none">
                   {block.items.map((item, itemIdx) => (
-                    <li key={itemIdx} className="space-y-1.5">
+                    <li key={itemIdx} className="space-y-1.5 list-none">
                       <div className="flex items-start gap-2 text-xs sm:text-sm text-slate-700">
                         <span className="w-1.5 h-1.5 bg-emerald-600 shrink-0 mt-2 rotate-45" />
                         <span className="leading-relaxed">{renderInline(item.text)}</span>
                       </div>
                       {item.subItems && item.subItems.length > 0 && (
-                        <ul className="pl-6 space-y-1 pt-1">
+                        <ul className="pl-6 space-y-1 pt-1 list-none">
                           {item.subItems.map((sub, subIdx) => (
-                            <li key={subIdx} className="flex items-start gap-2 text-xs sm:text-sm text-slate-600">
+                            <li key={subIdx} className="flex items-start gap-2 text-xs sm:text-sm text-slate-600 list-none">
                               <span className="w-1 h-1 bg-slate-400 shrink-0 mt-2 rounded-full" />
                               <span className="leading-relaxed">{renderInline(sub.text)}</span>
                             </li>
