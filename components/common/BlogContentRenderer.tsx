@@ -459,9 +459,9 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
 
           case 'ordered-list': {
             return (
-              <ol key={index} className="space-y-3.5 my-4 pl-1">
+              <ol key={index} className="list-none space-y-3.5 my-4 pl-1">
                 {node.items.map((item, itemIdx) => (
-                  <li key={itemIdx} className="space-y-2">
+                  <li key={itemIdx} className="space-y-2 list-none">
                     <div className="flex items-start gap-3 text-sm text-slate-800">
                       <span className="w-6 h-6 bg-slate-900 text-white text-xs font-bold font-mono flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         {item.num}
@@ -473,11 +473,11 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
 
                     {/* Nested Sub-Bullets */}
                     {item.subItems.length > 0 && (
-                      <ul className="ml-9 space-y-1.5 border-l-2 border-slate-200 pl-3">
+                      <ul className="list-none ml-9 space-y-1.5 border-l-2 border-slate-200 pl-3">
                         {item.subItems.map((sub, subIdx) => (
                           <li
                             key={subIdx}
-                            className="flex items-start gap-2 text-xs sm:text-sm text-slate-600"
+                            className="list-none flex items-start gap-2 text-xs sm:text-sm text-slate-600"
                           >
                             <span className="w-1.5 h-1.5 bg-emerald-600 shrink-0 mt-1.5 rotate-45" />
                             <span className="leading-relaxed">
@@ -495,9 +495,9 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
 
           case 'unordered-list': {
             return (
-              <ul key={index} className="space-y-2.5 my-4 pl-1">
+              <ul key={index} className="list-none space-y-2.5 my-4 pl-1">
                 {node.items.map((item, itemIdx) => (
-                  <li key={itemIdx} className="space-y-1.5">
+                  <li key={itemIdx} className="list-none space-y-1.5">
                     <div className="flex items-start gap-2.5 text-sm text-slate-800">
                       <span className="w-1.5 h-1.5 bg-emerald-600 shrink-0 mt-2 rotate-45" />
                       <div className="leading-relaxed">
@@ -507,11 +507,11 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
 
                     {/* Nested Sub-Bullets */}
                     {item.subItems.length > 0 && (
-                      <ul className="ml-6 space-y-1.5 border-l-2 border-slate-200 pl-3 mt-1">
+                      <ul className="list-none ml-6 space-y-1.5 border-l-2 border-slate-200 pl-3 mt-1">
                         {item.subItems.map((sub, subIdx) => (
                           <li
                             key={subIdx}
-                            className="flex items-start gap-2 text-xs sm:text-sm text-slate-600"
+                            className="list-none flex items-start gap-2 text-xs sm:text-sm text-slate-600"
                           >
                             <span className="w-1 h-1 bg-slate-400 shrink-0 mt-2" />
                             <span className="leading-relaxed">
