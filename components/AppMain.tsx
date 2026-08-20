@@ -309,7 +309,17 @@ export default function AppMain() {
         let storedFuls = await getAllFromStore<FulfillmentOrder>('fulfillmentOrders');
 
         if (active) {
-          setSettings(storedSettings[0]);
+          const loadedSetting = storedSettings[0];
+          try {
+            const storedLang = localStorage.getItem('inventory360_language');
+            if (storedLang && storedLang !== loadedSetting.language) {
+              loadedSetting.language = storedLang as SupportedLanguage;
+            } else if (loadedSetting.language) {
+              localStorage.setItem('inventory360_language', loadedSetting.language);
+            }
+          } catch {}
+
+          setSettings(loadedSetting);
           setLocations(storedLocations);
           setCategories(storedCategories || []);
           setSuppliers(storedSuppliers || []);
@@ -1082,6 +1092,12 @@ export default function AppMain() {
   const handleUpdateSettings = async (newSettings: BusinessSettings) => {
     await putToStore('settings', newSettings);
     setSettings(newSettings);
+    if (newSettings.language) {
+      try {
+        localStorage.setItem('inventory360_language', newSettings.language);
+        window.dispatchEvent(new Event('inventory360_lang_change'));
+      } catch {}
+    }
     broadcastSync();
   };
 

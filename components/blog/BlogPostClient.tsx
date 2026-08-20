@@ -27,20 +27,31 @@ export const BlogPostClient: React.FC<BlogPostClientProps> = ({ initialPost, slu
   const [language, setLanguage] = useState<SupportedLanguage>('en');
   const [copied, setCopied] = useState(false);
 
-  // Load language preference from localStorage
+  // Load language preference from localStorage & listen to global updates
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('inventory360_language') as SupportedLanguage;
-      if (stored) {
-        setLanguage(stored);
-      }
-    } catch {}
+    const syncLang = () => {
+      try {
+        const stored = localStorage.getItem('inventory360_language') as SupportedLanguage;
+        if (stored) {
+          setLanguage(stored);
+        }
+      } catch {}
+    };
+
+    syncLang();
+    window.addEventListener('storage', syncLang);
+    window.addEventListener('inventory360_lang_change', syncLang);
+    return () => {
+      window.removeEventListener('storage', syncLang);
+      window.removeEventListener('inventory360_lang_change', syncLang);
+    };
   }, []);
 
   const handleLanguageChange = (newLang: SupportedLanguage) => {
     setLanguage(newLang);
     try {
       localStorage.setItem('inventory360_language', newLang);
+      window.dispatchEvent(new Event('inventory360_lang_change'));
     } catch {}
   };
 

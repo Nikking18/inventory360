@@ -23,6 +23,8 @@ import {
   Check,
 } from 'lucide-react';
 import { BlogContentRenderer } from '../common/BlogContentRenderer';
+import { getLocalizedPost } from '../../lib/blogI18n';
+import { SupportedLanguage } from '../../lib/i18n';
 
 interface BlogViewProps {
   activeSubTab?: string;
@@ -35,15 +37,19 @@ export const BlogView: React.FC<BlogViewProps> = ({
   onSubTabChange,
   onNavigateToTab,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPostSlug, setSelectedPostSlug] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
 
+  const localizedAllPosts = useMemo(() => {
+    return BLOG_POSTS.map((p) => getLocalizedPost(p, (language || 'en') as SupportedLanguage));
+  }, [language]);
+
   const selectedPost = useMemo(() => {
     if (!selectedPostSlug) return null;
-    return BLOG_POSTS.find((p) => p.slug === selectedPostSlug) || null;
-  }, [selectedPostSlug]);
+    return localizedAllPosts.find((p) => p.slug === selectedPostSlug) || null;
+  }, [selectedPostSlug, localizedAllPosts]);
 
   const categories = [
     { id: 'all', label: 'All Articles' },
@@ -55,7 +61,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
   ];
 
   const filteredPosts = useMemo(() => {
-    return BLOG_POSTS.filter((post) => {
+    return localizedAllPosts.filter((post) => {
       // Category Filter
       if (activeSubTab && activeSubTab !== 'all') {
         const cat = categories.find((c) => c.id === activeSubTab);
@@ -78,7 +84,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
 
       return true;
     });
-  }, [activeSubTab, searchQuery]);
+  }, [activeSubTab, searchQuery, localizedAllPosts]);
 
   const handleShare = (slug: string) => {
     if (typeof window !== 'undefined') {
