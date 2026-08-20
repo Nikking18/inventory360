@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from '../../context/I18nContext';
 import { Product, Category, Supplier, Location, ProductVariant } from '../../lib/types';
 import { formatCurrency, round2 } from '../../lib/utils';
@@ -543,39 +543,51 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     setEditingTaxProduct(null);
   };
 
-  // Filtered dataset calculations
-  const filteredProducts = products.filter((p) => {
+  // Filtered dataset calculations memoized
+  const filteredProducts = useMemo(() => {
     const searchLower = search.trim().toLowerCase();
-    const matchesSearch =
-      !searchLower ||
-      (p.name || '').toLowerCase().includes(searchLower) ||
-      (p.sku || '').toLowerCase().includes(searchLower) ||
-      (p.barcode || '').toLowerCase().includes(searchLower) ||
-      (p.variants || []).some(
-        (v) =>
-          (v.sku && v.sku.toLowerCase().includes(searchLower)) ||
-          (v.name && v.name.toLowerCase().includes(searchLower)) ||
-          (v.barcode && v.barcode.toLowerCase().includes(searchLower))
+    if (!searchLower && selectedCategory === 'all') {
+      return products;
+    }
+    return products.filter((p) => {
+      const matchesCategory = selectedCategory === 'all' || p.categoryId === selectedCategory;
+      if (!matchesCategory) return false;
+      if (!searchLower) return true;
+
+      return (
+        (p.name || '').toLowerCase().includes(searchLower) ||
+        (p.sku || '').toLowerCase().includes(searchLower) ||
+        (p.barcode || '').toLowerCase().includes(searchLower) ||
+        (p.variants || []).some(
+          (v) =>
+            (v.sku && v.sku.toLowerCase().includes(searchLower)) ||
+            (v.name && v.name.toLowerCase().includes(searchLower)) ||
+            (v.barcode && v.barcode.toLowerCase().includes(searchLower))
+        )
       );
-    const matchesCategory = selectedCategory === 'all' || p.categoryId === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+    });
+  }, [products, search, selectedCategory]);
 
-  const filteredCategories = categories.filter((c) => {
+  const filteredCategories = useMemo(() => {
     const s = search.trim().toLowerCase();
-    return !s || c.name.toLowerCase().includes(s) || (c.description || '').toLowerCase().includes(s);
-  });
+    if (!s) return categories;
+    return categories.filter((c) => {
+      return c.name.toLowerCase().includes(s) || (c.description || '').toLowerCase().includes(s);
+    });
+  }, [categories, search]);
 
-  const filteredSuppliers = suppliers.filter((sup) => {
+  const filteredSuppliers = useMemo(() => {
     const s = search.trim().toLowerCase();
-    return (
-      !s ||
-      sup.name.toLowerCase().includes(s) ||
-      (sup.contactPerson || '').toLowerCase().includes(s) ||
-      (sup.email || '').toLowerCase().includes(s) ||
-      (sup.phone || '').toLowerCase().includes(s)
-    );
-  });
+    if (!s) return suppliers;
+    return suppliers.filter((sup) => {
+      return (
+        sup.name.toLowerCase().includes(s) ||
+        (sup.contactPerson || '').toLowerCase().includes(s) ||
+        (sup.email || '').toLowerCase().includes(s) ||
+        (sup.phone || '').toLowerCase().includes(s)
+      );
+    });
+  }, [suppliers, search]);
 
   // Bulk Product selection helpers
   const handleSelectAllProducts = () => {
