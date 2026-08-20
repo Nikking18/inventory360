@@ -58,6 +58,19 @@ export async function exportWorkspaceJSON(): Promise<string> {
   return JSON.stringify(payload, null, 2);
 }
 
+export async function downloadWorkspaceJSON(filename = 'inventory360_emergency_backup.json'): Promise<void> {
+  const json = await exportWorkspaceJSON();
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 export async function importWorkspaceJSON(jsonString: string): Promise<boolean> {
   try {
     const parsed = JSON.parse(jsonString);

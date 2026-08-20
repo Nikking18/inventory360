@@ -57,6 +57,7 @@ import { SetupView } from './views/SetupView';
 import { PrintReceipt } from './PrintReceipt';
 import { DataPolicyModal } from './common/DataPolicyModal';
 import { ProductTourModal } from './common/ProductTourModal';
+import { ErrorBoundary } from './common/ErrorBoundary';
 import { calculateStockStatus } from '../lib/utils';
 import { performAutoSave } from '../lib/autoSaveService';
 import {
@@ -1317,8 +1318,9 @@ export default function AppMain() {
 
             {/* View Container */}
             <div className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-              {activeTab === 'home' && (
-                <DashboardView
+              <ErrorBoundary fallbackTitle="Module Safeguard" onReset={loadAllData}>
+                {activeTab === 'home' && (
+                  <DashboardView
                   products={products}
                   sales={sales}
                   customers={customers}
@@ -1454,6 +1456,7 @@ export default function AppMain() {
                   onSubTabChange={setActiveSubTab}
                 />
               )}
+              </ErrorBoundary>
             </div>
           </main>
 
