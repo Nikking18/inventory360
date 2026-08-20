@@ -348,12 +348,12 @@ export const SellView: React.FC<SellViewProps> = ({
   };
 
   const handleTestPrint = () => {
-    const dummySale: Sale = {
-      id: 'test_print',
-      saleNumber: `TEST-${Date.now().toString().slice(-4)}`,
+    const previewSale: Sale = {
+      id: 'receipt_preview',
+      saleNumber: `REC-${Date.now().toString().slice(-4)}`,
       items: [
-        { productId: 'test_1', productName: 'Pro Wireless Mouse (Mac Edition)', sku: 'LOG-MX3S-MAC', unitPrice: 109.99, unitCost: 62.00, quantity: 1, total: 109.99 },
-        { productId: 'test_2', productName: 'Thermal Receipt Paper Roll 80mm', sku: 'THM-80MM-05', unitPrice: 4.50, unitCost: 1.20, quantity: 3, total: 13.50 },
+        { productId: 'prod_mx3s', productName: 'Pro Wireless Mouse (Mac Edition)', sku: 'LOG-MX3S-MAC', unitPrice: 109.99, unitCost: 62.00, quantity: 1, total: 109.99 },
+        { productId: 'prod_thm', productName: 'Thermal Receipt Paper Roll 80mm', sku: 'THM-80MM-05', unitPrice: 4.50, unitCost: 1.20, quantity: 3, total: 13.50 },
       ],
       subtotal: 123.49,
       tax: 10.50,
@@ -365,11 +365,11 @@ export const SellView: React.FC<SellViewProps> = ({
       status: 'Completed',
       locationId: currentLocation?.id || 'loc_1',
       locationName: currentLocation?.name || 'Main Flagship',
-      customerName: 'Sample VIP Buyer',
+      customerName: 'Commercial Buyer',
       channel: 'In-Store POS',
       createdAt: new Date().toISOString(),
     };
-    onPrintReceipt(dummySale, localFormat);
+    onPrintReceipt(previewSale, localFormat);
   };
 
   // SMART SEARCH & GRID ITEM GENERATION (Handles Parent Products AND Variant SKUs)

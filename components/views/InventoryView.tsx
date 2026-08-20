@@ -1895,7 +1895,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               <option value="Damaged Goods / Spillage">Damaged Goods / Spillage</option>
               <option value="Shrinkage / Loss">Shrinkage / Loss</option>
               <option value="Unaccounted Inbound Receipt">Unaccounted Inbound Receipt</option>
-              <option value="Promotional Sample / Giveaway">Promotional Sample / Giveaway</option>
+              <option value="Promotional Merchandise / Giveaway">Promotional Merchandise / Giveaway</option>
             </select>
           </div>
 
