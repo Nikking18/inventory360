@@ -1985,7 +1985,7 @@ The **Sell POS** module is built for rapid customer checkout throughput:
 
 #### Step-by-Step Checkout Workflow:
 1. **Adding Items to the Register**:
-   * **Hardware USB/Bluetooth Scanner**: Point and shoot your laser scanner at any product barcode; items appear in the register in under $15\\text{ ms}$.
+   * **Hardware USB/Bluetooth Scanner**: Point and shoot your laser scanner at any product barcode; items appear in the register in under **15ms**. (See our [Barcode Setup Guide](/blog/barcode-qr-code-inventory-setup-label-printing)).
    * **Integrated Camera Scanner**: Click **Camera Scanner** to use your device's built-in webcam or tablet camera to scan 1D Code 128 barcodes or 2D QR codes in real-time.
    * **Instant Text Search**: Type any product name, SKU code, or category in the top search bar.
 2. **Cart Modifications & Customer Assignment**:
@@ -1995,7 +1995,7 @@ The **Sell POS** module is built for rapid customer checkout throughput:
    * Select payment tender: **Cash**, **Credit/Debit Card**, **Digital Wallet (Apple Pay / UPI)**, or **Store Credit**.
    * When Cash is selected, enter the physical cash amount received; the terminal calculates the exact change due instantly.
 4. **Driverless Thermal Printing**:
-   * Click **Complete Sale & Print Receipt**. The system renders high-contrast typography formatted for **80mm Standard Thermal**, **58mm Mobile Bluetooth**, or **A4 Tax Invoices** without requiring third-party print drivers.
+   * Click **Complete Sale & Print Receipt**. The system renders high-contrast typography formatted for **80mm Standard Thermal**, **58mm Mobile Bluetooth**, or **A4 Tax Invoices** without requiring third-party print drivers. (See our [Thermal Printing Handbook](/blog/thermal-receipt-printing-escpos-bluetooth-guide)).
 
 ---
 
@@ -2013,13 +2013,13 @@ Navigate to **Catalog** on the primary navigation menu:
 
 ### 5. Multi-Location Stock Control: Cycle Adjustments & 3-State In-Transit Transfers
 
-The **Inventory** hub gives retail managers unified control across multiple store branches and distribution warehouses:
+The **Inventory** hub gives retail managers unified control across multiple store branches and distribution warehouses (Detailed in [Multi-Location Routing](/blog/multi-location-inventory-transfers-warehouse-routing)):
 
 #### 1. Real-Time Valuation Audits:
 * View total stock quantities, cost valuation (COGS), and projected retail sales valuation categorized by store location.
 
 #### 2. Physical Cycle Count Adjustments:
-* Reconciling physical shelf counts against ledger records? Click **Adjust Stock**, choose between a **Delta adjustment** ($+10$ or $-3$) or an **Exact Count Override** ($150\\text{ units}$), and select an audit reason code (*Physical Stocktake Reconciliation, Damaged Goods, Breakage, Internal Use*).
+* Reconciling physical shelf counts against ledger records? Click **Adjust Stock**, choose between a **Delta adjustment** (+10 or -3) or an **Exact Count Override** (**150 units**), and select an audit reason code (*Physical Stocktake Reconciliation, Damaged Goods, Breakage, Internal Use*).
 
 #### 3. 3-State Inter-Branch Transfers:
 * Click **Transfer Stock** to route merchandise between outlets.
@@ -2029,7 +2029,7 @@ The **Inventory** hub gives retail managers unified control across multiple stor
 
 ### 6. Autonomous Procurement: Low Stock Triggers, Auto-POs & Receiving Workflows
 
-Eliminate manual purchase order creation and stockouts:
+Eliminate manual purchase order creation and stockouts (Read our [Auto-PO Mathematical Guide](/blog/automated-purchase-orders-reorder-point-formulas)):
 
 1. **Automated Low-Stock Thresholds**: As items are rung up at POS registers, the system continuously audits on-hand balances against dynamic Reorder Points (ROP).
 2. **1-Click Purchase Order Generation**: In **Inventory > Low Stock Alerts**, click **Generate Purchase Orders**. The procurement engine automatically groups all low-stock items by preferred vendor.
@@ -2040,7 +2040,7 @@ Eliminate manual purchase order creation and stockouts:
 
 ### 7. Lot, Batch & Expiry Date Management: FEFO Picking & Instant Recall Quarantines
 
-For businesses selling perishable foods, beverages, dietary supplements, and cosmetics:
+For businesses selling perishable foods, beverages, dietary supplements, and cosmetics (Read our [FEFO & Lot Tracking Guide](/blog/batch-lot-expiry-date-tracking-guide)):
 
 * **Assign Batch & Expiration Metadata**: Attach Lot/Batch identifiers and expiration dates during receiving intake.
 * **Automated Expiry Warnings**: The system color-codes inventory batches nearing expiration:
@@ -2052,7 +2052,7 @@ For businesses selling perishable foods, beverages, dietary supplements, and cos
 
 ### 8. Omnichannel Fulfillment: Multi-Platform Orders & Consolidated Warehouse Pick Lists
 
-The **Channels & Orders** suite consolidates multi-channel commerce into a single operational pipeline:
+The **Channels & Orders** suite consolidates multi-channel commerce into a single operational pipeline (See [Omnichannel Fulfillment Architecture](/blog/omnichannel-retail-inventory-sync-shopify-amazon)):
 
 1. **Omnichannel Order Aggregation**: Monitor open customer orders across your physical counter POS, Shopify storefront, Amazon marketplace, and WooCommerce store.
 2. **Consolidated Warehouse Batch Pick Lists**: Click **Generate Pick List** to aggregate 20, 50, or 100 open orders into a single consolidated warehouse picking manifest sorted by aisle and SKU, eliminating wasted warehouse footsteps.
@@ -2062,10 +2062,10 @@ The **Channels & Orders** suite consolidates multi-channel commerce into a singl
 
 ### 9. Advanced Analytics, Tax Reports & 11-Language Document Exports
 
-The **Reporting** suite provides deep executive visibility into your business health:
+The **Reporting** suite provides deep executive visibility into your business health (See [Inventory Turnover & Stock Velocity](/blog/inventory-turnover-ratio-stock-velocity-guide) and [ABC Dead Stock Liquidation](/blog/abc-inventory-classification-dead-stock-liquidation)):
 
 * **Executive Financial Dashboard**: Track Gross Revenue, Cost of Goods Sold (COGS), Gross Profit Margins, and Average Order Value (AOV).
-* **Inventory Velocity & Turnover**: Monitor Daily Sales Velocity ($\text{DSV}$) and Days of Inventory Remaining ($\text{DIR}$) to pinpoint stagnant capital.
+* **Inventory Velocity & Turnover**: Monitor Daily Sales Velocity (**DSV**) and Days of Inventory Remaining (**DIR**) to pinpoint stagnant capital.
 * **Tax Liability Reports**: Audit taxable subtotal vs. sales tax collected for effortless quarterly sales tax filings.
 * **11-Language Translated PDF/Excel Exports**: Export official invoices, pick lists, and valuation ledgers translated natively into **English, Spanish, French, German, Hindi, Japanese, Chinese, Arabic, Portuguese, Italian, and Russian**.
 
@@ -2073,7 +2073,7 @@ The **Reporting** suite provides deep executive visibility into your business he
 
 ### 10. Offline Data Sovereignty: W3C File System Auto-Saves & 60-Second Disaster Recovery
 
-Protect your commercial records from ransomware, hardware burnout, and cloud downtime:
+Protect your commercial records from ransomware, hardware burnout, and cloud downtime (Read our [Data Sovereignty Guide](/blog/offline-data-sovereignty-automated-local-backups)):
 
 1. **W3C File System Background Auto-Save**: In **Settings > Data & Backup**, click **Select Backup Folder** and select any local folder on your computer, external SSD, or network-attached storage (NAS). The system silently writes complete timestamped JSON database backups at your selected interval (1h, 6h, 12h, 24h).
 2. **Manual Encrypted JSON Snapshots**: Click **Export Full JSON Snapshot** anytime to create an air-gapped backup file before major inventory adjustments.
