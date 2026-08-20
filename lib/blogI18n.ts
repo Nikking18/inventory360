@@ -1957,6 +1957,500 @@ export const BLOG_POST_TRANSLATIONS: Record<string, Partial<Record<SupportedLang
     "content": "\n### 1. Проблема Оверселлинга и Санкции Маркетплейсов\n\nПри одновременной продаже товаров в розничной точке и на маркетплейсах рассинхронизация остатков приводит к двойным продажам (оверселлингу):\n* Amazon накладывает жесткие санкции, если процент отмен превышает **2.5%**, вплоть до блокировки аккаунта.\n\n---\n\n### 2. Расчет Доступного для Продажи Остатка (ATP)\n\n$$\\text{ATP} = \\text{Физический Остаток} - \\text{Резервы под Заказы} - \\text{Брак/Карантин} - \\text{Буфер Безопасности}$$\n\nПри наличии 42 штук товара на складе (8 в резерве, 2 на проверке, 3 в буфере Amazon):\n$$\\text{ATP}_{\\text{Amazon}} = 42 - 8 - 2 - 3 = 29\\text{ Штук}$$\n\n---\n\n### 3. 5-Этапный Конвейер Складского Фулфилмента\n\n1. **В Ожидании (Pending)**: Мгновенная блокировка ATP при поступлении онлайн-заказа.\n2. **Сборка (Picking)**: Волновой лист подбора товаров по складским ячейкам.\n3. **Упаковка (Packed)**: 100% сканирование штрихкодов перед запечатыванием коробки.\n4. **Отправка (Shipped)**: Присвоение трек-номера службы доставки (СДЭК, Почта, DHL).\n5. **Доставлено (Delivered)**: Окончательное списание и закрытие заказа.\n\n---\n\n### 4. Работа в Inventory 360\n\n* Единый мониторинг в разделе **Каналы и Заказы**.\n* Формирование бланка сборки заказов (Pick List PDF) в 1 клик.\n* Экспорт отчетов по фулфилменту на 11 языках в CSV, Excel и PDF.\n"
   }
 },
+  'batch-lot-expiry-date-tracking-guide': {
+  "es": {
+    "title": "Trazabilidad de Lotes y Caducidades: Buenas Prácticas para Alimentación, Bebidas y Cosmética",
+    "excerpt": "Domina la trazabilidad por lotes, algoritmos de rotación FIFO vs FEFO, normativas internacionales (FDA FSMA 204, UE MDR, GMP) y protocolos de retirada de producto en 5 minutos sin destruir stock sano.",
+    "category": "Operaciones y Normativa",
+    "keywords": [
+      "software trazabilidad lotes",
+      "protocolo retirada de producto lote",
+      "método rotación FIFO vs FEFO",
+      "alertas fecha de caducidad TPV",
+      "cumplimiento FDA FSMA 204 retail",
+      "trazabilidad alimentación cosmética",
+      "código de barras GS1 128 lotes",
+      "reducción mermas por caducidad",
+      "gestión de stock en cuarentena"
+    ],
+    "tableOfContents": [
+      {
+        "id": "financial-regulatory-stakes",
+        "title": "1. El Coste Regulatorio y Financiero de las Mermas por Caducidad"
+      },
+      {
+        "id": "fifo-vs-fefo-mechanics",
+        "title": "2. FIFO vs. FEFO: Mecánica Matemática de Rotación de Stock"
+      },
+      {
+        "id": "regulatory-compliance-standards",
+        "title": "3. Marcos Regulatorios: FDA FSMA 204, Reglamento UE y GMP"
+      },
+      {
+        "id": "surgical-recall-protocol",
+        "title": "4. Protocolo Quirúrgico de Retirada de Lote en 5 Minutos"
+      },
+      {
+        "id": "expiry-alert-thresholds",
+        "title": "5. Embudo Dinámico de Alertas de Caducidad a 30/60/90 Días"
+      },
+      {
+        "id": "gs1-128-datamatrix-encoding",
+        "title": "6. Codificación GS1-128 y DataMatrix 2D: Identificadores AI de Lote"
+      },
+      {
+        "id": "spoilage-accounting-formulas",
+        "title": "7. Contabilidad de Mermas: Cálculo del Impacto Financiero Real"
+      },
+      {
+        "id": "inventory-360-lot-setup",
+        "title": "8. Ejecución de Lotes y Caducidades en Inventory 360"
+      }
+    ],
+    "content": "\n### 1. El Coste Regulatorio y Financiero de las Mermas por Caducidad\n\nEn los sectores de alimentación, bebidas especiales, cosmética natural, suplementos dietéticos y farmacia, el recuento genérico de unidades es un riesgo crítico.\n\nA diferencia del comercio no perecedero, un artículo caducado no es solo capital inmovilizado, sino una pérdida directa que destruye el margen comercial:\n\n```\n[ Recepción de Mercancía ] ➔ [ Desempaquetado de Lote ] ➔ [ Exposición en Estantería ]\n                                                               │\n                       ┌───────────────────────────────────────┴───────────────────────────────────────┐\n                       ▼                                                                               ▼\n           [ Vendido Antes de Fecha ]                                                        [ Caducado en Estantería ]\n                       │                                                                               │\n          🟢 Margen Bruto 100% Cobrado                                                   🔴 Pérdida Total del Coste (COGS)\n                                                                                         🔴 Tasa de Gestión de Residuos\n                                                                                         🔴 Sanción por Infracción Sanitaria\n```\n\nLa Organización de las Naciones Unidas para la Alimentación y la Agricultura (FAO) estima que el comercio minorista pierde entre un **1.8% y un 4.2% de su facturación anual** exclusivamente por productos caducados.\n\n---\n\n### 2. FIFO vs. FEFO: Mecánica Matemática de Rotación de Stock\n\n1. **FIFO (First-In, First-Out)**: Los primeros artículos en entrar al almacén son los primeros en venderse. Se basa únicamente en el **Momento de Entrada ($T_{\\text{llegada}}$)**.\n2. **FEFO (First-Expired, First-Out)**: Los artículos con la fecha de caducidad más cercana se priorizan para el cobro en caja, sin importar cuándo llegaron. Se basa en el **Tiempo hasta Caducidad ($T_{\\text{caducidad}}$)**.\n\n#### Comparativa Operativa FIFO vs. FEFO:\n\n| Característica / Métrica | FIFO (Primero en Entrar, Primero en Salir) | FEFO (Primero en Caducar, Primero en Salir) |\n| :--- | :--- | :--- |\n| **Criterio de Prioridad** | Fecha y hora de recepción del pedido | Fecha de caducidad o consumo preferente |\n| **Sector Recomendado** | Electrónica, Moda, Bricolaje, Secos | Lácteos, Frescos, Cosmética, Vacunas, Cerveza |\n| **Protección ante Inconsistencias** | 🔴 Baja (Nuevos lotes con fecha corta se pierden) | 🟢 Alta (Se despacha primero lo que antes caduca) |\n| **Tipo de Código de Barras** | UPC / EAN-13 estándar | GS1-128 / DataMatrix 2D con etiquetas AI |\n| **Reducción Media de Mermas** | Nivel de referencia estándar | **Reducción del desperdicio entre un 42% y 68%** |\n\n---\n\n### 3. Marcos Regulatorios: FDA FSMA 204, Reglamento UE y GMP\n\n1. **FDA FSMA 204 (EE.UU.)**: Obliga a registrar Eventos Críticos de Seguimiento (CTE) y Elementos de Datos Clave (KDE) durante al menos 24 meses.\n2. **Reglamento de Cosméticos de la UE (CE 1223/2009)**: Exige la trazabilidad de lotes y el control del Periodo Posterior a la Apertura (PAO).\n3. **Buenas Prácticas de Fabricación (GMP)**: Garantizan la trazabilidad genealógica del lote hacia adelante y hacia atrás.\n\n---\n\n### 4. Protocolo Quirúrgico de Retirada de Lote en 5 Minutos\n\n```\n[ Fase 1: NOTIFICACIÓN DEL PROVEEDOR ]\n   │  ➔ Alerta de lote contaminado: SKU #ALM-100, Lote #LOT-9921\n   ▼\n[ Fase 2: CONSULTA EN EL LIBRO MAYOR (< 30 Segundos) ]\n   │  ➔ Búsqueda en el motor IndexedDB local: 14 uds en Almacén | 6 uds en Pasillo 2.\n   ▼\n[ Fase 3: BLOQUEO DEL SISTEMA EN 1 CLIC (< 15 Segundos) ]\n   │  ➔ Estado cambiado a \"CUARENTENA_RETIRADO\".\n   │  ➔ El TPV rechaza automáticamente el escaneo de ese lote.\n   ▼\n[ Fase 4: AUDITORÍA DE CLIENTES AFECTADOS (< 2 Minutos) ]\n   │  ➔ Filtro de ventas: 18 uds compradas por 12 clientes identificados.\n   │  ➔ Exportación inmediata de contactos para aviso preventivo de seguridad.\n```\n\n---\n\n### 5. Embudo Dinámico de Alertas de Caducidad a 30/60/90 Días\n\n```\n[ A 90 Días de Caducar ] ➔ 🟢 Monitorización de velocidad. Precio normal.\n[ A 60 Días de Caducar ] ➔ 🟡 Alerta Amarilla. Mover producto al frontal de estantería.\n[ A 30 Días de Caducar ] ➔ 🟠 Descuento automático del 25% o pack promocional.\n[ A 10 Días de Caducar ] ➔ 🔴 Liquidación al 50% o donación a banco de alimentos.\n[ 0 Días (Caducado) ]    ➔ ⛔ Bloqueo en TPV: Prohibida su venta en caja.\n```\n\n---\n\n### 6. Codificación GS1-128 y DataMatrix 2D: Identificadores AI de Lote\n\n| Identificador de Aplicación (AI) | Dato Codificado | Ejemplo de Cadena | Interpretación |\n| :--- | :--- | :--- | :--- |\n| **(01)** | Código GTIN de Producto | `00850012345678` | Identificador SKU |\n| **(10)** | Número de Lote / Batch | `LOT-9921` | Serie de Producción |\n| **(17)** | Fecha de Caducidad (`AAMMDD`) | `261130` | Caduca el 30 Nov 2026 |\n| **(21)** | Número de Serie Unitario | `SN-883492` | ID Individual Único |\n\n---\n\n### 7. Contabilidad de Mermas: Cálculo del Impacto Financiero Real\n\n$$\\text{Tasa de Pérdida por Caducidad (\\%)} = \\left( \\frac{\\text{Coste Total de Unidades Caducadas}}{\\text{Coste Total de Mercancías Perecederas (COGS)}} \\right) \\times 100$$\n\n---\n\n### 8. Ejecución de Lotes y Caducidades en Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) incluye control de lotes integrado en local:\n1. **Asignación de Lote al Recibir**: Introduzca el número de lote y fecha de vencimiento al registrar las compras para activar la cola FEFO.\n2. **Alertas Visuales de Vencimiento**: Los paneles destacan automáticamente los lotes a 30, 60 y 90 días.\n3. **Bloqueo Quirúrgico de Lotes**: Ponga en cuarentena un lote específico mientras el resto de existencias del producto sigue vendiéndose con normalidad.\n4. **Informes de Auditoría Multilingües**: Exporte historiales completos en CSV, Excel o PDF en 11 idiomas con total privacidad.\n"
+  },
+  "fr": {
+    "title": "Traçabilité des Lots et Dates de Péremption : Guide Pratique pour l'Alimentaire et la Cosmétique",
+    "excerpt": "Maîtrisez la traçabilité par lot, les algorithmes de rotation FIFO vs FEFO, la conformité réglementaire (FDA FSMA 204, normes UE) et le rappel ciblé de produits en moins de 5 minutes.",
+    "category": "Opérations & Conformité",
+    "keywords": [
+      "traçabilité des lots logiciel",
+      "procédure rappel de lot",
+      "rotation des stocks FIFO FEFO",
+      "alerte date limite consommation DLC",
+      "traçabilité alimentaire cosmétique",
+      "code barre GS1 128 lot",
+      "réduction démarque casse péremption"
+    ],
+    "tableOfContents": [
+      {
+        "id": "financial-regulatory-stakes",
+        "title": "1. Le Coût Financier et Réglementaire des Pertes de Périssables"
+      },
+      {
+        "id": "fifo-vs-fefo-mechanics",
+        "title": "2. FIFO vs. FEFO : Mécanique Mathématique de Rotation des Stocks"
+      },
+      {
+        "id": "regulatory-compliance-standards",
+        "title": "3. Normes Réglementaires : FDA FSMA 204, UE et BPF"
+      },
+      {
+        "id": "surgical-recall-protocol",
+        "title": "4. Procédure de Rappel Ciblé de Lot en Moins de 5 Minutes"
+      },
+      {
+        "id": "expiry-alert-thresholds",
+        "title": "5. Pipeline Dynamique d'Alertes de Péremption à 30/60/90 Jours"
+      },
+      {
+        "id": "gs1-128-datamatrix-encoding",
+        "title": "6. Encodage GS1-128 et DataMatrix 2D"
+      },
+      {
+        "id": "spoilage-accounting-formulas",
+        "title": "7. Comptabilité des Pertes : Mesure du Coût Réel"
+      },
+      {
+        "id": "inventory-360-lot-setup",
+        "title": "8. Gestion des Lots dans Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Le Coût Financier et Réglementaire des Pertes de Périssables\n\nDans l'agroalimentaire, les cosmétiques et la pharmacie, la gestion générique des stocks est une source majeure de pertes. La FAO estime que les détaillants perdent entre **1,8% et 4,2% de leur chiffre d'affaires annuel** en produits périmés.\n\n---\n\n### 2. FIFO vs. FEFO : Mécanique Mathématique de Rotation des Stocks\n\n* **FIFO (First-In, First-Out)** : Sortie selon l'ordre d'arrivée en entrepôt.\n* **FEFO (First-Expired, First-Out)** : Sortie prioritaire des articles dont la Date Limite de Consommation (DLC) est la plus proche, permettant de **réduire le gaspillage de 42% à 68%**.\n\n---\n\n### 3. Procédure de Rappel Ciblé de Lot en Moins de 5 Minutes\n\n1. **Identification Immédiate** du numéro de lot concerné.\n2. **Recherche Instantanée** dans le grand livre local (< 30 secondes).\n3. **Mise en Quarantaine en 1 Clic** bloquant la vente en caisse.\n4. **Extraction des Coordonnées Clients** ayant acheté ce lot pour rappel sanitaire.\n\n---\n\n### 4. Pipeline Dynamique d'Alertes de Péremption\n\n* **90 Jours** : Surveillance normale des ventes.\n* **60 Jours** : Mise en avant en tête de gondole.\n* **30 Jours** : Démarque promotionnelle de -25%.\n* **10 Jours** : Déstockage flash (-50%) ou don alimentaire.\n* **0 Jour (Périmé)** : Blocage absolu au passage en caisse.\n\n---\n\n### 5. Gestion des Lots dans Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) intègre nativement la gestion des lots :\n* Saisie du numéro de lot et de la DLC à la réception.\n* Alertes visuelles automatiques sur les dates critiques.\n* Rapports d'audit conformes exportables en 11 langues en CSV, Excel et PDF.\n"
+  },
+  "de": {
+    "title": "Chargen- & Mindesthaltbarkeits-Tracking: Best Practices für Lebensmittel, Getränke & Kosmetik",
+    "excerpt": "Beherrschen Sie Chargenrückverfolgung, FIFO vs. FEFO-Rotationsalgorithmen, behördliche Compliance (FDA FSMA 204, EU-Kosmetikverordnung, GMP) und gezielte Produktrückrufe in unter 5 Minuten.",
+    "category": "Betrieb & Compliance",
+    "keywords": [
+      "Chargenrückverfolgung Software",
+      "Chargenrückruf Ablauf",
+      "FIFO vs FEFO Methode",
+      "MHD Ablaufwarnung Kasse",
+      "Lebensmittel Kosmetik Chargenverwaltung",
+      "GS1 128 Barcode Charge MHD",
+      "Verderb Reduzierung Einzelhandel"
+    ],
+    "tableOfContents": [
+      {
+        "id": "financial-regulatory-stakes",
+        "title": "1. Finanzielle und regulatorische Risiken von Verderb"
+      },
+      {
+        "id": "fifo-vs-fefo-mechanics",
+        "title": "2. FIFO vs. FEFO: Mathematische Bestandsrotation"
+      },
+      {
+        "id": "regulatory-compliance-standards",
+        "title": "3. Regulatorische Rahmenbedingungen: FDA, EU & GMP"
+      },
+      {
+        "id": "surgical-recall-protocol",
+        "title": "4. Der 5-Minuten-Präzisionsrückruf-Standard"
+      },
+      {
+        "id": "expiry-alert-thresholds",
+        "title": "5. Dynamische 30/60/90-Tage MHD-Warnstufen"
+      },
+      {
+        "id": "gs1-128-datamatrix-encoding",
+        "title": "6. GS1-128 & 2D-DataMatrix Barcode-Codierung"
+      },
+      {
+        "id": "spoilage-accounting-formulas",
+        "title": "7. Abschreibungsrechnung: Echte Verderbkosten ermitteln"
+      },
+      {
+        "id": "inventory-360-lot-setup",
+        "title": "8. Chargen- und MHD-Verwaltung in Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Finanzielle und regulatorische Risiken von Verderb\n\nIm Handel mit Lebensmitteln, Nahrungsergänzungsmitteln und Kosmetika führt fehlende Chargenverwaltung zu hohen Verlusten. Händler verlieren laut FAO jährlich **1,8% bis 4,2% des Bruttoumsatzes** durch abgelaufene Waren.\n\n---\n\n### 2. FIFO vs. FEFO: Mathematische Bestandsrotation\n\n* **FIFO (First-In, First-Out)**: Älteste Ware nach Wareneingangsdatum wird zuerst verkauft.\n* **FEFO (First-Expired, First-Out)**: Ware mit kürzestem Mindesthaltbarkeitsdatum (MHD) wird priorisiert. Senkt Verderbverluste um **42% bis 68%**.\n\n---\n\n### 3. Der 5-Minuten-Präzisionsrückruf-Standard\n\n1. **Chargen-Nummer** im System lokalisieren (< 30 Sekunden).\n2. **1-Klick-Sperrung**: Kassen scannen betroffene Chargen automatisch abweisend.\n3. **Kundenhistorie filtern**: Betroffene Käufer für Rückrufwarnungen exportieren.\n\n---\n\n### 4. Dynamische MHD-Warnstufen (30/60/90 Tage)\n\n* **90 Tage**: Regulärer Verkauf.\n* **60 Tage**: Platzierung im Regal vorne.\n* **30 Tage**: Rabattierung (-25%) zur beschleunigten Abverkäuflichkeit.\n* **10 Tage**: Abverkauf (-50%) oder Abgabe an Tafeln.\n* **0 Tage (Abgelaufen)**: Automatische Kassensperre.\n\n---\n\n### 5. Chargen- und MHD-Verwaltung in Inventory 360\n\n* Erfassung von Chargennummer und Verfallsdatum beim Wareneingang.\n* Automatische FEFO-Warteschlange und Warnmeldungen.\n* Revisionssichere Prüfberichte in 11 Sprachen als CSV, Excel und PDF.\n"
+  },
+  "hi": {
+    "title": "बैच, लॉट और समाप्ति तिथि ट्रैकिंग: खाद्य, पेय और सौंदर्य प्रसाधन रिटेलर्स के लिए संपूर्ण गाइड",
+    "excerpt": "लॉट-स्तरीय ट्रेसेबिलिटी, FIFO बनाम FEFO स्टॉक रोटेशन नियम, नियामक अनुपालन और स्वस्थ स्टॉक को नुकसान पहुंचाए बिना 5 मिनट में सर्जिकल रिकॉल करने की कार्यप्रणाली।",
+    "category": "परिचालन और अनुपालन",
+    "keywords": [
+      "लॉट ट्रैकिंग सॉफ्टवेयर",
+      "बैच नंबर रिकॉल प्रक्रिया",
+      "FIFO बनाम FEFO विधि",
+      "एक्सपायरी डेट अलर्ट पीओएस",
+      "खाद्य एवं सौंदर्य प्रसाधन ट्रेसेबिलिटी",
+      "GS1 128 बारकोड लॉट",
+      "खराब माल कम करने के उपाय"
+    ],
+    "tableOfContents": [
+      {
+        "id": "financial-regulatory-stakes",
+        "title": "1. खराब होने वाले सामान की वित्तीय और कानूनी लागत"
+      },
+      {
+        "id": "fifo-vs-fefo-mechanics",
+        "title": "2. FIFO बनाम FEFO: स्टॉक रोटेशन की गणितीय प्रणाली"
+      },
+      {
+        "id": "regulatory-compliance-standards",
+        "title": "3. नियामक मानक: FDA, FSSAI और GMP"
+      },
+      {
+        "id": "surgical-recall-protocol",
+        "title": "4. 5 मिनट में सर्जिकल बैच रिकॉल प्रक्रिया"
+      },
+      {
+        "id": "expiry-alert-thresholds",
+        "title": "5. 30/60/90 दिन का डायनामिक एक्सपायरी अलर्ट सिस्टम"
+      },
+      {
+        "id": "gs1-128-datamatrix-encoding",
+        "title": "6. GS1-128 और 2D बारकोड एनकोडिंग"
+      },
+      {
+        "id": "spoilage-accounting-formulas",
+        "title": "7. खराब माल की लागत का वास्तविक वित्तीय हिसाब"
+      },
+      {
+        "id": "inventory-360-lot-setup",
+        "title": "8. Inventory 360 में बैच और एक्सपायरी प्रबंधन"
+      }
+    ],
+    "content": "\n### 1. खराब होने वाले सामान की वित्तीय और कानूनी लागत\n\nकिराना, डेयरी, सौंदर्य प्रसाधन और दवाओं के व्यापार में एक्सपायरी तारीख का ध्यान न रखने पर भारी नुकसान होता है। वैश्विक आंकड़ों के अनुसार रिटेल स्टोर हर साल अपनी कुल बिक्री का **1.8% से 4.2%** खराब माल के कारण गंवा देते हैं।\n\n---\n\n### 2. FIFO बनाम FEFO स्टॉक रोटेशन\n\n* **FIFO (First-In, First-Out)**: जो माल पहले आया, वह पहले बिकेगा।\n* **FEFO (First-Expired, First-Out)**: जिसकी समाप्ति तिथि (Expiry Date) सबसे पहले है, वह पहले बिकेगा। इससे नुकसान **42% से 68% तक कम** हो जाता है।\n\n---\n\n### 3. 5 मिनट में सर्जिकल बैच रिकॉल\n\n1. खराब बैच की पहचान और 30 सेकंड में सिस्टम में लोकेशन का पता लगाना।\n2. 1-क्लिक में क्वारंटाइन लॉक ताकि बिलिंग काउंटर पर वह माल स्कैन ही न हो सके।\n3. उस बैच को खरीदने वाले ग्राहकों की सूची तुरंत निकाल कर सुरक्षा संदेश भेजना।\n\n---\n\n### 4. 30/60/90 दिन का एक्सपायरी अलर्ट\n\n* **90 दिन शेष**: सामान्य बिक्री दर।\n* **60 दिन शेष**: उत्पाद को दुकान के मुख्य रैक पर आगे रखना।\n* **30 दिन शेष**: 25% का विशेष डिस्काउंट ऑफर।\n* **10 दिन शेष**: 50% क्लीयरेंस सेल।\n* **0 दिन (समाप्त)**: बिलिंग काउंटर पर पूर्ण प्रतिबंध।\n\n---\n\n### 5. Inventory 360 में बैच प्रबंधन\n\n* सामान की आवक पर लॉट नंबर और एक्सपायरी तिथि दर्ज करना।\n* रंग-बिरंगे अलर्ट बैज द्वारा निकट आ रही एक्सपायरी की चेतावनी।\n* 11 भाषाओं में विस्तृत ऑडिट रिपोर्ट CSV, Excel और PDF में डाउनलोड।\n"
+  },
+  "ja": {
+    "title": "ロット管理・賞味期限トラッキング：食品・飲料・コスメ小売業のための実践ガイド",
+    "excerpt": "ロット追跡、FIFO（先入れ先出し）vs FEFO（賞味期限先出し）数理アルゴリズム、規制コンプライアンス（食品衛生法・GMP）、健全在庫を守る5分間リコール手順を網羅。",
+    "category": "業務運用＆コンプライアンス",
+    "keywords": [
+      "ロット管理 システム",
+      "リコール 手順",
+      "FIFO FEFO 先入れ先出し 違い",
+      "賞味期限アラート POS",
+      "食品 化粧品 在庫追跡",
+      "GS1 128 バーコード ロット",
+      "廃棄ロス 削減"
+    ],
+    "tableOfContents": [
+      {
+        "id": "financial-regulatory-stakes",
+        "title": "1. 廃棄ロスと規制遵守がもたらす財務的インパクト"
+      },
+      {
+        "id": "fifo-vs-fefo-mechanics",
+        "title": "2. FIFO vs. FEFO：在庫回転アルゴリズムの比較"
+      },
+      {
+        "id": "regulatory-compliance-standards",
+        "title": "3. 主要規制フレームワーク：食品衛生法・薬機法・GMP"
+      },
+      {
+        "id": "surgical-recall-protocol",
+        "title": "4. 5分間で完了する対象ロット限定リコール手順"
+      },
+      {
+        "id": "expiry-alert-thresholds",
+        "title": "5. 30/60/90日段階的賞味期限アラートパイプライン"
+      },
+      {
+        "id": "gs1-128-datamatrix-encoding",
+        "title": "6. GS1-128＆2次元データマトリックスの活用"
+      },
+      {
+        "id": "spoilage-accounting-formulas",
+        "title": "7. 廃棄損の真実の保有コスト計算式"
+      },
+      {
+        "id": "inventory-360-lot-setup",
+        "title": "8. Inventory 360でのロット＆期限管理運用"
+      }
+    ],
+    "content": "\n### 1. 廃棄ロスと規制遵守がもたらす財務的インパクト\n\n食品スーパー、オーガニックコスメ、サプリメント、医薬品分野において、単なる数量管理は重大なリスクを招きます。小売店は賞味期限切れ廃棄により**年間売上の1.8%〜4.2%**を喪失しています。\n\n---\n\n### 2. FIFO vs. FEFO：在庫回転アルゴリズム\n\n* **FIFO（先入れ先出し）**：入荷日時が古い順に出荷。\n* **FEFO（期限先出し）**：賞味期限が近い順に出荷。廃棄ロスを**42%〜68%大幅削減**。\n\n---\n\n### 3. 5分間で完了する対象ロット限定リコール手順\n\n1. 汚染・回収ロットの即時検索（30秒以内）。\n2. ワンクリックでの「回収隔離」設定（POSレジでのスキャンを自動拒否）。\n3. 過去の購入顧客リストを1クリック抽出して緊急連絡。\n\n---\n\n### 4. 30/60/90日段階的賞味期限アラート\n\n* **90日前**：通常販売と動向監視。\n* **60日前**：店舗手前棚へのフェイシング変更。\n* **30日前**：25%引きセール・バンドル販売。\n* **10日前**：50%引き売り切り処分。\n* **期限切れ（0日）**：POSレジでの会計を絶対禁止。\n\n---\n\n### 5. Inventory 360でのロット運用\n\n* 入庫時のロット番号・消費期限登録。\n* 危険期限に近づいたロットの自動警告。\n* 11言語対応の監査レポート出力（CSV/Excel/PDF）。\n"
+  },
+  "zh": {
+    "title": "批次号与保质期管理全景实战：食品生鲜、美妆与医药零售的先进追溯规范",
+    "excerpt": "深度解析批次级可追溯性构建、FIFO（先进先出）与 FEFO（先到期先出）数理轮换模型、法规合规标准及5分钟精准批次召回标准作业程序（SOP）。",
+    "category": "运营管理与法规合规",
+    "keywords": [
+      "批次追踪库存系统",
+      "产品批次召回SOP",
+      "FIFO与FEFO对比",
+      "保质期到期预警POS",
+      "食品美妆追溯法规",
+      "GS1 128条形码批次",
+      "降低生鲜临期损耗"
+    ],
+    "tableOfContents": [
+      {
+        "id": "financial-regulatory-stakes",
+        "title": "1. 易腐损耗与法规违规的双重财务代价"
+      },
+      {
+        "id": "fifo-vs-fefo-mechanics",
+        "title": "2. FIFO vs. FEFO：库存轮换算法的数理机制"
+      },
+      {
+        "id": "regulatory-compliance-standards",
+        "title": "3. 核心监管框架：食品安全法与GMP规范"
+      },
+      {
+        "id": "surgical-recall-protocol",
+        "title": "4. 5分钟精准批次召回标准作业程序（SOP）"
+      },
+      {
+        "id": "expiry-alert-thresholds",
+        "title": "5. 30/60/90天动态阶梯式临期预警流水线"
+      },
+      {
+        "id": "gs1-128-datamatrix-encoding",
+        "title": "6. GS1-128与二维DataMatrix的AI标识符编码"
+      },
+      {
+        "id": "spoilage-accounting-formulas",
+        "title": "7. 损耗会计：量化真实的库存报废持有成本"
+      },
+      {
+        "id": "inventory-360-lot-setup",
+        "title": "8. 在 Inventory 360 中落地批次与效期管理"
+      }
+    ],
+    "content": "\n### 1. 易腐损耗与法规违规的双重财务代价\n\n在生鲜食品、高端酒水、天然美妆和营养保健品零售中，按总件数模糊记账是极其危险的。联合国粮农组织（FAO）统计，零售商因临期过期直接造成的损耗占**年销售总额的1.8%至4.2%**。\n\n---\n\n### 2. FIFO vs. FEFO：库存轮换算法\n\n* **FIFO（先进先出）**：按采购入库时间先后出库。\n* **FEFO（先到期先出）**：无论到货先后，严格按保质期临近程度优先排面陈列与收银，可将**过期损耗降低42%至68%**。\n\n---\n\n### 3. 5分钟精准批次召回标准作业程序（SOP）\n\n1. **定位受污染批次**（30秒内检索本地账本）。\n2. **一键锁定隔离**：收银台扫码时自动触发警报并拒绝结算。\n3. **反向追溯客户档案**：一键导出已购该批次的会员名单以便紧急通告。\n\n---\n\n### 4. 30/60/90天动态阶梯式临期预警\n\n* **距到期90天**：正常动销监测。\n* **距到期60天**：调整至排面前端陈列。\n* **距到期30天**：自动触发7.5折促销或捆绑销售。\n* **距到期10天**：5折清仓或公益捐赠。\n* **已过期（0天）**：收银端绝对禁售。\n\n---\n\n### 5. 在 Inventory 360 中落地批次管理\n\n* 入库时登记供应商批次号与保质期。\n* 仪表盘色彩化高亮展示临期风险批次。\n* 支持以11种语言导出符合审计规范的 CSV、Excel 和 PDF 报表。\n"
+  },
+  "ar": {
+    "title": "تتبع التشغيلات وتواريخ الصلاحية: أفضل الممارسات لتجزئة الأغذية ومستحضرات التجميل",
+    "excerpt": "دليل تشغيلي شامل لتتبع أرقام التشغيلات (Lots)، وخوارزميات تدوير المخزون FIFO مقابل FEFO، والامتثال التنظيمي، وإجراء استدعاء دقيق للتشغيلات في أقل من 5 دقائق.",
+    "category": "العمليات والامتثال",
+    "keywords": [
+      "برنامج تتبع أرقام التشغيلات",
+      "إجراءات سحب واستدعاء البضائع",
+      "مقارنة FIFO و FEFO",
+      "تنبيهات تاريخ الصلاحية نقاط البيع",
+      "تتبع الأغذية والتجميل",
+      "باركود GS1 128 تشغيلات",
+      "تقليل التوالف المنتهية الصلاحية"
+    ],
+    "tableOfContents": [
+      {
+        "id": "financial-regulatory-stakes",
+        "title": "1. التكاليف المالية والتنظيمية لتلف البضائع المنتهية الصلاحية"
+      },
+      {
+        "id": "fifo-vs-fefo-mechanics",
+        "title": "2. مقارنة FIFO و FEFO: آليات تدوير المخزون رياضياً"
+      },
+      {
+        "id": "regulatory-compliance-standards",
+        "title": "3. الأطر التنظيمية ومعايير سلامة الأغذية"
+      },
+      {
+        "id": "surgical-recall-protocol",
+        "title": "4. خطة سحب واستدعاء التشغيلات المعيبة في 5 دقائق"
+      },
+      {
+        "id": "expiry-alert-thresholds",
+        "title": "5. خط التنبيهات التدريجي للصلاحية (30/60/90 يوماً)"
+      },
+      {
+        "id": "gs1-128-datamatrix-encoding",
+        "title": "6. ترميز باركود GS1-128 والرموز ثنائية الأبعاد"
+      },
+      {
+        "id": "spoilage-accounting-formulas",
+        "title": "7. محاسبة التوالف: حساب الخسارة المالية الفعلية"
+      },
+      {
+        "id": "inventory-360-lot-setup",
+        "title": "8. إدارة الصلاحية والتشغيلات في Inventory 360"
+      }
+    ],
+    "content": "\n### 1. التكاليف المالية لتلف المنتجات\n\nفي قطاعات الأغذية ومستحضرات التجميل والأدوية، يؤدي غياب التتبع الدقيق إلى خسارة **1.8% إلى 4.2% من إجمالي الإيرادات السنوية** بسبب انتهاء الصلاحية.\n\n---\n\n### 2. مقارنة FIFO و FEFO\n\n* **FIFO (الوارد أولاً يصرف أولاً)**: يعتمد على تاريخ وصول البضاعة.\n* **FEFO (المنتهي أولاً يصرف أولاً)**: يعتمد على تاريخ انتهاء الصلاحية، مما يخفض التوالف بنسبة **42% إلى 68%**.\n\n---\n\n### 3. استدعاء التشغيلات المعيبة في 5 دقائق\n\n1. تحديد مكان التشغيلة فورياً داخل المستودع (< 30 ثانية).\n2. حجز التشغيلة بنقرة واحدة ومنع بيعها آلياً على شاشات نقاط البيع.\n3. استخراج بيانات العملاء الذين اشتروا منها لإرسال تنبيهات السلامة.\n\n---\n\n### 4. التنبيهات التدريجية للصلاحية\n\n* **90 يوماً**: البيع بالسعر الرسمي.\n* **60 يوماً**: نقل المنتجات لمقدمة الرفوف.\n* **30 يوماً**: خصم ترويجي 25%.\n* **10 أيام**: تصفية بخصم 50%.\n* **0 يوم (منتهي)**: منع البيع في الكاشير تماماً.\n\n---\n\n### 5. إدارة التشغيلات في Inventory 360\n\n* تسجيل رقم التشغيلة وتاريخ الانتهاء عند الاستلام.\n* لوحة تحكم ذكية ترصد تواريخ الصلاحية بالألوان.\n* تصدير تقارير المطابقة والتدقيق بـ 11 لغة بصيغ CSV و Excel و PDF.\n"
+  },
+  "pt": {
+    "title": "Rastreamento de Lotes e Validade: Melhores Práticas para Alimentos, Bebidas e Cosméticos",
+    "excerpt": "Domine a rastreabilidade no nível do lote, algoritmos de rotação FIFO vs FEFO, conformidade com órgãos reguladores (Anvisa, FDA) e recall cirúrgico em menos de 5 minutos.",
+    "category": "Operações e Conformidade",
+    "keywords": [
+      "software rastreamento de lotes",
+      "procedimento de recall de lote",
+      "diferença FIFO e FEFO estoque",
+      "alerta data de validade PDV",
+      "rastreabilidade alimentos cosméticos",
+      "código de barras GS1 128 lote",
+      "redução de perdas por validade"
+    ],
+    "tableOfContents": [
+      {
+        "id": "financial-regulatory-stakes",
+        "title": "1. O Custo Financeiro e Regulatório das Perdas por Validade"
+      },
+      {
+        "id": "fifo-vs-fefo-mechanics",
+        "title": "2. FIFO vs. FEFO: A Mecânica de Rotação de Estoque"
+      },
+      {
+        "id": "regulatory-compliance-standards",
+        "title": "3. Normas Regulatórias: Anvisa, FDA e Boas Práticas (GMP)"
+      },
+      {
+        "id": "surgical-recall-protocol",
+        "title": "4. Procedimento Padrão de Recall de Lote em 5 Minutos"
+      },
+      {
+        "id": "expiry-alert-thresholds",
+        "title": "5. Linha de Alertas de Validade em 30/60/90 Dias"
+      },
+      {
+        "id": "gs1-128-datamatrix-encoding",
+        "title": "6. Códigos GS1-128 e DataMatrix 2D"
+      },
+      {
+        "id": "spoilage-accounting-formulas",
+        "title": "7. Contabilidade de Avarias: Medindo a Perda Real"
+      },
+      {
+        "id": "inventory-360-lot-setup",
+        "title": "8. Gestão de Lotes no Inventory 360"
+      }
+    ],
+    "content": "\n### 1. O Custo Financeiro das Perdas por Validade\n\nNo comércio de alimentos, cosméticos e suplementos, a falta de controle de validade destrói as margens de lucro. O varejo perde entre **1,8% e 4,2% do faturamento bruto anual** com descarte de itens vencidos.\n\n---\n\n### 2. FIFO vs. FEFO\n\n* **FIFO (Primeiro que Entra, Primeiro que Sai)**: Ordenado pela data de chegada.\n* **FEFO (Primeiro que Vence, Primeiro que Sai)**: Prioriza os itens com vencimento mais próximo, **reduzindo descartes em até 68%**.\n\n---\n\n### 3. Recall de Lote em 5 Minutos\n\n1. Localização exata das unidades em estoque (< 30 segundos).\n2. Bloqueio instantâneo do lote (o PDV rejeita o código de barras).\n3. Rastreamento dos clientes que compraram o item para alerta preventivo.\n\n---\n\n### 4. Alertas Escalonados de Validade\n\n* **90 Dias**: Monitoramento preventivo.\n* **60 Dias**: Posicionamento na frente da prateleira.\n* **30 Dias**: Promoção com 25% de desconto.\n* **10 Dias**: Queima de estoque (50% OFF) ou doação.\n* **Vencido (0 Dia)**: Proibição total de venda no caixa.\n\n---\n\n### 5. Gestão de Lotes no Inventory 360\n\n* Cadastro de lote e vencimento na entrada de notas de compra.\n* Avisos visuais automáticos nos relatórios de estoque.\n* Exportação de relatórios em 11 idiomas em CSV, Excel e PDF.\n"
+  },
+  "it": {
+    "title": "Tracciabilità di Lotti e Scadenze: Best Practice per il Settore Alimentare, Beverage e Cosmetica",
+    "excerpt": "Padroneggia la tracciabilità dei lotti, gli algoritmi di rotazione FIFO vs FEFO, la conformità normativa (HACCP, UE 1223/2009) e la procedura di richiamo mirato del lotto in meno di 5 minuti.",
+    "category": "Operazioni e Normativa",
+    "keywords": [
+      "software tracciabilità lotti",
+      "procedura richiamo lotto prodotto",
+      "rotazione scorte FIFO FEFO",
+      "avviso data di scadenza cassa",
+      "tracciabilità alimentare cosmetica",
+      "codice a barre GS1 128 lotto",
+      "riduzione scarti scaduti"
+    ],
+    "tableOfContents": [
+      {
+        "id": "financial-regulatory-stakes",
+        "title": "1. Il Costo Economico e Normativo dei Prodotti Deperibili"
+      },
+      {
+        "id": "fifo-vs-fefo-mechanics",
+        "title": "2. FIFO vs. FEFO: Meccanica Matematica della Rotazione Scorte"
+      },
+      {
+        "id": "regulatory-compliance-standards",
+        "title": "3. Normative di Settore: HACCP, Norme UE e GMP"
+      },
+      {
+        "id": "surgical-recall-protocol",
+        "title": "4. Procedura Operativa di Richiamo del Lotto in 5 Minuti"
+      },
+      {
+        "id": "expiry-alert-thresholds",
+        "title": "5. Pipeline di Allarmi Scadenza a 30/60/90 Giorni"
+      },
+      {
+        "id": "gs1-128-datamatrix-encoding",
+        "title": "6. Codifica GS1-128 e DataMatrix 2D"
+      },
+      {
+        "id": "spoilage-accounting-formulas",
+        "title": "7. Contabilità degli Scarti: Calcolo della Perdita Reale"
+      },
+      {
+        "id": "inventory-360-lot-setup",
+        "title": "8. Gestione Lotti e Scadenze in Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Il Costo Economico dei Prodotti Deperibili\n\nNei settori alimentare, cosmetico e parafarmaceutico, la mancata gestione delle scadenze provoca una perdita media compresa tra l'**1,8% e il 4,2% del fatturato annuo**.\n\n---\n\n### 2. FIFO vs. FEFO\n\n* **FIFO (First-In, First-Out)**: Prelievo in base alla data di arrivo in magazzino.\n* **FEFO (First-Expired, First-Out)**: Priorità ai prodotti con scadenza più ravvicinata, con un **abbattimento degli scarti fino al 68%**.\n\n---\n\n### 3. Procedura di Richiamo in 5 Minuti\n\n1. Individuazione istantanea delle unità a magazzino (< 30 secondi).\n2. Blocco in quarantena in 1 clic con rifiuto automatico alla cassa.\n3. Estrazione dei clienti acquirenti per avviso immediato.\n\n---\n\n### 4. Pipeline di Allarmi Scadenza\n\n* **90 Giorni**: Monitoraggio standard.\n* **60 Giorni**: Spostamento sul fronte scaffale.\n* **30 Giorni**: Sconto promozionale del 25%.\n* **10 Giorni**: Vendita promozionale al 50% o donazione.\n* **Scaduto (0 Giorni)**: Blocco assoluto della vendita.\n\n---\n\n### 5. Gestione Lotti in Inventory 360\n\n* Registrazione numero di lotto e scadenza al carico merci.\n* Badge visivi di allerta nei report di magazzino.\n* Esportazione di report di conformità in 11 lingue in CSV, Excel e PDF.\n"
+  },
+  "ru": {
+    "title": "Учет Партий, Серий и Сроков Годности: Руководство для Продуктового, Косметического и Фарма-Ритейла",
+    "excerpt": "Полное практическое руководство: поштучный партионный учет, алгоритмы ротации FIFO vs FEFO, регуляторный комплаенс (Честный Знак, ХАССП, GMP) и локальный отзыв партии за 5 минут.",
+    "category": "Операции и Регламенты",
+    "keywords": [
+      "партионный учет программа",
+      "регламент отзыва партии товара",
+      "ротация склада FIFO FEFO",
+      "контроль сроков годности на кассе",
+      "учет сроков годности косметика продукты",
+      "штрихкод GS1 128 срок годности",
+      "снижение списаний просрочки"
+    ],
+    "tableOfContents": [
+      {
+        "id": "financial-regulatory-stakes",
+        "title": "1. Финансовые и Юридические Риски Списания Просрочки"
+      },
+      {
+        "id": "fifo-vs-fefo-mechanics",
+        "title": "2. FIFO vs. FEFO: Математика Ротации Складских Запасов"
+      },
+      {
+        "id": "regulatory-compliance-standards",
+        "title": "3. Стандарты Регулирования: ХАССП, ЕАЭС и GMP"
+      },
+      {
+        "id": "surgical-recall-protocol",
+        "title": "4. 5-Минутный Регламент Выборочного Отзыва Партии"
+      },
+      {
+        "id": "expiry-alert-thresholds",
+        "title": "5. Каскадная Система Предупреждений за 30/60/90 Дней"
+      },
+      {
+        "id": "gs1-128-datamatrix-encoding",
+        "title": "6. Кодирование GS1-128 и DataMatrix: Теги Партий и Сроков"
+      },
+      {
+        "id": "spoilage-accounting-formulas",
+        "title": "7. Учет Списаний: Расчет Реального Ущерба от Порчи"
+      },
+      {
+        "id": "inventory-360-lot-setup",
+        "title": "8. Настройка Партий и Сроков Годности в Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Финансовые и Юридические Риски Списания Просрочки\n\nВ торговле продуктами питания, косметикой и аптечным ассортиментом отсутствие контроля партий ведет к прямым убыткам. По данным FAO, розничные сети теряют от **1.8% до 4.2% годовой выручки** исключительно на списаниях просроченной продукции.\n\n---\n\n### 2. FIFO vs. FEFO: Математика Ротации Запасов\n\n* **FIFO (First-In, First-Out)**: Списание по дате поступления на склад.\n* **FEFO (First-Expired, First-Out)**: Приоритетная продажа товаров с ближайшим сроком годности. Снижает потери от порчи на **42%–68%**.\n\n---\n\n### 3. 5-Минутный Регламент Выборочного Отзыва Партии\n\n1. Мгновенный поиск партии по локальной базе (< 30 секунд).\n2. Блокировка в 1 клик: кассовый узел автоматически отклоняет штрихкод отозванного лота.\n3. Экспорт списка покупателей данной партии для срочного оповещения.\n\n---\n\n### 4. Каскадная Система Предупреждений (30/60/90 Дней)\n\n* **90 Дней**: Стандартная скорость продаж.\n* **60 Дней**: Перемещение на передний план витрины.\n* **30 Дней**: Автоматическая скидка 25% или бандл.\n* **10 Дней**: Распродажа со скидкой 50%.\n* **0 Дней (Просрочено)**: Полный запрет продажи на кассе.\n\n---\n\n### 5. Настройка Партий и Сроков Годности в Inventory 360\n\n* Ввод номера партии и срока годности при оприходовании накладной.\n* Цветовые индикаторы приближающихся сроков в отчетах.\n* Экспорт аудиторских отчетов на 11 языках в CSV, Excel и PDF.\n"
+  }
+},
   'barcode-label-printing-sku-system-guide': {
     es: {
       title: 'Sistemas de Código de Barras y SKU en Retail: Guía de Generación, Impresión Térmica y Escaneo',
