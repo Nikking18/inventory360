@@ -58,6 +58,7 @@ import { PrintReceipt } from './PrintReceipt';
 import { DataPolicyModal } from './common/DataPolicyModal';
 import { ProductTourModal } from './common/ProductTourModal';
 import { ErrorBoundary } from './common/ErrorBoundary';
+import { useBroadcastSync } from '../hooks/useBroadcastSync';
 import { calculateStockStatus } from '../lib/utils';
 import { performAutoSave } from '../lib/autoSaveService';
 import {
@@ -398,32 +399,8 @@ export default function AppMain() {
     }
   };
 
-  // Helper to notify other tabs/windows of database writes
-  const broadcastSync = () => {
-    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-      try {
-        const bc = new BroadcastChannel('inventory360_realtime_sync');
-        bc.postMessage({ type: 'DATA_UPDATED', timestamp: Date.now() });
-        bc.close();
-      } catch {}
-    }
-  };
-
-  // Listen for real-time changes from other tabs
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return;
-    const bc = new BroadcastChannel('inventory360_realtime_sync');
-    bc.onmessage = (event) => {
-      if (event.data?.type === 'DATA_UPDATED') {
-        loadAllData();
-      }
-    };
-    return () => {
-      try {
-        bc.close();
-      } catch {}
-    };
-  }, []);
+  // Multi-tab / multi-window database state synchronization
+  const { broadcastChange: broadcastSync } = useBroadcastSync(loadAllData);
 
   // HANDLERS FOR PRODUCTS
   const handleAddProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
