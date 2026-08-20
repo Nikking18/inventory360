@@ -22,6 +22,7 @@ import {
   Home,
   BookOpen,
   HardDrive,
+  MessageSquarePlus,
 } from 'lucide-react';
 
 export type NavItemKey =
@@ -276,7 +277,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
-      {/* Data Policy Notice & Product Tour Actions */}
+      {/* Data Policy Notice, Feedback, Support & Product Tour Actions */}
       <div className="p-3 mx-3 my-1 bg-slate-50 border border-slate-200 space-y-2 text-[10px] font-mono">
         <Link
           href="/blog"
@@ -285,6 +286,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <BookOpen className="w-3.5 h-3.5 text-sky-600" />
           <span>{t('knowledge_blog', 'Knowledge & Blog')}</span>
         </Link>
+
+        {/* Customer Feedback Button */}
+        <a
+          href="https://docs.google.com/forms/d/e/1FAIpQLScUP7c8Av1NXwCB5oKcO51P0cdisGfSnpc8kVa6osjpa37jZQ/viewform?usp=header"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full py-1.5 px-2 bg-emerald-50 border border-emerald-300 text-emerald-900 hover:bg-emerald-100 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
+          title="Send User Feedback"
+        >
+          <MessageSquarePlus className="w-3.5 h-3.5 text-emerald-700" />
+          <span>{t('feedback_btn', 'Send Feedback')}</span>
+        </a>
+
+        {/* Ko-fi Support Button */}
+        <div className="flex items-center justify-center pt-0.5">
+          <a
+            href="https://ko-fi.com/Y0H123WFGA"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block hover:opacity-90 transition-opacity"
+            title="Buy Me a Coffee at ko-fi.com"
+          >
+            <img
+              height="36"
+              style={{ border: '0px', height: '36px' }}
+              src="https://storage.ko-fi.com/cdn/kofi3.png?v=6"
+              alt="Buy Me a Coffee at ko-fi.com"
+            />
+          </a>
+        </div>
 
         <button
           onClick={onOpenDataPolicy}
