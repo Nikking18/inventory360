@@ -37,7 +37,7 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
     blocks.push(codeBuffer.join('\n\n'));
   }
 
-  const renderInline = (text: string): React.ReactNode => {
+  const renderInline = (text: string, isDarkBg = false): React.ReactNode => {
     // Process bold, italic, code, links, inline math
     const parts: React.ReactNode[] = [];
     let remaining = text;
@@ -66,7 +66,11 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
         parts.push(
           <span
             key={key++}
-            className="inline-flex items-center px-1.5 py-0.5 mx-0.5 font-mono text-xs font-semibold bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xs shadow-2xs"
+            className={`inline-flex items-center px-1.5 py-0.5 mx-0.5 font-mono text-xs font-semibold rounded-xs shadow-2xs ${
+              isDarkBg
+                ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                : 'bg-emerald-50 text-emerald-900 border border-emerald-200'
+            }`}
           >
             {cleanMath}
           </span>
@@ -81,7 +85,11 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
         parts.push(
           <code
             key={key++}
-            className="px-1.5 py-0.5 bg-slate-100 border border-slate-300 text-slate-900 font-mono text-[11px] font-semibold"
+            className={`px-1.5 py-0.5 font-mono text-[11px] font-semibold ${
+              isDarkBg
+                ? 'bg-slate-800 border border-slate-700 text-emerald-300'
+                : 'bg-slate-100 border border-slate-300 text-slate-900'
+            }`}
           >
             {codeMatch[1]}
           </code>
@@ -94,7 +102,10 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
       const boldMatch = remaining.match(/^\*\*([^*]+)\*\*/);
       if (boldMatch) {
         parts.push(
-          <strong key={key++} className="font-bold text-slate-950">
+          <strong
+            key={key++}
+            className={`font-bold ${isDarkBg ? 'text-emerald-300 font-extrabold' : 'text-slate-950'}`}
+          >
             {boldMatch[1]}
           </strong>
         );
@@ -106,7 +117,7 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
       const italicMatch = remaining.match(/^\*([^*]+)\*/);
       if (italicMatch) {
         parts.push(
-          <em key={key++} className="italic text-slate-800">
+          <em key={key++} className={`italic ${isDarkBg ? 'text-slate-100' : 'text-slate-800'}`}>
             {italicMatch[1]}
           </em>
         );
@@ -121,7 +132,9 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
           <a
             key={key++}
             href={linkMatch[2]}
-            className="text-emerald-700 font-bold hover:underline underline-offset-2"
+            className={`font-bold hover:underline underline-offset-2 ${
+              isDarkBg ? 'text-emerald-400' : 'text-emerald-700'
+            }`}
             target={linkMatch[2].startsWith('http') ? '_blank' : '_self'}
             rel="noopener noreferrer"
           >
@@ -179,7 +192,7 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
                     key={i}
                     className="py-3 px-4 font-bold text-[11px] uppercase tracking-wider text-slate-100"
                   >
-                    {renderInline(th)}
+                    {renderInline(th, true)}
                   </th>
                 ))}
               </tr>
@@ -333,13 +346,16 @@ export const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ conten
           return (
             <div
               key={idx}
-              className="p-4 sm:p-5 bg-slate-900 text-white border-l-4 border-emerald-500 shadow-xs my-4 space-y-1"
+              className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 text-white border border-slate-800 border-l-4 border-l-emerald-400 shadow-md my-5 space-y-1.5"
             >
-              <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest font-mono">
-                Executive Takeaway &amp; Operational Rule
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-emerald-400"></span>
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest font-mono">
+                  Executive Takeaway &amp; Operational Rule
+                </span>
               </div>
-              <div className="text-xs sm:text-sm text-slate-200 font-mono leading-relaxed italic">
-                {renderInline(quoteText)}
+              <div className="text-xs sm:text-sm text-slate-100 font-mono leading-relaxed">
+                {renderInline(quoteText, true)}
               </div>
             </div>
           );
