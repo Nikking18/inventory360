@@ -1904,8 +1904,8 @@ Counter receipt printers feature an **RJ11/RJ12 modular port** on the back panel
   {
     slug: 'how-to-use-inventory-360-complete-user-guide-features',
     title: 'The Complete User Guide to Inventory 360: Fast POS, Multi-Outlet Stock, Auto-POs & Local Data Protection',
-    excerpt: 'A comprehensive, step-by-step master walkthrough of Inventory 360. Learn how to ring up zero-latency sales, manage multi-location stock transfers, automate supplier purchase orders, track lots and expiry dates, customize thermal receipts, and enable automated local backups.',
-    metaDescription: 'Complete step-by-step tutorial on how to use Inventory 360. Master the POS terminal, multi-outlet transfers, automated purchase orders, lot/expiry tracking, reporting, and automated local data backups.',
+    excerpt: 'The definitive operational handbook for Inventory 360. Step-by-step master tutorials for sub-15ms barcode POS checkout, multi-location branch transfers, automated supplier purchase orders, FEFO batch and expiry date tracking, omnichannel warehouse pick lists, driverless thermal printing, and 1-click local JSON backups.',
+    metaDescription: 'The definitive step-by-step user manual for Inventory 360. Master sub-15ms POS sales, multi-branch transfers, automated supplier POs, FEFO expiry tracking, omnichannel warehouse pick lists, and automated local data backups.',
     keywords: [
       'how to use inventory 360',
       'inventory management user guide',
@@ -1914,7 +1914,9 @@ Counter receipt printers feature an **RJ11/RJ12 modular port** on the back panel
       'automated purchase order setup',
       'thermal receipt printer guide',
       'offline POS software user manual',
-      'IndexedDB retail system tutorial'
+      'IndexedDB retail system tutorial',
+      'omnichannel pick list generator',
+      'local data backup POS guide'
     ],
     category: 'Operations & Compliance',
     author: {
@@ -1923,121 +1925,159 @@ Counter receipt printers feature an **RJ11/RJ12 modular port** on the back panel
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
     },
     publishedAt: 'August 20, 2026',
-    readTime: '10 min read',
+    readTime: '16 min read',
     tableOfContents: [
-      { id: 'quick-start', title: '1. Quick Start: Your First 5 Minutes in Inventory 360' },
-      { id: 'pos-checkout', title: '2. Sell POS: Fast Barcode Scanning, Discounts & Tender' },
-      { id: 'catalog-products', title: '3. Master Catalog: Adding SKUs, Categories & Suppliers' },
-      { id: 'inventory-hub', title: '4. Inventory Hub: Live Stock, Cycle Adjustments & Branch Transfers' },
-      { id: 'auto-po-replenishment', title: '5. Low Stock Automation: 1-Click PO Slips & Receiving' },
-      { id: 'lots-expiry-recalls', title: '6. Lots, Expiry Tracking & Quarantine Recalls' },
-      { id: 'fulfillment-pick-lists', title: '7. Omnichannel Channels & Warehouse Batch Pick Lists' },
-      { id: 'analytics-exports', title: '8. Financial Analytics & 11-Language Document Exports' },
-      { id: 'backup-data-protection', title: '9. Offline Data Sovereignty & Automated Local Backups' }
+      { id: 'introduction-local-first', title: '1. Introduction: The Local-First Architecture Advantage' },
+      { id: 'quick-start-setup', title: '2. Quick Start: Initializing Your Store in 5 Minutes (Demo Data vs Clean Slate)' },
+      { id: 'master-pos-operations', title: '3. Master POS Operations: Sub-15ms Barcode Scanning, Camera QR & Tender' },
+      { id: 'catalog-management', title: '4. Catalog Management: SKU Attributes, Custom Tax Rates & Bulk CSV Imports' },
+      { id: 'multi-location-stock-control', title: '5. Multi-Location Stock Control: Cycle Adjustments & 3-State In-Transit Transfers' },
+      { id: 'autonomous-procurement', title: '6. Autonomous Procurement: Low Stock Triggers, Auto-POs & Receiving Workflows' },
+      { id: 'lot-batch-expiry-tracking', title: '7. Lot, Batch & Expiry Date Management: FEFO Picking & Instant Recall Quarantines' },
+      { id: 'omnichannel-fulfillment', title: '8. Omnichannel Fulfillment: Multi-Platform Orders & Consolidated Warehouse Pick Lists' },
+      { id: 'analytics-multilingual-exports', title: '9. Advanced Analytics, Tax Reports & 11-Language Document Exports' },
+      { id: 'offline-data-sovereignty-backups', title: '10. Offline Data Sovereignty: W3C File System Auto-Saves & 60-Second Disaster Recovery' }
     ],
     content: `
-### 1. Quick Start: Your First 5 Minutes in Inventory 360
+### 1. Introduction: The Local-First Architecture Advantage
 
-Welcome to **Inventory 360** — a modern, local-first retail operations platform and enterprise Point of Sale (POS) designed for speed, reliability, and complete data privacy.
+Welcome to **Inventory 360** — an enterprise-grade, local-first inventory management and Point of Sale (POS) platform engineered for maximum operational throughput, 100% offline uptime, and absolute data sovereignty.
 
-Because Inventory 360 runs on **IndexedDB in your browser**, you enjoy:
-* **Instant Startup**: No credit card, no complex server setup, and zero cloud delay.
-* **100% Offline Capability**: Transactions and stock adjustments continue without pause even if your internet connection drops.
-* **Complete Data Ownership**: Your commercial ledger, pricing margins, and customer data never leave your computer.
+Unlike traditional cloud SaaS ERPs that freeze during network latency or demand hundreds of dollars in monthly subscription fees per register, Inventory 360 runs directly within your web browser using high-performance **IndexedDB storage**:
 
-#### Exploring with Demo Data vs. Clean Setup:
-* To explore immediately with pre-loaded products, sales history, and branch locations, open **Settings > Data & Backup** and click **Load Demo Dataset**.
-* To start fresh for your own store, click **Reset to Clean Slate** and proceed with catalog entry.
-
----
-
-### 2. Sell POS: Fast Barcode Scanning, Discounts & Tender
-
-The **Sell POS** module is optimized for high-volume cashier desks:
-
-1. **Barcode & Search Lookup**:
-   * Type any product name, SKU, or lot number into the search bar, or scan items directly with a USB/Bluetooth barcode scanner.
-   * Or click the **Camera Scanner** button to use your device's built-in webcam to scan 1D Code 128 barcodes or 2D QR codes in real-time.
-2. **Cart Management & Line Adjustments**:
-   * Click any cart line item to increment quantities, adjust unit prices on the fly, or apply custom item-level discounts.
-   * Assign a **Customer Profile** from your CRM list to track customer purchase history and loyalty spend.
-3. **Multi-Method Tender & Change Calculation**:
-   * Choose between **Cash**, **Credit / Debit Card**, **Digital Wallet (Apple Pay / Google Pay)**, or **Bank Transfer**.
-   * Enter the cash amount tendered to calculate exact change due.
-4. **Instant Receipt Printing**:
-   * Upon completing a sale, choose between **80mm Standard Thermal**, **58mm Mobile Bluetooth**, or **A4 Full Invoice** print layouts without installing external printer drivers.
+\`\`\`
+                       [ INVENTORY 360 PLATFORM ARCHITECTURE ]
+                                          │
+    ┌───────────────────────┬─────────────┴─────────────┬───────────────────────┐
+    ▼                       ▼                           ▼                       ▼
+[ SELL POS ENGINE ]   [ INVENTORY HUB ]         [ AUTONOMOUS POs ]      [ COMPLIANCE & LOTS ]
+├── Sub-15ms Barcodes ├── Multi-Branch Stores   ├── Dynamic ROP Alerts  ├── FEFO Batch Rotation
+├── Camera QR Scanner ├── 3-State Escrow Transfer├── Vendor Grouping POs ├── Expiry Proximity Flag
+└── Driverless Print  └── Cycle Count Audits    └── 1-Click Receiving   └── 1-Click Quarantine
+\`\`\`
 
 ---
 
-### 3. Master Catalog: Adding SKUs, Categories & Suppliers
+### 2. Quick Start: Initializing Your Store in 5 Minutes (Demo Data vs Clean Slate)
 
-Navigate to **Catalog** on the left panel to manage your product database:
+Getting started with [Inventory 360](https://inventory360-five.vercel.app) requires **zero credit cards, zero server provisioning, and zero database configuration**:
 
-* **Add New Product**: Click **+ Add Product** to define Product Name, SKU, Barcode, Category, Preferred Supplier, Cost Price (COGS), Retail Price, and Starting Stock.
-* **Individual Item Tax Rates**: Override store-wide GST/HST tax rates with specific percentages (e.g. 0% for tax-exempt grocery items).
-* **Category & Supplier Organization**: Organize your catalog into logical hierarchies and track supplier lead times and contact details for replenishment.
-* **Bulk CSV Import / Export**: Import your existing inventory from Shopify, Square, Lightspeed, or Excel via structured CSV files.
-
----
-
-### 4. Inventory Hub: Live Stock, Cycle Adjustments & Branch Transfers
-
-The **Inventory** suite gives you total operational visibility across all physical locations:
-
-* **Stock Levels**: View real-time quantities, total cost valuation, and total retail valuation. Filter by branch location or category.
-* **Cycle Count Physical Adjustments**: Need to reconcile discrepancies? Click **Adjust Stock**, choose between delta adjustment ($+5$ or $-2$) or exact count ($50$ units), and log the audit reason.
-* **Inter-Branch Stock Transfers**: Transfer merchandise between your downtown store, suburban branches, and central distribution warehouse with full FIFO movement history.
+1. **Option A: Test Drive with Pre-Populated Demo Data**:
+   * Open **Settings > Data & Backup**.
+   * Click **Load Demo Dataset** to immediately populate 10+ retail products, sample customer records, active branch stores, and historical sales transactions.
+2. **Option B: Start with a Fresh Commercial Clean Slate**:
+   * Click **Reset to Clean Slate** to purge sample data and prepare the database for your real catalog.
+3. **Configure Store Profile & Local Currency**:
+   * In **Settings > Store Profile**, enter your business name, street address, commercial tax ID (GSTIN / VAT / EIN), primary currency symbol ($ / € / £ / ₹ / ¥), and default receipt footer disclosures.
 
 ---
 
-### 5. Low Stock Automation: 1-Click PO Slips & Receiving
+### 3. Master POS Operations: Sub-15ms Barcode Scanning, Camera QR & Tender
 
-Never lose revenue to stockouts again:
+The **Sell POS** module is built for rapid customer checkout throughput:
 
-1. **Dynamic Reorder Alerts**: Items that drop below their configured reorder point automatically appear in the **Low Stock** tab.
-2. **1-Click Auto-PO Generation**: Click **Generate Automated POs** to consolidate all low-stock items into official Purchase Orders grouped by vendor.
-3. **Official PO Slip PDF**: Download or print branded procurement slips formatted with vendor information, line totals, delivery instructions, and signature boxes.
-4. **Receiving Workflow**: When shipments arrive at your receiving dock, click **Receive Stock** on the PO card to verify inbound counts and automatically increment live inventory.
+\`\`\`
+[ Hardware Barcode Scan / Search ] ➔ [ Sub-15ms B-Tree Lookup ] ➔ [ Instant Line Item Render ]
+                                                                             │
+                                                                             ▼
+[ 1-Click Print Receipt (80mm/58mm/A4) ] ◀── [ Multi-Method Tender ] ◀───────┘
+\`\`\`
 
----
-
-### 6. Lots, Expiry Tracking & Quarantine Recalls
-
-For food, beverages, cosmetics, and pharmaceuticals:
-
-* **Lot & Expiration Tracking**: Assign Lot/Batch numbers and expiration dates to products.
-* **Automated Expiry Warnings**: The system flags items expiring within 90 days (Warning) and 30 days (Critical).
-* **Instant Quarantine & Recalls**: If a supplier announces a batch recall, search the lot number and click **Quarantine Lot** to immediately lock the items from being sold at any register.
-
----
-
-### 7. Omnichannel Channels & Warehouse Batch Pick Lists
-
-In **Channels & Orders**:
-
-* **Multi-Channel Tracking**: Monitor orders across your physical store, Shopify, Amazon, eBay, and WooCommerce.
-* **Warehouse Batch Pick Lists**: Click **Generate Pick List** to aggregate all pending orders into a single consolidated picking document sorted by SKU, complete with verification checkboxes and supervisor sign-off lines.
-* **Carrier Dispatch & Tracking**: Advance orders through *Pending ➔ Picking ➔ Packed ➔ Shipped*, assign carriers (FedEx, UPS, DHL, USPS), and attach tracking numbers.
+#### Step-by-Step Checkout Workflow:
+1. **Adding Items to the Register**:
+   * **Hardware USB/Bluetooth Scanner**: Point and shoot your laser scanner at any product barcode; items appear in the register in under $15\\text{ ms}$.
+   * **Integrated Camera Scanner**: Click **Camera Scanner** to use your device's built-in webcam or tablet camera to scan 1D Code 128 barcodes or 2D QR codes in real-time.
+   * **Instant Text Search**: Type any product name, SKU code, or category in the top search bar.
+2. **Cart Modifications & Customer Assignment**:
+   * Click any cart line item to adjust quantities, override prices on the fly, or apply custom item-level discount percentages.
+   * Select an existing customer profile from your CRM directory or click **+ New Customer** to log loyalty purchases.
+3. **Tender Selection & Automated Change Calculation**:
+   * Select payment tender: **Cash**, **Credit/Debit Card**, **Digital Wallet (Apple Pay / UPI)**, or **Store Credit**.
+   * When Cash is selected, enter the physical cash amount received; the terminal calculates the exact change due instantly.
+4. **Driverless Thermal Printing**:
+   * Click **Complete Sale & Print Receipt**. The system renders high-contrast typography formatted for **80mm Standard Thermal**, **58mm Mobile Bluetooth**, or **A4 Tax Invoices** without requiring third-party print drivers.
 
 ---
 
-### 8. Financial Analytics & 11-Language Document Exports
+### 4. Catalog Management: SKU Attributes, Custom Tax Rates & Bulk CSV Imports
 
-The **Reporting** suite offers 7 analytical lenses:
-* **Retail Dashboard & Sales Reports**: Track Gross Revenue, COGS, Net Profit, and Average Order Value.
-* **Turnover & Sales Velocity**: Analyze units sold per day and days of supply remaining per SKU.
-* **Tax Liability Reports**: Review taxable subtotal vs. tax collected across all sales.
-* **11-Language Translated Exports**: Export reports in CSV, Excel, or PDF. All table headers, totals, and statuses dynamically translate into your chosen language (**English, Spanish, French, German, Hindi, Japanese, Chinese, Arabic, Portuguese, Italian, Russian**).
+Navigate to **Catalog** on the primary navigation menu:
+
+* **Create New Product SKUs**: Click **+ Add Product** to configure Product Name, Unique SKU, Barcode String, Category, Preferred Supplier, Cost of Goods Sold (COGS), Retail Price, and Starting Stock Levels.
+* **Granular SKU Tax Overrides**: Assign specific tax rate overrides per SKU (e.g. 0% for tax-exempt fresh groceries, 18% for consumer electronics) overriding default store tax policies.
+* **Bulk Data Import & Export**:
+  * Click **Import CSV** to batch import your existing catalog from Shopify, Square, Lightspeed, or Microsoft Excel spreadsheets.
+  * Click **Export CSV** anytime to download your catalog for external spreadsheet analysis.
 
 ---
 
-### 9. Offline Data Sovereignty & Automated Local Backups
+### 5. Multi-Location Stock Control: Cycle Adjustments & 3-State In-Transit Transfers
 
-Protect your business from cloud outages, subscription price hikes, and data breaches:
+The **Inventory** hub gives retail managers unified control across multiple store branches and distribution warehouses:
 
-* **Background Auto-Save**: In **Settings > Data & Backup**, select a backup folder on your computer (using the modern W3C File System Access API) and set a frequency (e.g. every 1 hour or 6 hours). Inventory 360 will silently write timestamped JSON backups directly to your disk.
-* **Manual 1-Click Backup**: Download an emergency encrypted JSON snapshot anytime.
-* **Disaster Recovery**: Restore your complete business state onto any new computer in under 3 seconds by selecting your backup file.
+#### 1. Real-Time Valuation Audits:
+* View total stock quantities, cost valuation (COGS), and projected retail sales valuation categorized by store location.
+
+#### 2. Physical Cycle Count Adjustments:
+* Reconciling physical shelf counts against ledger records? Click **Adjust Stock**, choose between a **Delta adjustment** ($+10$ or $-3$) or an **Exact Count Override** ($150\\text{ units}$), and select an audit reason code (*Physical Stocktake Reconciliation, Damaged Goods, Breakage, Internal Use*).
+
+#### 3. 3-State Inter-Branch Transfers:
+* Click **Transfer Stock** to route merchandise between outlets.
+* The system enforces a **3-State Escrow Protocol** (*Transfer Initiated ➔ In-Transit Escrow ➔ Inbound Receiving Confirmation*), ensuring inventory is never double-sold while aboard delivery vans.
+
+---
+
+### 6. Autonomous Procurement: Low Stock Triggers, Auto-POs & Receiving Workflows
+
+Eliminate manual purchase order creation and stockouts:
+
+1. **Automated Low-Stock Thresholds**: As items are rung up at POS registers, the system continuously audits on-hand balances against dynamic Reorder Points (ROP).
+2. **1-Click Purchase Order Generation**: In **Inventory > Low Stock Alerts**, click **Generate Purchase Orders**. The procurement engine automatically groups all low-stock items by preferred vendor.
+3. **Official PDF Purchase Orders**: Export and email print-ready, branded supplier PO slips with wholesale cost breakdowns, vendor shipping addresses, and authorized signature lines.
+4. **Dock Receiving Inspection**: When freight shipments arrive at your loading dock, open the PO and click **Receive Inbound Stock** to verify received quantities and instantly increment physical store inventory.
+
+---
+
+### 7. Lot, Batch & Expiry Date Management: FEFO Picking & Instant Recall Quarantines
+
+For businesses selling perishable foods, beverages, dietary supplements, and cosmetics:
+
+* **Assign Batch & Expiration Metadata**: Attach Lot/Batch identifiers and expiration dates during receiving intake.
+* **Automated Expiry Warnings**: The system color-codes inventory batches nearing expiration:
+  * 🟡 **Warning**: Expiring within 90 days (promote to front shelves for First-Expired, First-Out rotation).
+  * 🔴 **Critical**: Expiring within 30 days (immediate liquidation markdown).
+* **1-Click Surgical Recall & Quarantine**: If a manufacturer issues a health recall, locate the affected lot number and click **Quarantine Lot**. The system instantly locks all remaining units across all branch registers, rendering them impossible for cashiers to accidentally scan or sell.
+
+---
+
+### 8. Omnichannel Fulfillment: Multi-Platform Orders & Consolidated Warehouse Pick Lists
+
+The **Channels & Orders** suite consolidates multi-channel commerce into a single operational pipeline:
+
+1. **Omnichannel Order Aggregation**: Monitor open customer orders across your physical counter POS, Shopify storefront, Amazon marketplace, and WooCommerce store.
+2. **Consolidated Warehouse Batch Pick Lists**: Click **Generate Pick List** to aggregate 20, 50, or 100 open orders into a single consolidated warehouse picking manifest sorted by aisle and SKU, eliminating wasted warehouse footsteps.
+3. **5-Stage Order Progression**: Advance fulfillment status through *Pending ➔ Picking ➔ Packed ➔ Shipped ➔ Completed*, assign shipping carriers (FedEx, UPS, DHL, USPS), and attach tracking numbers.
+
+---
+
+### 9. Advanced Analytics, Tax Reports & 11-Language Document Exports
+
+The **Reporting** suite provides deep executive visibility into your business health:
+
+* **Executive Financial Dashboard**: Track Gross Revenue, Cost of Goods Sold (COGS), Gross Profit Margins, and Average Order Value (AOV).
+* **Inventory Velocity & Turnover**: Monitor Daily Sales Velocity ($\text{DSV}$) and Days of Inventory Remaining ($\text{DIR}$) to pinpoint stagnant capital.
+* **Tax Liability Reports**: Audit taxable subtotal vs. sales tax collected for effortless quarterly sales tax filings.
+* **11-Language Translated PDF/Excel Exports**: Export official invoices, pick lists, and valuation ledgers translated natively into **English, Spanish, French, German, Hindi, Japanese, Chinese, Arabic, Portuguese, Italian, and Russian**.
+
+---
+
+### 10. Offline Data Sovereignty: W3C File System Auto-Saves & 60-Second Disaster Recovery
+
+Protect your commercial records from ransomware, hardware burnout, and cloud downtime:
+
+1. **W3C File System Background Auto-Save**: In **Settings > Data & Backup**, click **Select Backup Folder** and select any local folder on your computer, external SSD, or network-attached storage (NAS). The system silently writes complete timestamped JSON database backups at your selected interval (1h, 6h, 12h, 24h).
+2. **Manual Encrypted JSON Snapshots**: Click **Export Full JSON Snapshot** anytime to create an air-gapped backup file before major inventory adjustments.
+3. **60-Second Disaster Recovery**: If a register laptop suffers a physical hardware failure, open [Inventory 360](https://inventory360-five.vercel.app) on any replacement computer, click **Import JSON Backup**, and restore your entire store catalog, historical receipts, and open POs in under 3 seconds.
     `
   }
 ];
