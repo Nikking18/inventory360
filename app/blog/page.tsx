@@ -99,25 +99,13 @@ export default function BlogIndexPage() {
             </div>
           </Link>
 
-          <nav className="flex items-center gap-4 text-xs font-mono">
+          <nav className="flex items-center gap-3 text-xs font-mono">
             <Link
               href="/"
-              className="text-slate-600 hover:text-slate-900 font-semibold flex items-center gap-1.5"
+              className="px-4 py-2 bg-slate-900 text-white font-bold uppercase tracking-wider text-xs hover:bg-black transition-colors shadow-xs flex items-center gap-1.5"
             >
-              <Home className="w-3.5 h-3.5" />
-              <span>Main Portal</span>
-            </Link>
-            <Link
-              href="/#preview"
-              className="text-slate-600 hover:text-slate-900 font-semibold hidden sm:inline"
-            >
-              Live Demo
-            </Link>
-            <Link
-              href="/"
-              className="px-3.5 py-1.5 bg-slate-900 text-white font-bold uppercase tracking-wider text-xs hover:bg-black transition-colors shadow-xs"
-            >
-              Launch App
+              <span>Launch App</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </nav>
         </div>
@@ -183,22 +171,10 @@ export default function BlogIndexPage() {
               ))}
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <img
-                  src={featuredPost.author.avatar}
-                  alt={featuredPost.author.name}
-                  className="w-9 h-9 rounded-full object-cover border border-slate-300"
-                />
-                <div>
-                  <p className="font-bold text-xs text-slate-900">{featuredPost.author.name}</p>
-                  <p className="text-[10px] text-slate-500">{featuredPost.author.role}</p>
-                </div>
-              </div>
-
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-end">
               <Link
                 href={`/blog/${featuredPost.slug}`}
-                className="px-4 py-2 bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-xs shrink-0"
+                className="px-5 py-2.5 bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-xs shrink-0"
               >
                 <span>Read Master Guide</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -258,16 +234,7 @@ export default function BlogIndexPage() {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={post.author.avatar}
-                        alt={post.author.name}
-                        className="w-6 h-6 rounded-full object-cover border border-slate-200"
-                      />
-                      <span className="text-[11px] font-bold text-slate-800">{post.author.name}</span>
-                    </div>
-
+                  <div className="flex items-center justify-end pt-1">
                     <Link
                       href={`/blog/${post.slug}`}
                       className="text-xs font-bold text-slate-900 hover:text-emerald-700 flex items-center gap-1 uppercase"
@@ -283,19 +250,19 @@ export default function BlogIndexPage() {
         </div>
 
         {/* 5. CTA WORKSPACE CARD */}
-        <div className="bg-slate-900 text-white p-8 border border-slate-800 shadow-xl space-y-4 text-center sm:text-left flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="bg-slate-900 !text-white text-white p-8 border border-slate-800 shadow-xl space-y-4 text-center sm:text-left flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-2">
-            <h3 className="text-xl sm:text-2xl font-bold font-heading">
+            <h3 className="text-xl sm:text-2xl font-bold font-heading !text-white text-white">
               Ready to Upgrade Your Retail Workflow?
             </h3>
-            <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+            <p className="text-xs !text-slate-200 text-slate-200 max-w-xl leading-relaxed">
               Launch Inventory 360 directly inside your browser. 100% offline-ready, sub-50ms local barcode searches, thermal receipts, and encrypted backups.
             </p>
           </div>
 
           <Link
             href="/"
-            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shrink-0 shadow-lg"
+            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 !text-slate-950 text-slate-950 font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shrink-0 shadow-lg"
           >
             <span>Launch Inventory 360</span>
             <ArrowRight className="w-4 h-4" />

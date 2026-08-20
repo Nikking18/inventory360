@@ -130,19 +130,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </div>
           </Link>
 
-          <nav className="flex items-center gap-4 text-xs font-mono">
-            <Link
-              href="/blog"
-              className="text-slate-600 hover:text-slate-900 font-semibold flex items-center gap-1.5"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>All Articles</span>
-            </Link>
+          <nav className="flex items-center gap-3 text-xs font-mono">
             <Link
               href="/"
-              className="px-3.5 py-1.5 bg-slate-900 text-white font-bold uppercase tracking-wider text-xs hover:bg-black transition-colors shadow-xs"
+              className="px-4 py-2 bg-slate-900 text-white font-bold uppercase tracking-wider text-xs hover:bg-black transition-colors shadow-xs flex items-center gap-1.5"
             >
-              Launch App
+              <span>Launch App</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </nav>
         </div>
@@ -157,25 +151,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <span>/</span>
             <Link href="/blog" className="hover:text-slate-900 font-semibold">Blog</Link>
             <span>/</span>
-            <span className="text-slate-900 font-bold truncate max-w-[180px] sm:max-w-[280px]">{post.title}</span>
+            <span className="text-slate-900 font-bold truncate max-w-[200px] sm:max-w-[340px]">{post.title}</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href="/blog"
-              className="px-3 py-1 bg-white border border-slate-300 hover:border-slate-900 text-slate-800 text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-2xs"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Articles</span>
-            </Link>
-            <Link
-              href="/"
-              className="px-3 py-1 bg-slate-900 text-white hover:bg-black text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-2xs"
-            >
-              <Home className="w-3.5 h-3.5" />
-              <span>Home Portal</span>
-            </Link>
-          </div>
+          <Link
+            href="/blog"
+            className="px-3.5 py-1.5 bg-white border border-slate-300 hover:border-slate-900 text-slate-800 text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-2xs"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Articles</span>
+          </Link>
         </div>
 
         {/* Article Header Card */}

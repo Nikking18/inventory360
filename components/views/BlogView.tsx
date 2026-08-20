@@ -284,16 +284,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <img
-                    src={post.author.avatar}
-                    alt={post.author.name}
-                    className="w-6 h-6 rounded-full border border-slate-300 object-cover"
-                  />
-                  <span className="text-[10px] font-bold text-slate-700">{post.author.name}</span>
-                </div>
-
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end text-xs">
                 <span className="font-bold text-slate-900 group-hover:text-emerald-700 flex items-center gap-1 text-[11px] uppercase">
                   <span>Read</span>
                   <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
