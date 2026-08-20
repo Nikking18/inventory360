@@ -33,15 +33,16 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: `
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com;
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-      img-src 'self' data: blob: https://picsum.photos https://images.unsplash.com https://www.google-analytics.com https://www.googletagmanager.com https://img.shields.io;
-      font-src 'self' data: https://fonts.gstatic.com;
-      connect-src 'self' blob: data: https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://storage.ko-fi.com https://ko-fi.com https://*.ko-fi.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://storage.ko-fi.com https://ko-fi.com https://*.ko-fi.com;
+      img-src 'self' data: blob: https://picsum.photos https://images.unsplash.com https://www.google-analytics.com https://www.googletagmanager.com https://img.shields.io https://storage.ko-fi.com https://ko-fi.com https://*.ko-fi.com;
+      font-src 'self' data: https://fonts.gstatic.com https://storage.ko-fi.com https://ko-fi.com https://*.ko-fi.com;
+      connect-src 'self' blob: data: https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com https://storage.ko-fi.com https://ko-fi.com https://*.ko-fi.com;
       media-src 'self' blob: data:;
       worker-src 'self' blob:;
+      frame-src 'self' https://ko-fi.com https://*.ko-fi.com https://docs.google.com https://*.google.com;
       frame-ancestors 'self';
-      form-action 'self';
+      form-action 'self' https://docs.google.com https://*.google.com https://ko-fi.com;
       base-uri 'self';
     `.replace(/\s{2,}/g, ' ').trim(),
   },

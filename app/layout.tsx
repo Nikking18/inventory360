@@ -268,6 +268,9 @@ const windowFetchPolyfillScript = `
 })();
 `;
 
+import { KofiWidget } from '../components/KofiWidget';
+import { FeedbackWidget } from '../components/FeedbackWidget';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const gaMeasurementId = process.env.NEXT_PUBLIC_GA_ID || 'G-INVENTORY360';
 
@@ -296,7 +299,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className={merriweather.className} suppressHydrationWarning>{children}</body>
+      <body className={merriweather.className} suppressHydrationWarning>
+        {children}
+        <FeedbackWidget />
+        <KofiWidget />
+      </body>
     </html>
   );
 }

@@ -821,8 +821,9 @@ export const LandingView: React.FC<LandingViewProps> = ({
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-bold text-slate-900 uppercase text-[11px]">Legal &amp; Trust</h4>
+              <h4 className="font-bold text-slate-900 uppercase text-[11px]">Legal &amp; Community</h4>
               <ul className="space-y-1 text-[11px] text-slate-600">
+                <li><a href="https://docs.google.com/forms/d/e/1FAIpQLScUP7c8Av1NXwCB5oKcO51P0cdisGfSnpc8kVa6osjpa37jZQ/viewform?usp=sharing&ouid=109337961244798371660" target="_blank" rel="noopener noreferrer" className="text-emerald-700 font-bold hover:underline">Customer Feedback Form ↗</a></li>
                 <li><Link href="/privacy" className="hover:text-slate-900 font-medium">Privacy Policy</Link></li>
                 <li><Link href="/thank-you" className="hover:text-slate-900 font-medium">Thank You Page</Link></li>
                 <li><Link href="/privacy" className="hover:text-slate-900 font-medium">Data Storage SLA</Link></li>
