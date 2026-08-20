@@ -180,9 +180,16 @@ export default function AppMain() {
       localStorage.setItem('inventory360_active_subtab', activeSubTab);
     } catch {}
 
-    const targetHash = `#/${activeTab}${activeSubTab ? '/' + activeSubTab : ''}`;
-    if (window.location.hash !== targetHash) {
-      window.history.replaceState(null, '', targetHash);
+    const isDefaultDashboard = activeTab === 'home' && (!activeSubTab || activeSubTab === 'retail-dashboard');
+    if (isDefaultDashboard) {
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    } else {
+      const targetHash = `#/${activeTab}${activeSubTab ? '/' + activeSubTab : ''}`;
+      if (window.location.hash !== targetHash) {
+        window.history.replaceState(null, '', targetHash);
+      }
     }
   }, [activeTab, activeSubTab]);
 
@@ -363,7 +370,14 @@ export default function AppMain() {
       localStorage.setItem('inventory360_active_subtab', subTab);
     } catch {}
     if (typeof window !== 'undefined') {
-      window.location.hash = `#/${tab}/${subTab}`;
+      const isDefaultDashboard = tab === 'home' && (!subTab || subTab === 'retail-dashboard');
+      if (isDefaultDashboard) {
+        if (window.location.hash) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      } else {
+        window.location.hash = `#/${tab}/${subTab}`;
+      }
     }
   };
 
