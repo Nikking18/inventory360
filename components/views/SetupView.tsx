@@ -415,7 +415,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
               key={tabId}
               onClick={() => onSubTabChange && onSubTabChange(tabId)}
               className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-colors ${
-                activeSubTab === tabId
+                activeSubTab === tabId || (tabId === 'data' && activeSubTab === 'autosave')
                   ? 'bg-slate-900 text-white font-bold'
                   : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
               }`}
@@ -719,7 +719,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
       )}
 
       {/* 3. DATA & BACKUP TAB */}
-      {activeSubTab === 'data' && (
+      {(activeSubTab === 'data' || activeSubTab === 'autosave') && (
         <div className="bg-white border border-slate-200 p-6 space-y-8 shadow-sm">
           <div className="border-b border-slate-200 pb-3">
             <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">

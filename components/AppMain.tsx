@@ -45,7 +45,6 @@ import {
 } from '../lib/seedData';
 
 import { Sidebar, NavItemKey } from './Sidebar';
-import { LandingView } from './views/LandingView';
 import { DashboardView } from './views/DashboardView';
 import { SellView } from './views/SellView';
 import { FulfillmentView } from './views/FulfillmentView';
@@ -94,51 +93,42 @@ const DEFAULT_SUB_FOR_TAB: Record<string, string> = {
   setup: 'general',
 };
 
-function getInitialRouteState(): { tab: NavItemKey; subTab: string; showLanding: boolean } {
+function getInitialRouteState(): { tab: NavItemKey; subTab: string } {
   if (typeof window === 'undefined') {
-    return { tab: 'home', subTab: 'retail-dashboard', showLanding: true };
+    return { tab: 'home', subTab: 'retail-dashboard' };
   }
 
   const hash = window.location.hash.replace(/^#\/?/, '');
-  if (hash === 'landing' || hash === '') {
-    return { tab: 'home', subTab: 'retail-dashboard', showLanding: true };
-  }
-
-  if (hash) {
+  if (hash && hash !== 'landing') {
     const parts = hash.split('/');
     const tabCandidate = (parts[0] === 'dashboard' ? 'home' : parts[0]) as NavItemKey;
     const sub = parts[1] || DEFAULT_SUB_FOR_TAB[tabCandidate] || '';
     if (VALID_TABS.includes(tabCandidate)) {
-      return { tab: tabCandidate, subTab: sub, showLanding: false };
+      return { tab: tabCandidate, subTab: sub };
     }
   }
 
   // Check localStorage if no specific hash present
   try {
-    const savedLanding = localStorage.getItem('inventory360_show_landing');
-    if (savedLanding === 'false') {
-      const savedTab = localStorage.getItem('inventory360_active_tab') as NavItemKey;
-      const savedSub = localStorage.getItem('inventory360_active_subtab');
-      if (savedTab && VALID_TABS.includes(savedTab)) {
-        return {
-          tab: savedTab,
-          subTab: savedSub || DEFAULT_SUB_FOR_TAB[savedTab] || '',
-          showLanding: false,
-        };
-      }
+    const savedTab = localStorage.getItem('inventory360_active_tab') as NavItemKey;
+    const savedSub = localStorage.getItem('inventory360_active_subtab');
+    if (savedTab && VALID_TABS.includes(savedTab)) {
+      return {
+        tab: savedTab,
+        subTab: savedSub || DEFAULT_SUB_FOR_TAB[savedTab] || '',
+      };
     }
   } catch {
     // Ignore storage errors
   }
 
-  return { tab: 'home', subTab: 'retail-dashboard', showLanding: true };
+  return { tab: 'home', subTab: 'retail-dashboard' };
 }
 
 export default function AppMain() {
   const initialRoute = getInitialRouteState();
   const [activeTab, setActiveTab] = useState<NavItemKey>(initialRoute.tab);
   const [activeSubTab, setActiveSubTab] = useState<string>(initialRoute.subTab);
-  const [showLanding, setShowLanding] = useState<boolean>(initialRoute.showLanding);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [showDataPolicyNotice, setShowDataPolicyNotice] = useState<boolean>(false);
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
@@ -176,7 +166,6 @@ export default function AppMain() {
       const current = getInitialRouteState();
       setActiveTab(current.tab);
       if (current.subTab) setActiveSubTab(current.subTab);
-      setShowLanding(current.showLanding);
     };
 
     window.addEventListener('hashchange', handleHashChange);
@@ -187,22 +176,15 @@ export default function AppMain() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      localStorage.setItem('inventory360_show_landing', String(showLanding));
       localStorage.setItem('inventory360_active_tab', activeTab);
       localStorage.setItem('inventory360_active_subtab', activeSubTab);
     } catch {}
 
-    if (showLanding) {
-      if (window.location.hash) {
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
-      }
-    } else {
-      const targetHash = `#/${activeTab}${activeSubTab ? '/' + activeSubTab : ''}`;
-      if (window.location.hash !== targetHash) {
-        window.history.replaceState(null, '', targetHash);
-      }
+    const targetHash = `#/${activeTab}${activeSubTab ? '/' + activeSubTab : ''}`;
+    if (window.location.hash !== targetHash) {
+      window.history.replaceState(null, '', targetHash);
     }
-  }, [showLanding, activeTab, activeSubTab]);
+  }, [activeTab, activeSubTab]);
 
   const initCleanData = async () => {
     await clearAllStores();
@@ -289,10 +271,10 @@ export default function AppMain() {
 
   // Dynamic Page Title Sync
   useEffect(() => {
-    const tabName = showLanding ? 'Portal' : activeTab.toUpperCase();
-    const subTabName = showLanding ? 'Overview' : activeSubTab.replace('-', ' ').toUpperCase();
+    const tabName = activeTab.toUpperCase();
+    const subTabName = activeSubTab.replace('-', ' ').toUpperCase();
     document.title = `${tabName} • ${subTabName} | ${settings.businessName || 'Inventory 360'}`;
-  }, [activeTab, activeSubTab, showLanding, settings.businessName]);
+  }, [activeTab, activeSubTab, settings.businessName]);
 
   // Initialize DB & Load State
   useEffect(() => {
@@ -374,11 +356,9 @@ export default function AppMain() {
   }, [settings]);
 
   const openWorkspace = (tab: NavItemKey = 'home', subTab: string = 'retail-dashboard') => {
-    setShowLanding(false);
     setActiveTab(tab);
     setActiveSubTab(subTab);
     try {
-      localStorage.setItem('inventory360_show_landing', 'false');
       localStorage.setItem('inventory360_active_tab', tab);
       localStorage.setItem('inventory360_active_subtab', subTab);
     } catch {}
@@ -388,15 +368,7 @@ export default function AppMain() {
   };
 
   const closeToLanding = () => {
-    setShowLanding(true);
-    try {
-      localStorage.setItem('inventory360_show_landing', 'true');
-    } catch {}
-    if (typeof window !== 'undefined') {
-      if (window.location.hash) {
-        window.history.pushState(null, '', window.location.pathname + window.location.search);
-      }
-    }
+    openWorkspace('home', 'retail-dashboard');
   };
 
   // Multi-tab / multi-window database state synchronization
@@ -1140,64 +1112,43 @@ export default function AppMain() {
 
   return (
     <I18nProvider language={(settings.language as SupportedLanguage) || 'en'}>
-      {/* If showLanding is true, render the Main Webapp Landing Portal */}
-      {showLanding ? (
-        <LandingView
-          onOpenDashboard={() => openWorkspace('home', 'retail-dashboard')}
-          onOpenPOS={() => openWorkspace('sell', 'quick-sale')}
-          onStartDemo={async () => {
-            await seedDemoData();
-            openWorkspace('home', 'retail-dashboard');
-          }}
-          onStartFresh={async () => {
-            await initCleanData();
-            openWorkspace('home', 'retail-dashboard');
-          }}
-          onOpenTour={() => {
-            openWorkspace('home', 'retail-dashboard');
-            setIsTourOpen(true);
-          }}
-          settings={settings}
-          onUpdateSettings={handleUpdateSettings}
-        />
-      ) : (
-        /* When showLanding is false, display the full workspace with the Left Sidebar Panel and views */
-        <div className="flex h-screen bg-slate-50 text-slate-900 antialiased overflow-hidden font-mono">
-          {/* 1. Left Fixed Navigation Rail */}
-          <aside className="hidden md:block shrink-0">
-            <Sidebar
-              activeTab={activeTab}
-              onTabChange={(tab) => {
-                setActiveTab(tab);
-              }}
-              activeSubTab={activeSubTab}
-              onSubTabChange={setActiveSubTab}
-              businessName={settings.businessName}
-              ownerName={settings.ownerName}
-              currencyCode={settings.currencyCode}
-              onCurrencyChange={async (code) => {
-                const found = CURRENCIES.find((c) => c.code === code);
-                if (found) {
-                  await handleUpdateSettings({
-                    ...settings,
-                    currencyCode: found.code,
-                    currencySymbol: found.symbol,
-                  });
-                }
-              }}
-              language={settings.language}
-              onLanguageChange={async (lang) => {
+      {/* Main Enterprise Retail Management Workspace */}
+      <div className="flex h-screen bg-slate-50 text-slate-900 antialiased overflow-hidden font-mono">
+        {/* 1. Left Fixed Navigation Rail */}
+        <aside className="hidden md:block shrink-0">
+          <Sidebar
+            activeTab={activeTab}
+            onTabChange={(tab) => {
+              setActiveTab(tab);
+            }}
+            activeSubTab={activeSubTab}
+            onSubTabChange={setActiveSubTab}
+            businessName={settings.businessName}
+            ownerName={settings.ownerName}
+            currencyCode={settings.currencyCode}
+            onCurrencyChange={async (code) => {
+              const found = CURRENCIES.find((c) => c.code === code);
+              if (found) {
                 await handleUpdateSettings({
                   ...settings,
-                  language: lang as SupportedLanguage,
+                  currencyCode: found.code,
+                  currencySymbol: found.symbol,
                 });
-              }}
-              onOpenLanding={closeToLanding}
-              onOpenTour={() => setIsTourOpen(true)}
-              onOpenDataPolicy={() => setShowDataPolicyNotice(true)}
-              autoSaveConfig={settings.autoSaveConfig}
-            />
-          </aside>
+              }
+            }}
+            language={settings.language}
+            onLanguageChange={async (lang) => {
+              await handleUpdateSettings({
+                ...settings,
+                language: lang as SupportedLanguage,
+              });
+            }}
+            onOpenLanding={closeToLanding}
+            onOpenTour={() => setIsTourOpen(true)}
+            onOpenDataPolicy={() => setShowDataPolicyNotice(true)}
+            autoSaveConfig={settings.autoSaveConfig}
+          />
+        </aside>
 
           {/* Mobile Drawer Navigation Overlay */}
           {isMobileMenuOpen && (
@@ -1442,7 +1393,6 @@ export default function AppMain() {
           {/* Printable Receipt Hidden Render Target */}
           <PrintReceipt sale={printableSale} settings={settings} receiptFormat={receiptFormat} />
         </div>
-      )}
 
       {/* Data Policy & Backup Notice Modal */}
       <DataPolicyModal

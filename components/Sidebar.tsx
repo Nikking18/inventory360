@@ -242,7 +242,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           type="button"
           onClick={() => {
             onTabChange('setup');
-            if (onSubTabChange) onSubTabChange('autosave');
+            if (onSubTabChange) onSubTabChange('data');
           }}
           className="w-full text-left group"
           title="Click to manage automated backups"
