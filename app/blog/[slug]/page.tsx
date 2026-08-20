@@ -179,7 +179,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </div>
 
         {/* Article Header Card */}
-        <div className="bg-white border border-slate-200 p-6 sm:p-10 shadow-sm space-y-6">
+        <div className="bg-white border border-slate-200 p-6 sm:p-10 shadow-sm space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
             <span className="text-[10px] font-bold text-slate-900 uppercase px-2.5 py-1 bg-slate-100 border border-slate-200">
               {post.category}
@@ -196,105 +196,52 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             {post.title}
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed border-l-2 border-emerald-500 pl-4">
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed border-l-2 border-emerald-500 pl-4 font-sans">
             {post.excerpt}
           </p>
+        </div>
 
-          {/* Author Block */}
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
-              <img
-                src={post.author.avatar}
-                alt={post.author.name}
-                className="w-10 h-10 rounded-full object-cover border border-slate-300 shadow-2xs"
-              />
-              <div>
-                <p className="font-bold text-xs text-slate-900">{post.author.name}</p>
-                <p className="text-[10px] text-slate-500">{post.author.role}</p>
-              </div>
-            </div>
+        {/* Main Content Body Card */}
+        <div className="bg-white border border-slate-200 p-6 sm:p-10 shadow-sm space-y-6 leading-relaxed text-slate-800 text-xs sm:text-sm">
+          {/* Table of Contents */}
+          <div className="p-4 bg-slate-50 border border-slate-200 space-y-2">
+            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-900 font-heading">
+              Table of Contents
+            </h3>
+            <ul className="space-y-1.5 text-xs text-slate-600 font-sans">
+              {post.tableOfContents.map((toc, idx) => (
+                <li key={idx}>
+                  <a
+                    href={`#${toc.id}`}
+                    className="hover:text-emerald-700 hover:underline flex items-center gap-2"
+                  >
+                    <span className="text-[10px] text-emerald-700 font-bold font-mono">0{idx + 1}.</span>
+                    <span className="text-slate-800 hover:text-emerald-800">{toc.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-            <div className="flex items-center gap-1.5">
-              {post.keywords.slice(0, 3).map((kw, i) => (
+          {/* Render Content */}
+          <div className="pt-2">
+            <BlogContentRenderer content={post.content} />
+          </div>
+
+          {/* Keyword Tags */}
+          <div className="pt-6 border-t border-slate-200 space-y-2">
+            <h4 className="text-[11px] font-bold uppercase text-slate-500 font-heading">
+              Related Topics &amp; Enterprise Keywords:
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {post.keywords.map((kw, idx) => (
                 <span
-                  key={i}
-                  className="text-[9px] bg-slate-50 border border-slate-200 text-slate-600 px-2 py-0.5 uppercase hidden sm:inline-block"
+                  key={idx}
+                  className="text-[10px] bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 uppercase font-mono"
                 >
                   #{kw}
                 </span>
               ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Article Body & Sidebar Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content Body */}
-          <div className="lg:col-span-3 bg-white border border-slate-200 p-6 sm:p-10 shadow-sm space-y-6 leading-relaxed text-slate-800 text-xs sm:text-sm">
-            {/* Table of Contents */}
-            <div className="p-4 bg-slate-50 border border-slate-200 space-y-2">
-              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-900 font-heading">
-                Table of Contents
-              </h3>
-              <ul className="space-y-1 text-xs text-slate-600">
-                {post.tableOfContents.map((toc, idx) => (
-                  <li key={idx}>
-                    <a
-                      href={`#${toc.id}`}
-                      className="hover:text-emerald-700 hover:underline flex items-center gap-1.5"
-                    >
-                      <span className="text-[10px] text-slate-400 font-mono">0{idx + 1}.</span>
-                      <span>{toc.title}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Render Content */}
-            <div className="pt-2">
-              <BlogContentRenderer content={post.content} />
-            </div>
-
-            {/* Keyword Tags */}
-            <div className="pt-6 border-t border-slate-200 space-y-2">
-              <h4 className="text-[11px] font-bold uppercase text-slate-500 font-heading">
-                Related Topics &amp; Enterprise Keywords:
-              </h4>
-              <div className="flex flex-wrap gap-1.5">
-                {post.keywords.map((kw, idx) => (
-                  <span
-                    key={idx}
-                    className="text-[10px] bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 uppercase"
-                  >
-                    #{kw}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Sticky Side Column */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Launch App Card */}
-            <div className="bg-slate-900 text-white p-5 border border-slate-800 space-y-3 sticky top-20 shadow-md">
-              <div className="flex items-center gap-2 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
-                <Zap className="w-3.5 h-3.5" />
-                <span>Live POS Terminal</span>
-              </div>
-              <h4 className="font-bold text-sm font-heading leading-tight">
-                Experience Local-First Speed
-              </h4>
-              <p className="text-[11px] text-slate-300 leading-relaxed">
-                Test sub-50ms barcode searches, purchase order automation, and sales reporting.
-              </p>
-              <Link
-                href="/"
-                className="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5"
-              >
-                <span>Launch App</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
             </div>
           </div>
         </div>

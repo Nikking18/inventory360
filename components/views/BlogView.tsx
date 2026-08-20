@@ -147,19 +147,6 @@ export const BlogView: React.FC<BlogViewProps> = ({
             <p className="text-sm text-slate-600 leading-relaxed font-sans font-medium border-l-2 border-slate-900 pl-3">
               {selectedPost.excerpt}
             </p>
-
-            {/* Author Profile */}
-            <div className="flex items-center gap-3 pt-3 border-t border-slate-200">
-              <img
-                src={selectedPost.author.avatar}
-                alt={selectedPost.author.name}
-                className="w-10 h-10 rounded-full border border-slate-300 object-cover"
-              />
-              <div>
-                <p className="text-xs font-bold text-slate-900">{selectedPost.author.name}</p>
-                <p className="text-[10px] text-slate-500 uppercase">{selectedPost.author.role}</p>
-              </div>
-            </div>
           </div>
 
           {/* Table of Contents Box */}
