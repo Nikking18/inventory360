@@ -1218,6 +1218,7 @@ export default function AppMain() {
               onOpenLanding={closeToLanding}
               onOpenTour={() => setIsTourOpen(true)}
               onOpenDataPolicy={() => setShowDataPolicyNotice(true)}
+              autoSaveConfig={settings.autoSaveConfig}
             />
           </aside>
 
@@ -1285,6 +1286,7 @@ export default function AppMain() {
                       setShowDataPolicyNotice(true);
                       setIsMobileMenuOpen(false);
                     }}
+                    autoSaveConfig={settings.autoSaveConfig}
                   />
                 </div>
               </div>

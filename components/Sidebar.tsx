@@ -4,6 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { useTranslation } from '../context/I18nContext';
 import { LANGUAGES } from '../lib/i18n';
+import { AutoSaveConfig } from '../lib/types';
+import { formatDateTime } from '../lib/utils';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -19,6 +21,7 @@ import {
   Globe,
   Home,
   BookOpen,
+  HardDrive,
 } from 'lucide-react';
 
 export type NavItemKey =
@@ -46,6 +49,7 @@ interface SidebarProps {
   onOpenDemoModal?: () => void;
   onOpenTour?: () => void;
   onOpenDataPolicy?: () => void;
+  autoSaveConfig?: AutoSaveConfig;
 }
 
 export const NAV_ITEMS: {
@@ -139,6 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenLanding,
   onOpenTour,
   onOpenDataPolicy,
+  autoSaveConfig,
 }) => {
   const { t } = useTranslation();
 
@@ -231,8 +236,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
+      {/* Auto-Save Live Status Indicator */}
+      <div className="p-3 mx-3 my-1 bg-slate-50 border border-slate-200 text-[10px] font-mono">
+        <button
+          type="button"
+          onClick={() => {
+            onTabChange('setup');
+            if (onSubTabChange) onSubTabChange('autosave');
+          }}
+          className="w-full text-left group"
+          title="Click to manage automated backups"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`w-2 h-2 rounded-full shrink-0 ${
+                  autoSaveConfig?.enabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+                }`}
+              />
+              <span className="font-bold uppercase tracking-wider text-slate-800 text-[10px]">
+                {autoSaveConfig?.enabled ? 'Auto-Save Active' : 'Auto-Save Off'}
+              </span>
+            </div>
+            <span className="text-[9px] font-bold text-slate-500 group-hover:text-emerald-700 uppercase">
+              Manage &rarr;
+            </span>
+          </div>
+
+          {autoSaveConfig?.enabled && (
+            <div className="mt-1 flex items-center justify-between text-slate-500 text-[9px] pt-1 border-t border-slate-200">
+              <span className="truncate max-w-[110px]" title={autoSaveConfig.folderName || 'Selected Folder'}>
+                {autoSaveConfig.folderName || 'Selected Folder'}
+              </span>
+              <span className="font-semibold text-slate-700 shrink-0">
+                {autoSaveConfig.interval || '24h'}
+              </span>
+            </div>
+          )}
+        </button>
+      </div>
+
       {/* Data Policy Notice & Product Tour Actions */}
-      <div className="p-3 mx-3 my-2 bg-slate-50 border border-slate-200 space-y-2 text-[10px] font-mono">
+      <div className="p-3 mx-3 my-1 bg-slate-50 border border-slate-200 space-y-2 text-[10px] font-mono">
         <Link
           href="/blog"
           className="w-full py-1.5 px-2 bg-white border border-slate-300 text-slate-800 hover:text-black font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:border-slate-400 transition-colors shadow-2xs"
