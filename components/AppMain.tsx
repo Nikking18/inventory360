@@ -53,7 +53,6 @@ import { InventoryView } from './views/InventoryView';
 import { CustomersView } from './views/CustomersView';
 import { ReportingView } from './views/ReportingView';
 import { SetupView } from './views/SetupView';
-import { BlogView } from './views/BlogView';
 import { PrintReceipt } from './PrintReceipt';
 import { DataPolicyModal } from './common/DataPolicyModal';
 import { ProductTourModal } from './common/ProductTourModal';
@@ -84,7 +83,6 @@ const VALID_TABS: NavItemKey[] = [
   'inventory',
   'customers',
   'setup',
-  'blog',
 ];
 
 const DEFAULT_SUB_FOR_TAB: Record<string, string> = {
@@ -93,7 +91,6 @@ const DEFAULT_SUB_FOR_TAB: Record<string, string> = {
   catalog: 'all-products',
   fulfillment: 'all-orders',
   setup: 'general',
-  blog: 'all',
 };
 
 function getInitialRouteState(): { tab: NavItemKey; subTab: string } {
@@ -1401,17 +1398,6 @@ export default function AppMain() {
                   inventory={products}
                   activeSubTab={activeSubTab}
                   onSubTabChange={setActiveSubTab}
-                />
-              )}
-
-              {activeTab === 'blog' && (
-                <BlogView
-                  activeSubTab={activeSubTab}
-                  onSubTabChange={setActiveSubTab}
-                  onNavigateToTab={(tab, subTab) => {
-                    setActiveTab(tab as NavItemKey);
-                    if (subTab) setActiveSubTab(subTab);
-                  }}
                 />
               )}
               </ErrorBoundary>

@@ -243,33 +243,6 @@ export const BlogView: React.FC<BlogViewProps> = ({
             ))}
           </div>
         </article>
-
-        {/* Feature Action Banner */}
-        <div className="p-6 bg-slate-900 text-white flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-800 shadow-md">
-          <div className="space-y-1 text-center sm:text-left">
-            <h4 className="text-sm font-bold uppercase tracking-wider font-heading flex items-center gap-2 justify-center sm:justify-start">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span>Put This Strategy to Work in Inventory360</span>
-            </h4>
-            <p className="text-xs text-slate-300 font-mono">
-              Test out the zero-latency POS, auto-save backups, and inventory valuation analytics directly inside your workspace.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => onNavigateToTab && onNavigateToTab('sell', 'quick-sale')}
-              className="px-4 py-2 bg-emerald-500 text-slate-900 font-bold text-xs uppercase hover:bg-emerald-400 transition-colors cursor-pointer"
-            >
-              Launch POS Terminal &rarr;
-            </button>
-            <button
-              onClick={() => onNavigateToTab && onNavigateToTab('home', 'retail-dashboard')}
-              className="px-4 py-2 bg-white text-slate-900 font-bold text-xs uppercase hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              Open Dashboard
-            </button>
-          </div>
-        </div>
       </div>
     );
   }
