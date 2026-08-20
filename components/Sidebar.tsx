@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '../context/I18nContext';
 import { LANGUAGES } from '../lib/i18n';
@@ -23,6 +23,10 @@ import {
   BookOpen,
   HardDrive,
   MessageSquarePlus,
+  AlertTriangle,
+  X,
+  Check,
+  Database,
 } from 'lucide-react';
 
 export type NavItemKey =
@@ -48,6 +52,7 @@ interface SidebarProps {
   onLanguageChange?: (lang: string) => void;
   onOpenLanding?: () => void;
   onOpenDemoModal?: () => void;
+  onResetDemoData?: () => Promise<void> | void;
   onOpenTour?: () => void;
   onOpenDataPolicy?: () => void;
   autoSaveConfig?: AutoSaveConfig;
@@ -142,11 +147,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   language,
   onLanguageChange,
   onOpenLanding,
+  onResetDemoData,
   onOpenTour,
   onOpenDataPolicy,
   autoSaveConfig,
 }) => {
   const { t } = useTranslation();
+  const [showDemoConfirmModal, setShowDemoConfirmModal] = useState(false);
+  const [isSeedingDemo, setIsSeedingDemo] = useState(false);
 
   return (
     <aside className="w-full md:w-64 bg-white text-slate-900 flex flex-col h-full md:h-screen md:sticky md:top-0 shrink-0 border-r border-slate-200 z-30 select-none shadow-xs">
@@ -332,21 +340,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           <span>{t('interactive_tour', 'Interactive Tour')}</span>
         </button>
-        <div className="flex items-center justify-between pt-1 border-t border-slate-200">
-          <div className="flex items-center gap-1.5 text-slate-500">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-            <span className="uppercase tracking-wider font-semibold">{t('demo_mode', 'Ready')}</span>
-          </div>
-          {onOpenLanding && (
-            <button
-              onClick={onOpenLanding}
-              className="text-slate-900 hover:underline flex items-center gap-0.5 uppercase tracking-wider font-bold"
-            >
-              <span>{t('portal', 'Main Portal')}</span>
-              <ArrowUpRight className="w-3 h-3 text-slate-600" />
-            </button>
-          )}
-        </div>
+
+        {/* Functional Demo Button (Replaces static Demo Store / Main Portal row) */}
+        <button
+          type="button"
+          onClick={() => setShowDemoConfirmModal(true)}
+          className="w-full py-1.5 px-2 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-900 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+          title="Load Complete Demo Store Dataset"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+          <span>{t('load_demo_btn', 'Demo')}</span>
+        </button>
       </div>
 
       {/* Currency & Language Controls in Sidebar Footer */}
@@ -406,6 +410,81 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
         <ChevronRight className="w-4 h-4 text-slate-400" />
       </div>
+
+      {/* Demo Store Data Confirmation Modal Popup */}
+      {showDemoConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 font-mono">
+          <div className="bg-white border-2 border-slate-900 w-full max-w-md p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2 text-slate-900">
+                <div className="p-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700">
+                  <Database className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold uppercase tracking-wider">
+                  {t('demo_confirm_title', 'Load Demo Store Data')}
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowDemoConfirmModal(false)}
+                className="text-slate-400 hover:text-slate-900 p-1 hover:bg-slate-100"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-700 leading-relaxed">
+              <div className="p-3 bg-amber-50 border border-amber-200 flex gap-2.5 items-start text-amber-900 text-[11px]">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong>Confirmation:</strong> By accepting this, you allow us to displace demo data and populate your workspace with complete sample retail store records.
+                </div>
+              </div>
+              <p>
+                This will load realistic sample products with matrix variants, multi-outlet stock allocations, completed POS transactions, customer accounts, and vendor purchase orders.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 text-xs">
+              <button
+                type="button"
+                onClick={() => setShowDemoConfirmModal(false)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold uppercase tracking-wider cursor-pointer"
+                disabled={isSeedingDemo}
+              >
+                {t('cancel', 'Cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (onResetDemoData) {
+                    setIsSeedingDemo(true);
+                    try {
+                      await onResetDemoData();
+                    } finally {
+                      setIsSeedingDemo(false);
+                      setShowDemoConfirmModal(false);
+                    }
+                  } else {
+                    setShowDemoConfirmModal(false);
+                  }
+                }}
+                className="px-4 py-2 bg-slate-900 hover:bg-black text-white font-bold uppercase tracking-wider shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                disabled={isSeedingDemo}
+              >
+                {isSeedingDemo ? (
+                  <span>Loading Demo Data...</span>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{t('accept_load_demo', 'Accept & Load Demo')}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 };

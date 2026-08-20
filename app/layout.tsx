@@ -9,7 +9,7 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://inventory360.shop'),
+  metadataBase: new URL('https://www.inventory360.shop'),
   title: {
     default: 'Inventory 360 | Local-First POS & Enterprise Inventory Management System',
     template: '%s | Inventory 360',
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     'High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, autonomous purchase orders, and financial analytics powered by browser IndexedDB.',
   keywords: [
     'Inventory 360',
-    'inventory360.shop',
+    'www.inventory360.shop',
     'POS System',
     'Point of Sale',
     'Inventory Management Software',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     'Shopify Amazon POS Sync',
     'Lot and Expiry Tracking Software',
   ],
-  authors: [{ name: 'Inventory 360 Engineering Team', url: 'https://inventory360.shop' }],
+  authors: [{ name: 'Inventory 360 Engineering Team', url: 'https://www.inventory360.shop' }],
   creator: 'Inventory 360',
   publisher: 'Inventory 360',
   manifest: '/manifest.webmanifest',
@@ -53,11 +53,11 @@ export const metadata: Metadata = {
     title: 'Inventory 360 | Local-First POS & Inventory Management System',
     description:
       'High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, purchase order workflows, and financial analytics powered by browser IndexedDB.',
-    url: 'https://inventory360.shop',
+    url: 'https://www.inventory360.shop',
     siteName: 'Inventory 360',
     images: [
       {
-        url: 'https://inventory360.shop/og-image.png',
+        url: 'https://www.inventory360.shop/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Inventory 360 - Local-First POS & Enterprise Inventory Management System',
@@ -71,10 +71,10 @@ export const metadata: Metadata = {
     title: 'Inventory 360 | Local-First POS & Inventory Management System',
     description:
       'High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, purchase order workflows, and financial analytics powered by browser IndexedDB.',
-    images: ['https://inventory360.shop/og-image.png'],
+    images: ['https://www.inventory360.shop/og-image.png'],
   },
   alternates: {
-    canonical: 'https://inventory360.shop',
+    canonical: 'https://www.inventory360.shop',
   },
   robots: {
     index: true,
@@ -94,32 +94,32 @@ const jsonLdSchema = {
   '@graph': [
     {
       '@type': 'WebSite',
-      '@id': 'https://inventory360.shop/#website',
-      'url': 'https://inventory360.shop',
+      '@id': 'https://www.inventory360.shop/#website',
+      'url': 'https://www.inventory360.shop',
       'name': 'Inventory 360',
       'description': 'High-performance, local-first retail enterprise POS and stock management system.',
       'publisher': {
-        '@id': 'https://inventory360.shop/#organization',
+        '@id': 'https://www.inventory360.shop/#organization',
       },
       'potentialAction': {
         '@type': 'SearchAction',
-        'target': 'https://inventory360.shop/?q={search_term_string}',
+        'target': 'https://www.inventory360.shop/?q={search_term_string}',
         'query-input': 'required name=search_term_string',
       },
       'inLanguage': 'en-US',
     },
     {
       '@type': 'Organization',
-      '@id': 'https://inventory360.shop/#organization',
+      '@id': 'https://www.inventory360.shop/#organization',
       'name': 'Inventory 360 Enterprise',
-      'url': 'https://inventory360.shop',
+      'url': 'https://www.inventory360.shop',
       'logo': {
         '@type': 'ImageObject',
-        'url': 'https://inventory360.shop/icon.png',
+        'url': 'https://www.inventory360.shop/icon.png',
         'width': 512,
         'height': 512,
       },
-      'image': 'https://inventory360.shop/og-image.png',
+      'image': 'https://www.inventory360.shop/og-image.png',
       'description': 'Creator of the local-first, zero-cloud dependency retail POS & inventory management platform.',
       'sameAs': [
         'https://github.com/Nikking18/inventory360',
@@ -127,7 +127,7 @@ const jsonLdSchema = {
     },
     {
       '@type': 'SoftwareApplication',
-      '@id': 'https://inventory360.shop/#software',
+      '@id': 'https://www.inventory360.shop/#software',
       'name': 'Inventory 360',
       'applicationCategory': 'BusinessApplication',
       'operatingSystem': 'All modern web browsers (Chrome, Edge, Safari, Firefox)',
@@ -140,9 +140,9 @@ const jsonLdSchema = {
       },
       'description':
         'High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, purchase order workflows, and financial analytics powered by browser IndexedDB.',
-      'url': 'https://inventory360.shop',
+      'url': 'https://www.inventory360.shop',
       'author': {
-        '@id': 'https://inventory360.shop/#organization',
+        '@id': 'https://www.inventory360.shop/#organization',
       },
       'aggregateRating': {
         '@type': 'AggregateRating',
@@ -163,10 +163,10 @@ const jsonLdSchema = {
     },
     {
       '@type': 'LocalBusiness',
-      '@id': 'https://inventory360.shop/#localbusiness',
+      '@id': 'https://www.inventory360.shop/#localbusiness',
       'name': 'Inventory 360 Flagship Terminal',
-      'image': 'https://inventory360.shop/og-image.png',
-      'url': 'https://inventory360.shop',
+      'image': 'https://www.inventory360.shop/og-image.png',
+      'url': 'https://www.inventory360.shop',
       'telephone': '+1-800-555-0360',
       'priceRange': '$$',
       'address': {

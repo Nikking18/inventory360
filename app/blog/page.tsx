@@ -16,17 +16,17 @@ export const metadata: Metadata = {
     'lot and expiry tracking best practices',
   ],
   alternates: {
-    canonical: 'https://inventory360.shop/blog',
+    canonical: 'https://www.inventory360.shop/blog',
   },
   openGraph: {
     title: 'Inventory & POS Operations Blog | Inventory 360',
     description: 'Expert guides on local-first POS systems, inventory turnover ratios, omnichannel retail fulfillment, lot & expiry tracking, and barcode label workflows.',
-    url: 'https://inventory360.shop/blog',
+    url: 'https://www.inventory360.shop/blog',
     siteName: 'Inventory 360',
     type: 'website',
     images: [
       {
-        url: 'https://inventory360.shop/og-image.png',
+        url: 'https://www.inventory360.shop/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Inventory 360 Engineering & Retail Strategy Blog',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Inventory & POS Operations Blog | Inventory 360',
     description: 'Expert guides on local-first POS systems, inventory turnover ratios, omnichannel retail fulfillment, lot & expiry tracking, and barcode label workflows.',
-    images: ['https://inventory360.shop/og-image.png'],
+    images: ['https://www.inventory360.shop/og-image.png'],
   },
 };
 
@@ -45,25 +45,25 @@ export default function BlogIndexPage() {
   const jsonLdBlogSchema = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
-    '@id': 'https://inventory360.shop/blog/#blog',
+    '@id': 'https://www.inventory360.shop/blog/#blog',
     'name': 'Inventory 360 Operational Insights & Retail ERP Blog',
     'description': 'Expert guides on local-first POS systems, inventory turnover ratios, omnichannel retail fulfillment, and barcode workflows.',
-    'url': 'https://inventory360.shop/blog',
+    'url': 'https://www.inventory360.shop/blog',
     'publisher': {
       '@type': 'Organization',
-      '@id': 'https://inventory360.shop/#organization',
+      '@id': 'https://www.inventory360.shop/#organization',
       'name': 'Inventory 360 Enterprise',
       'logo': {
         '@type': 'ImageObject',
-        'url': 'https://inventory360.shop/icon.png',
+        'url': 'https://www.inventory360.shop/icon.png',
       },
     },
     'blogPost': BLOG_POSTS.map((post) => ({
       '@type': 'BlogPosting',
-      '@id': `https://inventory360.shop/blog/${post.slug}#article`,
+      '@id': `https://www.inventory360.shop/blog/${post.slug}#article`,
       'headline': post.title,
       'description': post.excerpt,
-      'url': `https://inventory360.shop/blog/${post.slug}`,
+      'url': `https://www.inventory360.shop/blog/${post.slug}`,
       'datePublished': '2026-08-14T00:00:00Z',
       'dateModified': '2026-08-20T00:00:00Z',
       'author': {
@@ -71,7 +71,7 @@ export default function BlogIndexPage() {
         'name': post.author.name,
       },
       'keywords': post.keywords.join(', '),
-      'image': 'https://inventory360.shop/og-image.png',
+      'image': 'https://www.inventory360.shop/og-image.png',
     })),
   };
 

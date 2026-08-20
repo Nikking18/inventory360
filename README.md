@@ -2,12 +2,12 @@
 
 > **Industrial-Grade Local-First Point of Sale (POS) & Multi-Outlet Inventory Management System**
 
-[![Live Production](https://img.shields.io/badge/🌐_Live_Domain-inventory360.shop-10B981?style=for-the-badge&logo=vercel&logoColor=white)](https://inventory360.shop/)
+[![Live Production](https://img.shields.io/badge/🌐_Live_Domain-www.inventory360.shop-10B981?style=for-the-badge&logo=vercel&logoColor=white)](https://www.inventory360.shop/)
 [![Next.js 15](https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![IndexedDB Local-First](https://img.shields.io/badge/Storage-100%25_Offline_IndexedDB-blueviolet?style=for-the-badge)](https://inventory360.shop/)
-[![Languages](https://img.shields.io/badge/i18n-11_Languages_Supported-amber?style=for-the-badge)](https://inventory360.shop/)
+[![IndexedDB Local-First](https://img.shields.io/badge/Storage-100%25_Offline_IndexedDB-blueviolet?style=for-the-badge)](https://www.inventory360.shop/)
+[![Languages](https://img.shields.io/badge/i18n-11_Languages_Supported-amber?style=for-the-badge)](https://www.inventory360.shop/)
 
 Inventory 360 is a zero-latency, local-first retail enterprise web application designed for fast, offline-resilient stock tracking, quick-sale POS terminal operations, matrix product variants, lots & FEFO batch expiry management, multi-channel marketplace synchronization, thermal receipt printing, and multi-outlet financial analytics.
 
@@ -16,7 +16,7 @@ Inventory 360 is a zero-latency, local-first retail enterprise web application d
 ## 🌐 Official Production Domain
 
 🚀 **Launch the Web App:**  
-👉 **[https://inventory360.shop/](https://inventory360.shop/)**
+👉 **[https://www.inventory360.shop/](https://www.inventory360.shop/)**
 
 ---
 

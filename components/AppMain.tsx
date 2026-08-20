@@ -1176,6 +1176,7 @@ export default function AppMain() {
             onOpenLanding={closeToLanding}
             onOpenTour={() => setIsTourOpen(true)}
             onOpenDataPolicy={() => setShowDataPolicyNotice(true)}
+            onResetDemoData={seedDemoData}
             autoSaveConfig={settings.autoSaveConfig}
           />
         </aside>
@@ -1242,6 +1243,10 @@ export default function AppMain() {
                     }}
                     onOpenDataPolicy={() => {
                       setShowDataPolicyNotice(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    onResetDemoData={async () => {
+                      await seedDemoData();
                       setIsMobileMenuOpen(false);
                     }}
                     autoSaveConfig={settings.autoSaveConfig}

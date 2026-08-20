@@ -28,14 +28,14 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     title: `${post.title} | Inventory 360 Engineering Blog`,
     description: post.metaDescription,
     keywords: post.keywords,
-    authors: [{ name: post.author.name, url: 'https://inventory360.shop' }],
+    authors: [{ name: post.author.name, url: 'https://www.inventory360.shop' }],
     alternates: {
-      canonical: `https://inventory360.shop/blog/${post.slug}`,
+      canonical: `https://www.inventory360.shop/blog/${post.slug}`,
     },
     openGraph: {
       title: post.title,
       description: post.metaDescription,
-      url: `https://inventory360.shop/blog/${post.slug}`,
+      url: `https://www.inventory360.shop/blog/${post.slug}`,
       siteName: 'Inventory 360',
       type: 'article',
       publishedTime: '2026-08-14T00:00:00Z',
@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       tags: post.keywords,
       images: [
         {
-          url: 'https://inventory360.shop/og-image.png',
+          url: 'https://www.inventory360.shop/og-image.png',
           width: 1200,
           height: 630,
           alt: post.title,
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       card: 'summary_large_image',
       title: post.title,
       description: post.metaDescription,
-      images: ['https://inventory360.shop/og-image.png'],
+      images: ['https://www.inventory360.shop/og-image.png'],
     },
   };
 }
@@ -73,37 +73,37 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     '@graph': [
       {
         '@type': 'BreadcrumbList',
-        '@id': `https://inventory360.shop/blog/${post.slug}#breadcrumb`,
+        '@id': `https://www.inventory360.shop/blog/${post.slug}#breadcrumb`,
         'itemListElement': [
           {
             '@type': 'ListItem',
             'position': 1,
             'name': 'Home',
-            'item': 'https://inventory360.shop',
+            'item': 'https://www.inventory360.shop',
           },
           {
             '@type': 'ListItem',
             'position': 2,
             'name': 'Blog',
-            'item': 'https://inventory360.shop/blog',
+            'item': 'https://www.inventory360.shop/blog',
           },
           {
             '@type': 'ListItem',
             'position': 3,
             'name': post.title,
-            'item': `https://inventory360.shop/blog/${post.slug}`,
+            'item': `https://www.inventory360.shop/blog/${post.slug}`,
           },
         ],
       },
       {
         '@type': 'TechArticle',
-        '@id': `https://inventory360.shop/blog/${post.slug}#article`,
+        '@id': `https://www.inventory360.shop/blog/${post.slug}#article`,
         'headline': post.title,
         'description': post.metaDescription,
-        'url': `https://inventory360.shop/blog/${post.slug}`,
+        'url': `https://www.inventory360.shop/blog/${post.slug}`,
         'datePublished': '2026-08-14T00:00:00Z',
         'dateModified': '2026-08-20T00:00:00Z',
-        'image': 'https://inventory360.shop/og-image.png',
+        'image': 'https://www.inventory360.shop/og-image.png',
         'author': {
           '@type': 'Person',
           'name': post.author.name,
@@ -111,16 +111,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         },
         'publisher': {
           '@type': 'Organization',
-          '@id': 'https://inventory360.shop/#organization',
+          '@id': 'https://www.inventory360.shop/#organization',
           'name': 'Inventory 360 Enterprise',
           'logo': {
             '@type': 'ImageObject',
-            'url': 'https://inventory360.shop/icon.png',
+            'url': 'https://www.inventory360.shop/icon.png',
           },
         },
         'mainEntityOfPage': {
           '@type': 'WebPage',
-          '@id': `https://inventory360.shop/blog/${post.slug}`,
+          '@id': `https://www.inventory360.shop/blog/${post.slug}`,
         },
         'keywords': post.keywords.join(', '),
       },
