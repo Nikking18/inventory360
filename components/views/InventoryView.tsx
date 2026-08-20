@@ -91,7 +91,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   activeSubTab = 'stock-levels',
   onSubTabChange,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [search, setSearch] = useState('');
   const [locationFilter, setLocationFilter] = useState('all');
   const [movementTypeFilter, setMovementTypeFilter] = useState('all');
@@ -508,7 +508,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       'Total Retail Valuation ($)': (p.retailPrice * p.stockQuantity).toFixed(2),
       'Inventory Status': p.status,
     }));
-    exportToCSV('Master_Stock_Levels_Report', data);
+    exportToCSV('Master_Stock_Levels_Report', data, language);
     showToast('Stock Levels exported to CSV!');
   };
 
@@ -526,7 +526,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       'Retail Valuation ($)': (p.retailPrice * p.stockQuantity).toFixed(2),
       'Inventory Status': p.status,
     }));
-    exportToExcel('Master_Stock_Levels_Report', data);
+    exportToExcel('Master_Stock_Levels_Report', data, language);
     showToast('Stock Levels exported to Excel!');
   };
 
@@ -549,7 +549,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       data,
       settings?.businessName || 'Inventory 360 Enterprise',
       settings?.logoUrl,
-      settings?.taxNumber
+      settings?.taxNumber,
+      language
     );
     showToast('Stock Valuation Report PDF downloaded!');
   };
@@ -567,7 +568,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       'Resulting Stock': m.newStock,
       'Audit Notes / Reason': m.notes || 'System Ledger',
     }));
-    exportToCSV('Stock_Movements_Audit_Ledger', data);
+    exportToCSV('Stock_Movements_Audit_Ledger', data, language);
     showToast('Movements ledger exported to CSV!');
   };
 
@@ -577,7 +578,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       currencySymbol,
       settings?.businessName || 'Inventory 360 Enterprise',
       settings?.logoUrl,
-      settings?.taxNumber
+      settings?.taxNumber,
+      language
     );
     showToast(`Purchase Order Slip PDF downloaded for ${po.poNumber}!`);
   };

@@ -32,7 +32,8 @@ export type NavItemKey =
   | 'catalog'
   | 'inventory'
   | 'customers'
-  | 'setup';
+  | 'setup'
+  | 'blog';
 
 interface SidebarProps {
   activeTab: NavItemKey;
@@ -125,6 +126,19 @@ export const NAV_ITEMS: {
       { id: 'profile', label: 'Business Profile' },
       { id: 'locations', label: 'Store Locations' },
       { id: 'data', label: 'Data & Backup' },
+    ],
+  },
+  {
+    key: 'blog',
+    label: 'Knowledge & Blog',
+    icon: BookOpen,
+    subTabs: [
+      { id: 'all', label: 'All Articles' },
+      { id: 'pos-tech', label: 'POS & Architecture' },
+      { id: 'inventory-strategy', label: 'Inventory Strategy' },
+      { id: 'omnichannel', label: 'Omnichannel' },
+      { id: 'compliance', label: 'Operations & Compliance' },
+      { id: 'hardware', label: 'Hardware & Guides' },
     ],
   },
 ];

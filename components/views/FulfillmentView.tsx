@@ -73,7 +73,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
   activeSubTab = 'channels',
   onSubTabChange,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   // Filters & State
   const [selectedStatusTab, setSelectedStatusTab] = useState<string>('all');
@@ -1075,7 +1075,8 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                     pendingOrders.length,
                     settings?.businessName,
                     settings?.logoUrl,
-                    settings?.taxNumber
+                    settings?.taxNumber,
+                    language
                   );
                 }}
                 className="px-4 py-2 bg-white border border-slate-300 text-slate-800 font-bold uppercase hover:bg-slate-100 flex items-center gap-1.5 shadow-2xs text-xs"
@@ -1091,7 +1092,8 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                     pendingOrders.length,
                     settings?.businessName,
                     settings?.logoUrl,
-                    settings?.taxNumber
+                    settings?.taxNumber,
+                    language
                   );
                   window.print();
                 }}

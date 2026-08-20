@@ -81,7 +81,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
   activeSubTab = 'retail-dashboard',
   onSubTabChange,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [selectedLocation, setSelectedLocation] = useState<string>('all');
   const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'year' | 'all'>('month');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
@@ -346,7 +346,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
       'Gross Profit': i.profit,
       'Gross Margin %': i.revenue > 0 ? ((i.profit / i.revenue) * 100).toFixed(1) : '0.0',
     }));
-    exportToCSV(`Report_${activeSubTab}_${selectedLocation}`, data);
+    exportToCSV(`Report_${activeSubTab}_${selectedLocation}`, data, language);
     setShowExportMenu(false);
   };
 
@@ -361,7 +361,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
       'Gross Profit': i.profit,
       'Gross Margin %': i.revenue > 0 ? ((i.profit / i.revenue) * 100).toFixed(1) : '0.0',
     }));
-    exportToExcel(`Report_${activeSubTab}_${selectedLocation}`, data);
+    exportToExcel(`Report_${activeSubTab}_${selectedLocation}`, data, language);
     setShowExportMenu(false);
   };
 
@@ -377,7 +377,11 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
     exportToPDF(
       `Report_${activeSubTab}`,
       `FINANCIAL & ANALYTICS REPORT (${activeSubTab.toUpperCase().replace('-', ' ')})`,
-      data
+      data,
+      'Inventory 360 Enterprise',
+      undefined,
+      undefined,
+      language
     );
     setShowExportMenu(false);
   };

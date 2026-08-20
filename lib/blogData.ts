@@ -4,7 +4,7 @@ export interface BlogPost {
   excerpt: string;
   metaDescription: string;
   keywords: string[];
-  category: 'POS & Technology' | 'Inventory Strategy' | 'Omnichannel Retail' | 'Operations & Compliance';
+  category: 'POS & Technology' | 'Inventory Strategy' | 'Omnichannel Retail' | 'Operations & Compliance' | 'Hardware & Guides';
   author: {
     name: string;
     role: string;
@@ -13,7 +13,7 @@ export interface BlogPost {
   publishedAt: string;
   readTime: string;
   tableOfContents: { id: string; title: string }[];
-  content: string; // Markdown / Structured HTML content
+  content: string;
 }
 
 export const BLOG_POSTS: BlogPost[] = [
@@ -38,7 +38,7 @@ export const BLOG_POSTS: BlogPost[] = [
       role: 'Principal Systems Architect',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
     },
-    publishedAt: 'August 14, 2026',
+    publishedAt: 'August 18, 2026',
     readTime: '7 min read',
     tableOfContents: [
       { id: 'the-cloud-latency-trap', title: 'The Cloud Latency Trap in Modern Retail' },
@@ -114,7 +114,7 @@ Inventory 360 is built from the ground up on modern local-first primitives:
       role: 'Director of Inventory Analytics',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'
     },
-    publishedAt: 'August 12, 2026',
+    publishedAt: 'August 16, 2026',
     readTime: '9 min read',
     tableOfContents: [
       { id: 'what-is-inventory-turnover', title: 'What is Inventory Turnover Ratio?' },
@@ -161,7 +161,7 @@ $$\\text{Sales Velocity} = \\frac{\\text{Units Sold in Period}}{\\text{Days in P
 
 $$\\text{Days Supply Remaining} = \\frac{\\text{Current Stock Quantity}}{\\text{Sales Velocity (Units/Day)}}$$
 
-In **Inventory 360's Business Intelligence suite**, these calculations are automated in real-time. If a product has 60 units in stock and sells 2 units per day, the system alerts you that you have **30 days of supply remaining** before reaching a stockout breach.
+In **Inventory 360's Reporting & Velocity suite**, these calculations are automated in real-time. If a product has 60 units in stock and sells 2 units per day, the system alerts you that you have **30 days of supply remaining** before reaching a stockout breach.
 
 ---
 
@@ -204,7 +204,7 @@ In **Inventory 360's Business Intelligence suite**, these calculations are autom
       role: 'Head of Retail Operations',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'
     },
-    publishedAt: 'August 10, 2026',
+    publishedAt: 'August 14, 2026',
     readTime: '8 min read',
     tableOfContents: [
       { id: 'the-overselling-nightmare', title: 'The Omnichannel Overselling Dilemma' },
@@ -281,7 +281,7 @@ To protect against marketplace synchronization delay (which can range from 1 to 
       role: 'Compliance & Quality Lead',
       avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80'
     },
-    publishedAt: 'August 08, 2026',
+    publishedAt: 'August 12, 2026',
     readTime: '6 min read',
     tableOfContents: [
       { id: 'why-lot-tracking-matters', title: 'Why Lot & Batch Tracking is Non-Negotiable' },
@@ -318,38 +318,49 @@ When a supplier announces a contaminated batch or defective lot:
   },
   {
     slug: 'barcode-qr-code-inventory-setup-label-printing',
-    title: 'Barcode & QR Code Inventory Systems: Step-by-Step Label Printing & Scanning Setup',
+    title: 'Barcode & QR Code Inventory Systems: Step-by-Step Label Printing & Scanning Setup (GS1 Sunrise 2027 Ready)',
     excerpt: 'A practical, hardware-agnostic guide to configuring 1D Code 128 barcodes, 2D QR codes, thermal label printers, and USB/Bluetooth scanners for zero-error stock counts.',
-    metaDescription: 'Complete step-by-step tutorial to set up barcode and QR code scanning in your retail store. Learn about Code 128, thermal label printers, SKU formatting, and scanner configuration.',
+    metaDescription: 'Complete step-by-step tutorial to set up barcode and QR code scanning in your retail store. Learn about Code 128, GS1 2D barcode transition, thermal label printers, and scanner configuration.',
     keywords: [
       'barcode inventory system setup',
+      'GS1 Sunrise 2027 2D barcodes',
       'QR code label printing',
       'UPC barcode scanner POS',
       'custom SKU generator',
       'thermal label printer setup',
-      'free barcode generator POS',
       'retail barcode standards'
     ],
-    category: 'POS & Technology',
+    category: 'Hardware & Guides',
     author: {
       name: 'David Kowalski',
       role: 'Hardware & Systems Integration Specialist',
       avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80'
     },
-    publishedAt: 'August 05, 2026',
+    publishedAt: 'August 10, 2026',
     readTime: '7 min read',
     tableOfContents: [
       { id: 'choosing-barcode-format', title: '1D vs 2D Barcodes: Code 128 vs QR Code' },
+      { id: 'gs1-sunrise-2027', title: 'The GS1 Sunrise 2027 2D Barcode Transition' },
       { id: 'sku-naming-best-practices', title: 'Best Practices for SKU & Barcode Formatting' },
       { id: 'thermal-printers', title: 'Thermal Label Printers & Media Sizing' },
-      { id: 'hardware-scanners', title: 'Configuring USB & Bluetooth Handheld Scanners' },
-      { id: 'label-printing-modal', title: 'Generating Printable Labels in Inventory 360' }
+      { id: 'hardware-scanners', title: 'Configuring USB & Bluetooth Handheld Scanners' }
     ],
     content: `
 ### 1D vs 2D Barcodes: Code 128 vs QR Code
 
 * **Code 128 (1D Linear Barcode)**: The gold standard for retail product labeling. Compact, universally readable by standard laser and CCD barcode scanners, and ideal for linear SKU strings (e.g. \`SKU-APP-001\`).
 * **QR Code (2D Matrix Code)**: Capable of holding hundreds of alphanumeric characters. Perfect for encoding product URLs, lot numbers, batch IDs, and direct digital warranty verification links.
+
+---
+
+### The GS1 Sunrise 2027 2D Barcode Transition
+
+Global retail is migrating toward **2D barcodes by 2027 (GS1 Sunrise initiative)**. 2D barcodes allow point-of-sale systems to scan a single dynamic square code that contains:
+* Master GTIN / SKU number
+* Serialized batch / lot number
+* Expiration date and manufacturing origin
+
+Inventory 360 is built with native support for both high-density 1D Code 128 and 2D QR Code vector generation.
 
 ---
 
@@ -370,16 +381,306 @@ Standard retail label sizes:
 * **Standard Product Barcode**: $2.25\" \\times 1.25\"$ ($57\\text{mm} \\times 32\\text{mm}$)
 * **Compact Jewelry / Price Tag**: $1.5\" \\times 0.5\"$ ($38\\text{mm} \\times 13\\text{mm}$)
 * **Shipping Box Label**: $4\" \\times 6\"$ ($100\\text{mm} \\times 150\\text{mm}$)
+    `
+  },
+  {
+    slug: 'multi-location-inventory-transfers-warehouse-routing',
+    title: 'Multi-Location Inventory Routing: Managing Inter-Branch Transfers, Central Warehouses & Outlet Reordering',
+    excerpt: 'Step-by-step framework for routing stock between central distribution hubs and retail branch locations with zero phantom inventory or audit discrepancies.',
+    metaDescription: 'Learn how to manage multi-location inventory, inter-outlet stock transfers, warehouse routing, and location-specific reorder points across multiple store branches.',
+    keywords: [
+      'multi location inventory management',
+      'inter store stock transfer procedure',
+      'multi branch retail POS',
+      'warehouse stock routing',
+      'centralized distribution inventory',
+      'outlet stock replenishment',
+      'multi warehouse inventory software'
+    ],
+    category: 'Operations & Compliance',
+    author: {
+      name: 'Marcus Vance',
+      role: 'Head of Retail Operations',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'
+    },
+    publishedAt: 'August 08, 2026',
+    readTime: '8 min read',
+    tableOfContents: [
+      { id: 'the-multi-location-challenge', title: 'The Multi-Location Stock Visibility Problem' },
+      { id: 'hub-and-spoke-distribution', title: 'Hub-and-Spoke Distribution Model' },
+      { id: 'stock-transfer-workflow', title: '3-Step Inter-Location Transfer Protocol' },
+      { id: 'location-specific-reorder-points', title: 'Configuring Branch-Level Reorder Thresholds' },
+      { id: 'inventory-reconciliation', title: 'Preventing Phantom Stock & In-Transit Leakage' }
+    ],
+    content: `
+### The Multi-Location Stock Visibility Problem
+
+As soon as a retail business expands beyond a single shopfront into two or more physical locations (or opens a central warehouse), inventory complexity increases exponentially:
+* Stockouts occur at high-traffic branches while surplus stock sits dormant in secondary outlets.
+* Cashiers cannot tell customers whether an item is in stock across town.
+* Transferring items between stores results in "in-transit shrinkage" where units vanish from records.
 
 ---
 
-### Generating Printable Labels in Inventory 360
+### Hub-and-Spoke Distribution Model
 
-In Inventory 360, you can generate crisp, high-density SVG barcodes and QR codes for any product or variant:
-1. Open **Master Product Catalog**.
-2. Click the **Printer Icon** on any SKU.
-3. Select label size ($2.25\" \\times 1.25\"$ or Compact), choose barcode format (**Code 128** or **QR Code**), and select quantity.
-4. Click **Print Label Sheet** to output pixel-perfect vectors ready for your thermal printer.
+The most cost-effective multi-location inventory architecture is the **Hub-and-Spoke model**:
+
+1. **Central Warehouse (The Hub)**: Receives bulk purchase order shipments directly from overseas manufacturers and wholesale distributors.
+2. **Retail Outlets (The Spokes)**: Maintain compact, fast-moving floor stock with replenishment shipments delivered 1–2 times per week from the central warehouse.
+
+---
+
+### 3-Step Inter-Location Transfer Protocol
+
+To ensure 100% inventory accuracy during transfers:
+
+\`\`\`
+[1. Transfer Initiated (Stock Deducted from Source)]
+   ➔ [2. In-Transit Transit State]
+   ➔ [3. Receiving Inspection & Sign-off (Stock Added to Destination)]
+\`\`\`
+
+1. **Initiate Transfer**: Source branch manager creates an official Stock Transfer voucher specifying SKU, batch, quantity, and destination.
+2. **Transit Lock**: The quantity is instantly deducted from the source location’s available balance so it cannot be sold.
+3. **Receipt Confirmation**: The receiving store scans the inbound units, verifies quantities against the transfer manifest, and signs off. Only then are items added to the active sales floor.
+    `
+  },
+  {
+    slug: 'automated-purchase-orders-reorder-point-formulas',
+    title: 'Automated Purchase Orders & Dynamic Reorder Point Formulas: Eliminating Stockouts and Carrying Cost Waste',
+    excerpt: 'Learn the exact mathematical formulas for calculating Economic Order Quantity (EOQ), Lead Time Demand, and Safety Stock to automate purchase orders.',
+    metaDescription: 'Master reorder point formulas, EOQ calculations, safety stock buffers, and automated supplier purchase order workflows to optimize retail cash flow.',
+    keywords: [
+      'reorder point formula excel',
+      'economic order quantity EOQ formula',
+      'safety stock calculation',
+      'automated purchase orders POS',
+      'supplier lead time demand',
+      'procurement automation software',
+      'prevent retail stockouts'
+    ],
+    category: 'Inventory Strategy',
+    author: {
+      name: 'Elena Rostova',
+      role: 'Director of Inventory Analytics',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'
+    },
+    publishedAt: 'August 06, 2026',
+    readTime: '9 min read',
+    tableOfContents: [
+      { id: 'the-cost-of-stockouts', title: 'The True Financial Cost of Stockouts & Excess Stock' },
+      { id: 'reorder-point-formula', title: 'The Master Reorder Point (ROP) Formula' },
+      { id: 'safety-stock-math', title: 'Calculating Statistical Safety Stock Buffers' },
+      { id: 'eoq-formula', title: 'Economic Order Quantity (EOQ) Calculation' },
+      { id: 'automated-po-generation', title: 'Generating Supplier PO Slips in Inventory 360' }
+    ],
+    content: `
+### The True Financial Cost of Stockouts & Excess Stock
+
+Retailers constantly balance two competing financial risks:
+1. **Stockouts**: Lost revenue, disappointed buyers, and lost customer lifetime value (LTV).
+2. **Excess Stock**: Trapped working capital, warehouse storage costs, insurance, and risk of obsolescence.
+
+The solution is mathematical inventory automation using **Dynamic Reorder Points (ROP)**.
+
+---
+
+### The Master Reorder Point (ROP) Formula
+
+$$\\text{Reorder Point (ROP)} = (\\text{Average Daily Usage} \\times \\text{Supplier Lead Time in Days}) + \\text{Safety Stock}$$
+
+#### Worked Example:
+* **Average Sales Rate**: 8 units/day
+* **Supplier Lead Time**: 5 business days
+* **Safety Stock Buffer**: 15 units
+
+$$\\text{ROP} = (8 \\times 5) + 15 = 40 + 15 = 55 \\text{ units}$$
+
+Whenever stock on hand drops to **55 units**, the system triggers a purchase requisition.
+
+---
+
+### Economic Order Quantity (EOQ) Calculation
+
+$$\\text{EOQ} = \\sqrt{\\frac{2 \\times D \\times S}{H}}$$
+
+Where:
+* $D$ = Annual Demand (units/year)
+* $S$ = Fixed Ordering Cost per Purchase Order ($)
+* $H$ = Annual Carrying Cost per Unit ($)
+
+---
+
+### Generating Supplier PO Slips in Inventory 360
+
+In Inventory 360, when stock hits the reorder point:
+1. Open **Inventory > Low Stock Alerts**.
+2. Click **Generate Purchase Order**.
+3. The system automatically populates supplier details, item costs, and suggested replenishment quantities.
+4. Export or download an official, print-ready **PO Slip PDF** formatted with company branding and tax details.
+    `
+  },
+  {
+    slug: 'abc-inventory-classification-dead-stock-liquidation',
+    title: 'ABC Inventory Analysis & Dead Stock Liquidation: Unlocking Frozen Working Capital in Retail',
+    excerpt: 'Apply the Pareto Principle (80/20 rule) to classify inventory into Class A, B, and C SKUs, and execute a 4-tier liquidation strategy for non-moving dead stock.',
+    metaDescription: 'Comprehensive guide to ABC inventory analysis, Pareto classification, dead stock identification, and liquidation strategies to maximize retail working capital.',
+    keywords: [
+      'ABC inventory analysis method',
+      'liquidate dead stock retail',
+      'Pareto principle inventory 80 20',
+      'non moving inventory strategies',
+      'free working capital retail',
+      'stock aging report',
+      'inventory turnover optimization'
+    ],
+    category: 'Inventory Strategy',
+    author: {
+      name: 'Alexander Vance',
+      role: 'Principal Systems Architect',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+    },
+    publishedAt: 'August 04, 2026',
+    readTime: '8 min read',
+    tableOfContents: [
+      { id: 'the-pareto-principle-in-retail', title: 'The Pareto Principle (80/20 Rule) in Inventory' },
+      { id: 'class-a-b-c-breakdown', title: 'Class A, B, and C Breakdown & Thresholds' },
+      { id: 'identifying-dead-stock', title: 'How to Detect Stagnant & Dead Stock' },
+      { id: '4-tier-liquidation-plan', title: '4-Tier Dead Stock Liquidation Playbook' },
+      { id: 'measuring-capital-recovery', title: 'Measuring Working Capital Recovery' }
+    ],
+    content: `
+### The Pareto Principle (80/20 Rule) in Inventory
+
+In virtually every retail business:
+* **20% of your product catalog generates 80% of your total revenue.**
+* The remaining 80% of SKUs generate only 20% of sales and consume 80% of your warehouse space.
+
+**ABC Analysis** categorizes products based on revenue contribution so you allocate working capital where it yields maximum return.
+
+---
+
+### Class A, B, and C Breakdown & Thresholds
+
+| Category | % of Total SKUs | % of Annual Revenue | Management Strategy |
+| :--- | :--- | :--- | :--- |
+| **Class A** | ~15% – 20% | **70% – 80%** | Tight daily tracking, strict safety stocks, priority vendor replenishment |
+| **Class B** | ~30% – 35% | **15% – 20%** | Moderate weekly review, automated standard reorder points |
+| **Class C** | ~50% – 55% | **5% – 10%** | Minimal buffer stocks, bulk periodic ordering or on-demand drop-shipping |
+
+---
+
+### 4-Tier Dead Stock Liquidation Playbook
+
+When an item records zero sales over 60+ days:
+
+1. **Tier 1: Bundling & Cross-Merchandising**: Bundle slow-moving accessories with best-selling Class A products (e.g. "Buy a Laptop, Get a Case for 50% Off").
+2. **Tier 2: Flash Sale Promotion**: Apply cashier-level discount promotions in the POS terminal for a limited weekend campaign.
+3. **Tier 3: Clearance Outlet Transfer**: Route stagnant stock from prime downtown retail shelves to outlet or clearance sections.
+4. **Tier 4: Bulk Vendor Return or Liquidation**: Return unsold batches to vendors under agreed return allowances or liquidate to wholesale liquidators to reclaim floor space.
+    `
+  },
+  {
+    slug: 'offline-data-sovereignty-automated-local-backups',
+    title: 'Offline Data Sovereignty & Automated Local Backups: Protecting Commercial Ledgers from Ransomware & Cloud Outages',
+    excerpt: 'Why modern enterprises choose local data ownership over cloud vendor lock-in. Configure background auto-saves and browser IndexedDB security.',
+    metaDescription: 'Understand offline data sovereignty for retail businesses. Learn how automated background JSON backups and local-first architecture protect against cloud outages and ransomware.',
+    keywords: [
+      'offline data sovereignty retail',
+      'automated local backups POS',
+      'browser IndexedDB security',
+      'cloud outage protection retail',
+      'ransomware resilient POS',
+      'encrypted retail JSON backup',
+      'local first data privacy'
+    ],
+    category: 'POS & Technology',
+    author: {
+      name: 'Sarah Chen',
+      role: 'Compliance & Quality Lead',
+      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80'
+    },
+    publishedAt: 'August 02, 2026',
+    readTime: '7 min read',
+    tableOfContents: [
+      { id: 'why-cloud-lockin-is-a-liability', title: 'Why Cloud Lock-In is a Modern Enterprise Liability' },
+      { id: 'the-browser-file-system-api', title: 'Leveraging the W3C File System Access API' },
+      { id: 'automated-background-backups', title: 'How Automated Background Auto-Save Works' },
+      { id: '1-click-disaster-recovery', title: '1-Click Multi-Device Disaster Recovery' }
+    ],
+    content: `
+### Why Cloud Lock-In is a Modern Enterprise Liability
+
+When a business entrusts 100% of its operational data to a third-party cloud SaaS provider:
+1. **Hostage Scenarios**: If subscription prices double, extracting your historical transaction data is made intentionally painful through proprietary export formats.
+2. **Cloud Outages & Regional Downtime**: Major cloud outages (AWS, Cloudflare, Azure) bring physical registers down with zero recourse.
+3. **Ransomware & Cyber Breaches**: Centralized cloud databases represent high-value honeypots for hackers.
+
+---
+
+### Leveraging the W3C File System Access API
+
+Modern web browsers support the **File System Access API**, allowing client-side web applications to securely persist data directly into designated directories on the user's computer without ever touching a remote server.
+
+---
+
+### How Automated Background Auto-Save Works in Inventory 360
+
+1. **Folder Selection**: In **Setup > Data & Backup**, select any folder on your laptop, external SSD, or local NAS drive.
+2. **Frequency Trigger**: Choose backup interval (every 1 hour, 6 hours, 12 hours, or 24 hours).
+3. **Silent Background Archiving**: The system silently writes timestamped, sanitized JSON snapshots directly to your local machine.
+4. **Zero Cloud Telemetry**: Complete ledger sovereignty with 100% offline ownership.
+    `
+  },
+  {
+    slug: 'thermal-receipt-printing-escpos-bluetooth-guide',
+    title: 'Thermal Receipt Printing & Hardware Integration: 80mm ESC/POS, 58mm Mobile Bluetooth, and A4 Invoices',
+    excerpt: 'Master POS printer hardware integration. Configure 80mm standard counter rolls, 58mm mobile Bluetooth slips, and full A4 tax invoices without third-party drivers.',
+    metaDescription: 'Complete setup guide for thermal receipt printers in retail. Compare 80mm ESC/POS, 58mm mobile Bluetooth thermal printers, and A4 laser tax invoice printing.',
+    keywords: [
+      'thermal receipt printer setup POS',
+      '80mm ESC POS receipt printer',
+      '58mm bluetooth mobile receipt printer',
+      'A4 tax invoice printer POS',
+      'driverless thermal printer browser',
+      'POS hardware integration guide',
+      'retail receipt formatting'
+    ],
+    category: 'Hardware & Guides',
+    author: {
+      name: 'David Kowalski',
+      role: 'Hardware & Systems Integration Specialist',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80'
+    },
+    publishedAt: 'July 30, 2026',
+    readTime: '8 min read',
+    tableOfContents: [
+      { id: 'receipt-printer-formats', title: 'The 3 Standard Retail Printing Formats' },
+      { id: '80mm-standard-roll', title: '80mm Standard Counter Thermal Printing' },
+      { id: '58mm-mobile-bluetooth', title: '58mm Mobile & Handheld Bluetooth Printers' },
+      { id: 'a4-tax-invoices', title: 'A4 / Letter Full Tax Invoices for B2B' },
+      { id: 'browser-native-printing', title: 'Driverless Browser-Native ESC/POS Formatting' }
+    ],
+    content: `
+### The 3 Standard Retail Printing Formats
+
+Every retail business has distinct operational printing requirements:
+
+1. **80mm Standard Thermal (3-1/8 inch)**: The industry standard for brick-and-mortar checkout registers. Fast (250mm/sec), auto-cutter equipped, and high clarity.
+2. **58mm Compact Thermal (2-1/4 inch)**: Designed for pop-up shops, food trucks, mobile cashiers, and Bluetooth handheld belt-clip printers.
+3. **A4 / Letter Full Page**: Ideal for wholesale B2B billing, bulk purchase order sign-offs, and commercial tax audits requiring legal signatures and GSTIN breakdown.
+
+---
+
+### Driverless Browser-Native ESC/POS Formatting
+
+Traditional POS systems required cumbersome Windows COM port drivers or proprietary cloud print gateways.
+
+**Inventory 360** renders CSS-based dynamic media print stylesheets tailored precisely to thermal media widths:
+* Custom CSS print rules automatically strip browser headers, footers, and margins.
+* Direct compatibility with Epson, Star Micronics, Munbyn, Bixolon, Rollo, and generic USB/Bluetooth receipt printers.
+* Instant 1-click test and print modal right upon completing a checkout sale.
     `
   }
 ];
