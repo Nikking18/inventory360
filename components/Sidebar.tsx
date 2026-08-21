@@ -27,6 +27,7 @@ import {
   X,
   Check,
   Database,
+  Coffee,
 } from 'lucide-react';
 
 export type NavItemKey =
@@ -304,25 +305,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </a>
 
         {/* Ko-fi Support Button */}
-        <div className="flex items-center justify-center pt-0.5">
-          <a
-            href="https://ko-fi.com/Y0H123WFGA"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block hover:opacity-90 transition-opacity"
-            title="Buy Me a Coffee at ko-fi.com"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              width="143"
-              height="36"
-              style={{ border: '0px', width: '143px', height: '36px', aspectRatio: '580 / 146' }}
-              src="https://storage.ko-fi.com/cdn/kofi3.png?v=6"
-              alt="Buy Me a Coffee at ko-fi.com"
-              loading="lazy"
-            />
-          </a>
-        </div>
+        <a
+          href="https://ko-fi.com/Y0H123WFGA"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full py-1.5 px-2 bg-[#FF5E5B] hover:bg-[#e04f4c] text-white font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-2xs text-[10px]"
+          title="Support Developer on Ko-fi"
+        >
+          <Coffee className="w-3.5 h-3.5 text-white" />
+          <span>Support on Ko-fi</span>
+        </a>
 
         <button
           onClick={onOpenDataPolicy}

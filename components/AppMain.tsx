@@ -44,18 +44,34 @@ import {
   CLEAN_SUPPLIERS,
 } from '../lib/seedData';
 
+import dynamic from 'next/dynamic';
 import { Sidebar, NavItemKey } from './Sidebar';
 import { DashboardView } from './views/DashboardView';
-import { SellView } from './views/SellView';
-import { FulfillmentView } from './views/FulfillmentView';
-import { CatalogView } from './views/CatalogView';
-import { InventoryView } from './views/InventoryView';
-import { CustomersView } from './views/CustomersView';
-import { ReportingView } from './views/ReportingView';
-import { SetupView } from './views/SetupView';
-import { PrintReceipt } from './PrintReceipt';
-import { DataPolicyModal } from './common/DataPolicyModal';
-import { ProductTourModal } from './common/ProductTourModal';
+
+const SellView = dynamic(() => import('./views/SellView').then((m) => m.SellView), {
+  loading: () => <div className="p-8 text-center text-xs text-slate-500 font-mono">Loading POS Terminal...</div>,
+});
+const FulfillmentView = dynamic(() => import('./views/FulfillmentView').then((m) => m.FulfillmentView), {
+  loading: () => <div className="p-8 text-center text-xs text-slate-500 font-mono">Loading Fulfillment...</div>,
+});
+const CatalogView = dynamic(() => import('./views/CatalogView').then((m) => m.CatalogView), {
+  loading: () => <div className="p-8 text-center text-xs text-slate-500 font-mono">Loading Catalog...</div>,
+});
+const InventoryView = dynamic(() => import('./views/InventoryView').then((m) => m.InventoryView), {
+  loading: () => <div className="p-8 text-center text-xs text-slate-500 font-mono">Loading Inventory...</div>,
+});
+const CustomersView = dynamic(() => import('./views/CustomersView').then((m) => m.CustomersView), {
+  loading: () => <div className="p-8 text-center text-xs text-slate-500 font-mono">Loading CRM...</div>,
+});
+const ReportingView = dynamic(() => import('./views/ReportingView').then((m) => m.ReportingView), {
+  loading: () => <div className="p-8 text-center text-xs text-slate-500 font-mono">Loading Reports...</div>,
+});
+const SetupView = dynamic(() => import('./views/SetupView').then((m) => m.SetupView), {
+  loading: () => <div className="p-8 text-center text-xs text-slate-500 font-mono">Loading Settings...</div>,
+});
+const PrintReceipt = dynamic(() => import('./PrintReceipt').then((m) => m.PrintReceipt));
+const DataPolicyModal = dynamic(() => import('./common/DataPolicyModal').then((m) => m.DataPolicyModal));
+const ProductTourModal = dynamic(() => import('./common/ProductTourModal').then((m) => m.ProductTourModal));
 import { ErrorBoundary } from './common/ErrorBoundary';
 import { useBroadcastSync } from '../hooks/useBroadcastSync';
 import { calculateStockStatus } from '../lib/utils';
