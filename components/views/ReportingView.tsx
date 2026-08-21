@@ -512,7 +512,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
+                <span>{t(tab.id, tab.label)}</span>
               </button>
             );
           })}
@@ -525,7 +525,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             className="px-3.5 py-2 bg-slate-900 text-white hover:bg-black text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-xs"
           >
             <Download className="w-4 h-4" />
-            <span>Export Report</span>
+            <span>{t('export_report', 'Export Report')}</span>
             <ChevronDown className="w-3.5 h-3.5 ml-1" />
           </button>
 
@@ -582,7 +582,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              {r === 'today' ? 'Today' : r === 'week' ? '7 Days' : r === 'month' ? '30 Days' : r === 'year' ? '1 Year' : 'All Time'}
+              {r === 'today' ? t('today', 'Today') : r === 'week' ? t('last_7_days', '7 Days') : r === 'month' ? t('last_30_days', '30 Days') : r === 'year' ? t('last_365_days', '1 Year') : t('all_time', 'All Time')}
             </button>
           ))}
         </div>
@@ -594,7 +594,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             onChange={(e) => setSelectedLocation(e.target.value)}
             className="text-xs bg-white border border-slate-300 px-2.5 py-1 text-slate-900 font-mono shadow-2xs"
           >
-            <option value="all">All Store Locations</option>
+            <option value="all">{t('all_locations', 'All Store Locations')}</option>
             {locations.map((loc) => (
               <option key={loc.id} value={loc.id}>
                 {loc.name}
@@ -608,7 +608,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
               onChange={(e) => setSelectedCategoryFilter(e.target.value)}
               className="text-xs bg-white border border-slate-300 px-2.5 py-1 text-slate-900 font-mono shadow-2xs"
             >
-              <option value="all">All Categories</option>
+              <option value="all">{t('all_categories', 'All Categories')}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.name}>
                   {c.name}
@@ -637,25 +637,25 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
         <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="p-4 bg-white border border-slate-200 shadow-xs space-y-1">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Gross Revenue</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold">{t('total_net_revenue', 'Gross Revenue')}</span>
               <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalSalesRevenue, currencySymbol)}</p>
               <p className="text-[10px] text-emerald-700 font-bold">{filteredSales.length} Transactions</p>
             </div>
 
             <div className="p-4 bg-white border border-slate-200 shadow-xs space-y-1">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Gross Profit</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold">{t('th_gross_profit', 'Gross Profit')}</span>
               <p className="text-2xl font-bold text-emerald-700">{formatCurrency(totalGrossProfit, currencySymbol)}</p>
               <p className="text-[10px] text-slate-500">Margin: {grossMarginPercent.toFixed(1)}%</p>
             </div>
 
             <div className="p-4 bg-white border border-slate-200 shadow-xs space-y-1">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Average Order Value</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold">{t('average_order_value', 'Average Order Value')}</span>
               <p className="text-2xl font-bold text-slate-900">{formatCurrency(averageOrderValue, currencySymbol)}</p>
               <p className="text-[10px] text-slate-500">Per Receipt Ticket</p>
             </div>
 
             <div className="p-4 bg-white border border-slate-200 shadow-xs space-y-1">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Stock Cost Valuation</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold">{t('cost_inventory_label', 'Stock Cost Valuation')}</span>
               <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalStockCostValuation, currencySymbol)}</p>
               <p className="text-[10px] text-slate-500">{totalUnitsOnHand} Units in Inventory</p>
             </div>
@@ -719,11 +719,11 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Gross Sales</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold">{t('th_revenue', 'Gross Sales')}</span>
               <p className="text-xl font-bold text-slate-900">{formatCurrency(totalSalesRevenue, currencySymbol)}</p>
             </div>
             <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Total Units Sold</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold">{t('th_units_sold', 'Total Units Sold')}</span>
               <p className="text-xl font-bold text-slate-900">
                 {performanceList.reduce((acc, i) => acc + i.units, 0)} Units
               </p>
@@ -763,14 +763,14 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] bg-slate-50">
-                  <th className="p-2.5">Product &amp; SKU</th>
-                  <th className="p-2.5">Category</th>
-                  <th className="p-2.5 text-right">Units Sold</th>
-                  <th className="p-2.5 text-right">Unit Price</th>
-                  <th className="p-2.5 text-right">Gross Revenue</th>
-                  <th className="p-2.5 text-right">Total COGS</th>
-                  <th className="p-2.5 text-right">Gross Profit</th>
-                  <th className="p-2.5 text-right">Margin %</th>
+                  <th className="p-2.5">{t('th_product_sku', 'Product & SKU')}</th>
+                  <th className="p-2.5">{t('th_category', 'Category')}</th>
+                  <th className="p-2.5 text-right">{t('th_units_sold', 'Units Sold')}</th>
+                  <th className="p-2.5 text-right">{t('th_retail_price', 'Unit Price')}</th>
+                  <th className="p-2.5 text-right">{t('th_revenue', 'Gross Revenue')}</th>
+                  <th className="p-2.5 text-right">{t('th_cogs', 'Total COGS')}</th>
+                  <th className="p-2.5 text-right">{t('th_gross_profit', 'Gross Profit')}</th>
+                  <th className="p-2.5 text-right">{t('th_margin_pct', 'Margin %')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -804,11 +804,11 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Total Cost Value</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold">{t('th_total_cost_val', 'Total Cost Value')}</span>
               <p className="text-xl font-bold text-slate-900">{formatCurrency(totalStockCostValuation, currencySymbol)}</p>
             </div>
             <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Retail Valuation</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold">{t('th_total_retail_val', 'Retail Valuation')}</span>
               <p className="text-xl font-bold text-slate-900">{formatCurrency(totalStockRetailValuation, currencySymbol)}</p>
             </div>
             <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
@@ -828,14 +828,14 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] bg-slate-50">
-                  <th className="p-2.5">Product &amp; SKU</th>
-                  <th className="p-2.5">Category</th>
-                  <th className="p-2.5 text-right">In Stock</th>
-                  <th className="p-2.5 text-right">Unit Cost</th>
-                  <th className="p-2.5 text-right">Unit Retail</th>
-                  <th className="p-2.5 text-right">Total Cost Value</th>
-                  <th className="p-2.5 text-right">Total Retail Value</th>
-                  <th className="p-2.5 text-center">Status</th>
+                  <th className="p-2.5">{t('th_product_sku', 'Product & SKU')}</th>
+                  <th className="p-2.5">{t('th_category', 'Category')}</th>
+                  <th className="p-2.5 text-right">{t('th_stock_on_hand', 'In Stock')}</th>
+                  <th className="p-2.5 text-right">{t('th_cost_price', 'Unit Cost')}</th>
+                  <th className="p-2.5 text-right">{t('th_retail_price', 'Unit Retail')}</th>
+                  <th className="p-2.5 text-right">{t('th_total_cost_val', 'Total Cost Value')}</th>
+                  <th className="p-2.5 text-right">{t('th_total_retail_val', 'Total Retail Value')}</th>
+                  <th className="p-2.5 text-center">{t('th_status', 'Status')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -928,13 +928,13 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] bg-slate-50">
-                  <th className="p-2.5">PO Number</th>
-                  <th className="p-2.5">Supplier</th>
-                  <th className="p-2.5">Location</th>
-                  <th className="p-2.5">Expected Date</th>
-                  <th className="p-2.5 text-right">Items / Quantity</th>
-                  <th className="p-2.5 text-right">Total Amount</th>
-                  <th className="p-2.5 text-center">Status</th>
+                  <th className="p-2.5">{t('th_po_num', 'PO Number')}</th>
+                  <th className="p-2.5">{t('th_supplier', 'Supplier')}</th>
+                  <th className="p-2.5">{t('th_location', 'Location')}</th>
+                  <th className="p-2.5">{t('th_expected_date', 'Expected Date')}</th>
+                  <th className="p-2.5 text-right">{t('th_items', 'Items / Quantity')}</th>
+                  <th className="p-2.5 text-right">{t('th_total', 'Total Amount')}</th>
+                  <th className="p-2.5 text-center">{t('th_status', 'Status')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -989,7 +989,7 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Turnover Velocity</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold">{t('stock_turnover_rate', 'Turnover Velocity')}</span>
               <p className="text-xl font-bold text-slate-900">{turnoverRate}x / mo</p>
             </div>
             <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
@@ -1034,12 +1034,12 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] bg-slate-50">
-                  <th className="p-2.5">Product &amp; SKU</th>
-                  <th className="p-2.5 text-right">In Stock</th>
-                  <th className="p-2.5 text-right">Units Sold (30d)</th>
-                  <th className="p-2.5 text-right">Velocity (Units/Day)</th>
-                  <th className="p-2.5 text-right">Days Supply Left</th>
-                  <th className="p-2.5 text-center">Velocity Classification</th>
+                  <th className="p-2.5">{t('th_product_sku', 'Product & SKU')}</th>
+                  <th className="p-2.5 text-right">{t('th_stock_on_hand', 'In Stock')}</th>
+                  <th className="p-2.5 text-right">{t('th_units_sold', 'Units Sold')}</th>
+                  <th className="p-2.5 text-right">{t('th_velocity_day', 'Velocity (Units/Day)')}</th>
+                  <th className="p-2.5 text-right">{t('days_remaining', 'Days Supply Left')}</th>
+                  <th className="p-2.5 text-center">{t('compliance_status', 'Velocity Classification')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -1108,12 +1108,12 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] bg-slate-50">
-                  <th className="p-2.5">Product &amp; SKU</th>
-                  <th className="p-2.5 text-right">Units Sold</th>
-                  <th className="p-2.5 text-right">Total Revenue</th>
-                  <th className="p-2.5 text-right">Total COGS</th>
-                  <th className="p-2.5 text-right">Gross Profit ($)</th>
-                  <th className="p-2.5 text-right">Margin (%)</th>
+                  <th className="p-2.5">{t('th_product_sku', 'Product & SKU')}</th>
+                  <th className="p-2.5 text-right">{t('th_units_sold', 'Units Sold')}</th>
+                  <th className="p-2.5 text-right">{t('th_revenue', 'Total Revenue')}</th>
+                  <th className="p-2.5 text-right">{t('th_cogs', 'Total COGS')}</th>
+                  <th className="p-2.5 text-right">{t('th_gross_profit', 'Gross Profit')}</th>
+                  <th className="p-2.5 text-right">{t('th_margin_pct', 'Margin (%)')}</th>
                   <th className="p-2.5 text-right">Markup (%)</th>
                 </tr>
               </thead>
@@ -1150,11 +1150,11 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Total Tax Collected</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold">{t('th_tax_collected', 'Total Tax Collected')}</span>
               <p className="text-xl font-bold text-emerald-700">{formatCurrency(totalSalesTax, currencySymbol)}</p>
             </div>
             <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Taxable Sales</span>
+              <span className="text-[10px] text-slate-500 uppercase font-bold">{t('th_taxable_amount', 'Taxable Sales')}</span>
               <p className="text-xl font-bold text-slate-900">{formatCurrency(totalSalesRevenue - totalSalesTax, currencySymbol)}</p>
             </div>
             <div className="p-3.5 bg-white border border-slate-200 shadow-xs">
@@ -1174,13 +1174,13 @@ export const ReportingView: React.FC<ReportingViewProps> = ({
             <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] bg-slate-50">
-                  <th className="p-2.5">Invoice #</th>
-                  <th className="p-2.5">Date &amp; Time</th>
-                  <th className="p-2.5">Customer</th>
-                  <th className="p-2.5">Location</th>
-                  <th className="p-2.5 text-right">Taxable Subtotal</th>
-                  <th className="p-2.5 text-right">Tax Collected</th>
-                  <th className="p-2.5 text-right">Total Invoice</th>
+                  <th className="p-2.5">{t('th_tx_id', 'Invoice #')}</th>
+                  <th className="p-2.5">{t('th_timestamp', 'Date & Time')}</th>
+                  <th className="p-2.5">{t('customer', 'Customer')}</th>
+                  <th className="p-2.5">{t('th_location', 'Location')}</th>
+                  <th className="p-2.5 text-right">{t('th_taxable_amount', 'Taxable Subtotal')}</th>
+                  <th className="p-2.5 text-right">{t('th_tax_collected', 'Tax Collected')}</th>
+                  <th className="p-2.5 text-right">{t('th_total', 'Total Invoice')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

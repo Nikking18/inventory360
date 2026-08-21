@@ -346,7 +346,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
             className="px-3.5 py-1.5 bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider hover:bg-emerald-800 transition-colors flex items-center gap-1.5 shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Log Order</span>
+            <span>{t('log_order', 'Log Order')}</span>
           </button>
 
           <button
@@ -355,7 +355,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
             className="px-3.5 py-1.5 bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors flex items-center gap-2 shadow-xs"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Updating...' : 'Update Feeds'}</span>
+            <span>{isSyncing ? t('updating_feeds', 'Updating...') : t('update_feeds', 'Update Feeds')}</span>
           </button>
         </div>
       </div>
@@ -363,7 +363,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
       {syncSuccessMsg && (
         <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center gap-2 shadow-2xs">
           <Check className="w-4 h-4 text-emerald-700" />
-          <span>Tracked feeds refreshed for In-Store POS and Online platforms (Shopify, Amazon, eBay, WooCommerce).</span>
+          <span>{t('tracked_feeds_refreshed', 'Tracked feeds refreshed for In-Store POS and Online platforms (Shopify, Amazon, eBay, WooCommerce).')}</span>
         </div>
       )}
 
@@ -380,25 +380,25 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                 <div className="flex items-center gap-2">
                   <Store className="w-5 h-5 text-slate-900" />
                   <div>
-                    <h3 className="font-bold text-xs text-slate-900 uppercase">In-Store POS</h3>
-                    <p className="text-[10px] text-slate-500">Counter Register &amp; Walk-in</p>
+                    <h3 className="font-bold text-xs text-slate-900 uppercase">{t('in_store_pos', 'In-Store POS')}</h3>
+                    <p className="text-[10px] text-slate-500">{t('counter_walk_in', 'Counter Register & Walk-in')}</p>
                   </div>
                 </div>
                 <span className="text-[9px] font-bold px-2 py-0.5 border border-slate-300 text-slate-800 bg-slate-50 uppercase">
-                  Tracked
+                  {t('tracked', 'Tracked')}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <div className="p-2 bg-slate-50 border border-slate-100">
-                  <span className="text-[9px] text-slate-500 uppercase">POS Sales</span>
+                  <span className="text-[9px] text-slate-500 uppercase">{t('pos_sales', 'POS Sales')}</span>
                   <p className="text-sm font-bold text-slate-900 mt-0.5">
-                    {orders.filter((o) => o.channel === 'In-Store POS').length} Logged
+                    {orders.filter((o) => o.channel === 'In-Store POS').length} {t('logged', 'Logged')}
                   </p>
                 </div>
                 <div className="p-2 bg-slate-50 border border-slate-100">
-                  <span className="text-[9px] text-slate-500 uppercase">Inventory Sync</span>
-                  <p className="text-sm font-bold text-slate-900 mt-0.5">Real-Time</p>
+                  <span className="text-[9px] text-slate-500 uppercase">{t('inventory_sync', 'Inventory Sync')}</span>
+                  <p className="text-sm font-bold text-slate-900 mt-0.5">{t('real_time', 'Real-Time')}</p>
                 </div>
               </div>
             </div>
@@ -409,12 +409,12 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                 <div className="flex items-center gap-2">
                   <Globe className="w-5 h-5 text-emerald-700" />
                   <div>
-                    <h3 className="font-bold text-xs text-slate-900 uppercase">Online Marketplaces &amp; E-Commerce</h3>
-                    <p className="text-[10px] text-slate-500">Tracked Multi-Platform Order Streams</p>
+                    <h3 className="font-bold text-xs text-slate-900 uppercase">{t('online_marketplaces', 'Online Marketplaces & E-Commerce')}</h3>
+                    <p className="text-[10px] text-slate-500">{t('tracked_order_streams', 'Tracked Multi-Platform Order Streams')}</p>
                   </div>
                 </div>
                 <span className="text-[9px] font-bold px-2 py-0.5 border border-emerald-300 text-emerald-800 bg-emerald-50 uppercase">
-                  Tracked (4 Platforms)
+                  {t('tracked_4_platforms', 'Tracked (4 Platforms)')}
                 </span>
               </div>
 
@@ -432,12 +432,12 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                       <div className="flex items-center justify-between">
                         <Icon className={`w-3.5 h-3.5 ${plat.color}`} />
                         <span className="text-[8px] font-bold uppercase text-slate-600 bg-white border border-slate-200 px-1 py-0.2">
-                          Tracked
+                          {t('tracked', 'Tracked')}
                         </span>
                       </div>
                       <div className="mt-2">
                         <p className="font-bold text-xs text-slate-900">{plat.name}</p>
-                        <p className="text-[10px] text-slate-500">{plat.ordersCount} Orders</p>
+                        <p className="text-[10px] text-slate-500">{plat.ordersCount} {t('orders_count', 'Orders')}</p>
                       </div>
                     </div>
                   );
@@ -462,7 +462,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                         : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
                     }`}
                   >
-                    {tab}
+                    {t(`status_${tab}`, tab)}
                   </button>
                 ))}
               </div>
@@ -472,7 +472,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                 <div className="relative min-w-[200px]">
                   <input
                     type="text"
-                    placeholder="Search Order #, Customer, Tracking..."
+                    placeholder={t('search_fulfillment_placeholder', 'Search Order #, Customer, Tracking...')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full text-xs bg-white border border-slate-300 text-slate-900 pl-8 pr-3 py-1.5 focus:outline-none focus:border-slate-900 font-mono shadow-2xs"
@@ -485,9 +485,9 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                   onChange={(e) => setSelectedChannelFilter(e.target.value)}
                   className="text-xs bg-white border border-slate-300 px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-slate-900 font-mono shadow-2xs"
                 >
-                  <option value="all">All Channels</option>
-                  <option value="in-store">In-Store POS</option>
-                  <option value="online-all">Online (All Platforms)</option>
+                  <option value="all">{t('all_channels', 'All Channels')}</option>
+                  <option value="in-store">{t('channel_in_store', 'In-Store POS')}</option>
+                  <option value="online-all">{t('channel_online_all', 'Online (All Platforms)')}</option>
                   <option value="Shopify">↳ Shopify</option>
                   <option value="Amazon">↳ Amazon</option>
                   <option value="eBay">↳ eBay</option>
@@ -501,22 +501,22 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
               <table className="w-full text-left text-xs border-collapse font-mono">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
-                    <th className="p-2.5">Order #</th>
-                    <th className="p-2.5">Channel</th>
-                    <th className="p-2.5">Date</th>
-                    <th className="p-2.5">Customer &amp; Destination</th>
-                    <th className="p-2.5">Items</th>
-                    <th className="p-2.5 text-right">Total</th>
-                    <th className="p-2.5 text-center">Status</th>
-                    <th className="p-2.5">Carrier / Tracking</th>
-                    <th className="p-2.5 text-center">Action</th>
+                    <th className="p-2.5">{t('th_order_num', 'Order #')}</th>
+                    <th className="p-2.5">{t('th_channel', 'Channel')}</th>
+                    <th className="p-2.5">{t('th_date', 'Date')}</th>
+                    <th className="p-2.5">{t('th_customer_dest', 'Customer & Destination')}</th>
+                    <th className="p-2.5">{t('th_items', 'Items')}</th>
+                    <th className="p-2.5 text-right">{t('th_total', 'Total')}</th>
+                    <th className="p-2.5 text-center">{t('th_status', 'Status')}</th>
+                    <th className="p-2.5">{t('th_carrier_tracking', 'Carrier / Tracking')}</th>
+                    <th className="p-2.5 text-center">{t('th_action', 'Action')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredAllOrders.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="p-8 text-center text-slate-500 text-xs">
-                        No orders matching active filters.
+                        {t('no_orders_match', 'No orders matching active filters.')}
                       </td>
                     </tr>
                   ) : (
@@ -565,7 +565,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                               onClick={() => handleOpenDispatchModal(order)}
                               className="px-2.5 py-1 bg-slate-900 hover:bg-black text-white text-[10px] font-bold uppercase transition-colors"
                             >
-                              Dispatch
+                              {t('process_dispatch', 'Dispatch')}
                             </button>
                           ) : (
                             <button
@@ -575,7 +575,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                               }}
                               className="px-2.5 py-1 bg-slate-100 border border-slate-300 text-slate-800 hover:bg-slate-200 text-[10px] font-bold uppercase"
                             >
-                              Slip
+                              {t('packing_slip', 'Slip')}
                             </button>
                           )}
                         </td>
@@ -624,7 +624,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                 className="w-full mt-1 py-2 bg-slate-900 hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-xs"
               >
                 <Printer className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Generate Pick List ({aggregatedPickItems.length} SKUs)</span>
+                <span>{t('batch_pick_list', 'Generate Pick List')} ({aggregatedPickItems.length} SKUs)</span>
               </button>
             </div>
           </div>
@@ -699,7 +699,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                           className="px-3 py-1.5 bg-amber-100 border border-amber-300 text-amber-900 hover:bg-amber-200 text-xs font-bold uppercase transition-colors flex items-center gap-1"
                         >
                           <Boxes className="w-3.5 h-3.5" />
-                          <span>Start Picking</span>
+                          <span>{t('start_picking', 'Start Picking')}</span>
                         </button>
                       )}
 
@@ -709,7 +709,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                           className="px-3 py-1.5 bg-sky-100 border border-sky-300 text-sky-900 hover:bg-sky-200 text-xs font-bold uppercase transition-colors flex items-center gap-1"
                         >
                           <Package className="w-3.5 h-3.5" />
-                          <span>Mark Packed</span>
+                          <span>{t('mark_packed', 'Mark Packed')}</span>
                         </button>
                       )}
 
@@ -718,7 +718,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                         className="px-4 py-1.5 bg-slate-900 hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-xs"
                       >
                         <Truck className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Ship &amp; Tracking</span>
+                        <span>{t('process_dispatch', 'Ship & Tracking')}</span>
                       </button>
 
                       <button
@@ -816,14 +816,14 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
               <table className="w-full text-left text-xs border-collapse font-mono">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
-                    <th className="p-2.5">Order #</th>
-                    <th className="p-2.5">Channel</th>
-                    <th className="p-2.5">Customer &amp; Address</th>
-                    <th className="p-2.5">Carrier</th>
-                    <th className="p-2.5">Tracking Number</th>
-                    <th className="p-2.5 text-right">Value</th>
-                    <th className="p-2.5 text-center">Status</th>
-                    <th className="p-2.5 text-center">Actions</th>
+                    <th className="p-2.5">{t('th_order_num', 'Order #')}</th>
+                    <th className="p-2.5">{t('th_channel', 'Channel')}</th>
+                    <th className="p-2.5">{t('th_customer_dest', 'Customer & Address')}</th>
+                    <th className="p-2.5">{t('select_carrier', 'Carrier')}</th>
+                    <th className="p-2.5">{t('enter_tracking_num', 'Tracking Number')}</th>
+                    <th className="p-2.5 text-right">{t('th_total', 'Value')}</th>
+                    <th className="p-2.5 text-center">{t('th_status', 'Status')}</th>
+                    <th className="p-2.5 text-center">{t('th_actions', 'Actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -883,7 +883,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                                 onClick={() => onUpdateOrderStatus(order.id, 'Delivered', order.carrier, order.trackingNumber)}
                                 className="px-2 py-1 bg-emerald-50 border border-emerald-300 text-emerald-800 hover:bg-emerald-100 text-[10px] font-bold uppercase transition-colors"
                               >
-                                Mark Delivered
+                                {t('mark_delivered', 'Mark Delivered')}
                               </button>
                             )}
                             <button
@@ -914,7 +914,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
         <Modal
           isOpen={!!selectedOrder}
           onClose={() => setSelectedOrder(null)}
-          title={`DISPATCH ORDER: ${selectedOrder.orderNumber}`}
+          title={`${t('dispatch_modal_title', 'DISPATCH ORDER')}: ${selectedOrder.orderNumber}`}
         >
           <div className="space-y-4 font-mono text-xs text-slate-900">
             <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
@@ -924,7 +924,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
 
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                Select Shipping Carrier
+                {t('select_carrier', 'Select Shipping Carrier')}
               </label>
               <select
                 value={selectedCarrier}
@@ -941,7 +941,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
 
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                Tracking Number / Waybill ID
+                {t('enter_tracking_num', 'Tracking Number / Waybill ID')}
               </label>
               <input
                 type="text"
@@ -961,7 +961,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                 onClick={() => setSelectedOrder(null)}
                 className="px-4 py-2 bg-slate-100 border border-slate-300 text-slate-700 font-bold uppercase hover:bg-slate-200"
               >
-                Cancel
+                {t('cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -969,7 +969,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                 className="px-6 py-2 bg-slate-900 text-white font-bold uppercase hover:bg-black flex items-center gap-1.5"
               >
                 <Truck className="w-3.5 h-3.5" />
-                <span>Confirm &amp; Ship</span>
+                <span>{t('mark_as_shipped', 'Confirm & Ship')}</span>
               </button>
             </div>
           </div>
@@ -1184,12 +1184,12 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
         <Modal
           isOpen={isNewOrderModalOpen}
           onClose={() => setIsNewOrderModalOpen(false)}
-          title="LOG ONLINE / IN-STORE ORDER"
+          title={t('log_order_modal_title', 'LOG ONLINE / IN-STORE ORDER')}
         >
           <form onSubmit={handleCreateManualOrder} className="space-y-4 font-mono text-xs text-slate-900">
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                Order Sales Channel
+                {t('select_channel', 'Order Sales Channel')}
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {(['Shopify', 'Amazon', 'eBay', 'WooCommerce', 'In-Store POS'] as const).map((chan) => (
@@ -1212,7 +1212,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                  Customer Name *
+                  {t('customer_name', 'Customer Name')} *
                 </label>
                 <input
                   type="text"
@@ -1226,7 +1226,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
 
               <div>
                 <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                  Customer Email
+                  {t('customer_email', 'Customer Email')}
                 </label>
                 <input
                   type="email"
@@ -1240,7 +1240,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
 
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                Delivery Address *
+                {t('shipping_address', 'Delivery Address')} *
               </label>
               <input
                 type="text"
@@ -1255,7 +1255,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                  Assigned Fulfillment Outlet *
+                  {t('assign_location', 'Assigned Fulfillment Outlet')} *
                 </label>
                 <select
                   value={newOrderLocationId}
@@ -1272,7 +1272,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
 
               <div>
                 <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                  Product SKU *
+                  {t('select_product_label', 'Product SKU')} *
                 </label>
                 <select
                   value={newOrderProductId}
@@ -1291,7 +1291,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                  Order Quantity *
+                  {t('order_quantity', 'Order Quantity')} *
                 </label>
                 <input
                   type="number"
@@ -1317,7 +1317,7 @@ export const FulfillmentView: React.FC<FulfillmentViewProps> = ({
                 className="px-5 py-2 bg-slate-900 text-white font-bold uppercase hover:bg-black shadow-xs flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Log Order to Tracker</span>
+                <span>{t('register_order_btn', 'Log Order to Tracker')}</span>
               </button>
             </div>
           </form>

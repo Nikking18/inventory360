@@ -267,9 +267,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   };
 
   const getTopActionLabel = () => {
-    if (activeSubTab === 'categories') return 'Add Category';
-    if (activeSubTab === 'suppliers') return 'Add Supplier';
-    return 'Add Product';
+    if (activeSubTab === 'categories') return t('add_category', 'Add Category');
+    if (activeSubTab === 'suppliers') return t('add_supplier', 'Add Supplier');
+    return t('add_product', 'Add Product');
   };
 
   const handleAddVariant = () => {
@@ -741,7 +741,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
               }`}
             >
-              {tabId === 'products' ? 'Products & Variants' : tabId === 'categories' ? 'Categories' : 'Suppliers'}
+              {tabId === 'products' ? t('products', 'Products & Variants') : tabId === 'categories' ? t('categories', 'Categories') : t('suppliers', 'Suppliers')}
             </button>
           ))}
 
@@ -835,14 +835,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                       )}
                     </button>
                   </th>
-                  <th className="p-2.5">Product &amp; SKU</th>
-                  <th className="p-2.5">Category</th>
-                  <th className="p-2.5">Supplier</th>
-                  <th className="p-2.5 text-right">Cost</th>
-                  <th className="p-2.5 text-right">Retail</th>
-                  <th className="p-2.5 text-right">Stock</th>
-                  <th className="p-2.5 text-center">Status</th>
-                  <th className="p-2.5 text-center">Actions</th>
+                  <th className="p-2.5">{t('th_product_sku', 'Product & SKU')}</th>
+                  <th className="p-2.5">{t('th_category', 'Category')}</th>
+                  <th className="p-2.5">{t('th_supplier', 'Supplier')}</th>
+                  <th className="p-2.5 text-right">{t('th_cost_price', 'Cost')}</th>
+                  <th className="p-2.5 text-right">{t('th_retail_price', 'Retail')}</th>
+                  <th className="p-2.5 text-right">{t('th_stock', 'Stock')}</th>
+                  <th className="p-2.5 text-center">{t('th_status', 'Status')}</th>
+                  <th className="p-2.5 text-center">{t('th_actions', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -1061,7 +1061,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
               <div>
                 <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
-                  Product Categories ({categories.length})
+                  {t('categories', 'Product Categories')} ({categories.length})
                 </h3>
                 <p className="text-[11px] text-slate-500">Organize and group catalog items for fast POS filtering and reporting.</p>
               </div>
@@ -1194,7 +1194,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
               <div>
                 <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
-                  Approved Vendors &amp; Suppliers ({suppliers.length})
+                  {t('suppliers', 'Approved Vendors & Suppliers')} ({suppliers.length})
                 </h3>
                 <p className="text-[11px] text-slate-500">Manage procurement partner profiles, lead times, and contact points.</p>
               </div>
@@ -1596,7 +1596,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                {tab === 'basic' ? 'Basic Info' : tab === 'variants' ? 'Variants' : tab === 'custom-fields' ? 'Custom Fields' : 'Lots & Expiry'}
+                {tab === 'basic' ? t('tab_basic_details', 'Basic Info') : tab === 'variants' ? t('tab_variants_skus', 'Variants') : tab === 'custom-fields' ? t('tab_custom_attributes', 'Custom Fields') : t('tab_lots_expiry', 'Lots & Expiry')}
               </button>
             ))}
           </div>
@@ -1605,7 +1605,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Product Name *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('label_product_name', 'Product Name')} *</label>
                   <input
                     type="text"
                     required
@@ -1615,7 +1615,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">SKU (Stock Keeping Unit) *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('label_sku', 'SKU (Stock Keeping Unit)')} *</label>
                   <input
                     type="text"
                     required
@@ -1628,7 +1628,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Barcode / UPC</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('label_barcode', 'Barcode / UPC')}</label>
                   <input
                     type="text"
                     value={barcode}
@@ -1637,7 +1637,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Category *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('label_category', 'Category')} *</label>
                   <select
                     value={categoryId}
                     required
@@ -1653,7 +1653,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Supplier *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('label_supplier', 'Supplier')} *</label>
                   <select
                     value={supplierId}
                     required
@@ -1672,7 +1672,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Cost Price ($) *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('label_cost_price', 'Cost Price')} *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -1684,7 +1684,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Retail Price ($) *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('label_retail_price', 'Retail Price')} *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -1696,7 +1696,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Current Stock *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('label_stock_qty', 'Current Stock')} *</label>
                   <input
                     type="number"
                     min="0"
@@ -1707,7 +1707,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Reorder Point *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('label_reorder_point', 'Reorder Point')} *</label>
                   <input
                     type="number"
                     min="0"
@@ -1747,7 +1747,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               <div className="p-3 bg-slate-50 border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-[10px] font-bold uppercase text-slate-700">
-                    Individual Item Tax / GST Rate (%)
+                    {t('label_tax_rate_override', 'Individual Item Tax / GST Rate (%)')}
                   </label>
                   <span className="text-[10px] text-slate-500">
                     Leave blank to use store default rate

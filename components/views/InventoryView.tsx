@@ -638,16 +638,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               >
                 <span>
                   {tabId === 'stock-levels'
-                    ? 'Stock Levels'
+                    ? t('stock_levels', 'Stock Levels')
                     : tabId === 'low-stock'
-                    ? `Low Stock (${lowStockItems.length})`
+                    ? `${t('low_stock', 'Low Stock')} (${lowStockItems.length})`
                     : tabId === 'lots-expiry'
-                    ? 'Lots & Expiry'
+                    ? t('lots_expiry', 'Lots & Expiry')
                     : tabId === 'multi-location'
-                    ? 'Multi-Outlet'
+                    ? t('multi_location', 'Multi-Outlet')
                     : tabId === 'movements'
-                    ? 'Movements'
-                    : 'Purchase Orders'}
+                    ? t('movements', 'Movements')
+                    : t('purchases', 'Purchase Orders')}
                 </span>
                 {isLowStock && lowStockItems.length > 0 && (
                   <span
@@ -665,7 +665,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             className="px-3.5 py-1.5 bg-slate-900 text-white hover:bg-black font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs shrink-0"
           >
             <ArrowRightLeft className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Transfer</span>
+            <span>{t('transfer', 'Transfer')}</span>
           </button>
         </div>
       </div>
@@ -678,7 +678,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           {/* KPI Valuation Summary Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 font-mono">
             <div className="p-4 bg-white border border-slate-200 shadow-2xs">
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Active SKUs / Products</p>
+              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{t('active_skus_products', 'Active SKUs / Products')}</p>
               <h3 className="text-xl font-bold text-slate-900 mt-1">{products.length}</h3>
               <p className="text-[11px] text-emerald-700 mt-0.5">
                 {products.filter((p) => p.stockQuantity > 0).length} in stock
@@ -686,13 +686,13 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             </div>
 
             <div className="p-4 bg-white border border-slate-200 shadow-2xs">
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Total Units on Hand</p>
+              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{t('total_units_on_hand', 'Total Units on Hand')}</p>
               <h3 className="text-xl font-bold text-slate-900 mt-1">{totalStockUnits.toLocaleString()}</h3>
               <p className="text-[11px] text-slate-500 mt-0.5">Across {locations.length} branches</p>
             </div>
 
             <div className="p-4 bg-white border border-slate-200 shadow-2xs">
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Cost Inventory Value</p>
+              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{t('cost_inventory_value', 'Cost Inventory Value')}</p>
               <h3 className="text-xl font-bold text-slate-900 mt-1 font-mono">
                 {formatCurrency(totalCostValuation, currencySymbol)}
               </h3>
@@ -700,7 +700,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             </div>
 
             <div className="p-4 bg-white border border-slate-200 shadow-2xs">
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Retail Valuation</p>
+              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{t('retail_valuation', 'Retail Valuation')}</p>
               <h3 className="text-xl font-bold text-emerald-700 mt-1 font-mono">
                 {formatCurrency(totalRetailValuation, currencySymbol)}
               </h3>
@@ -1137,15 +1137,15 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               <table className="w-full text-left text-xs border-collapse font-mono">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
-                    <th className="p-2.5">Product &amp; SKU</th>
-                    <th className="p-2.5">Lot #</th>
-                    <th className="p-2.5">Batch #</th>
-                    <th className="p-2.5">Serial #</th>
-                    <th className="p-2.5">Expiration Date</th>
-                    <th className="p-2.5 text-right">Units on Hand</th>
-                    <th className="p-2.5 text-right">Batch Value</th>
-                    <th className="p-2.5 text-center">FIFO Status</th>
-                    <th className="p-2.5 text-center">Quarantine / Release</th>
+                    <th className="p-2.5">{t('th_product_sku', 'Product & SKU')}</th>
+                    <th className="p-2.5">{t('th_lot_num', 'Lot #')}</th>
+                    <th className="p-2.5">{t('th_batch_num', 'Batch #')}</th>
+                    <th className="p-2.5">{t('th_serial_num', 'Serial #')}</th>
+                    <th className="p-2.5">{t('th_expiration_date', 'Expiration Date')}</th>
+                    <th className="p-2.5 text-right">{t('th_units_on_hand', 'Units on Hand')}</th>
+                    <th className="p-2.5 text-right">{t('th_batch_value', 'Batch Value')}</th>
+                    <th className="p-2.5 text-center">{t('th_fifo_status', 'FIFO Status')}</th>
+                    <th className="p-2.5 text-center">{t('th_quarantine_release', 'Quarantine / Release')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1420,13 +1420,13 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             <table className="w-full text-left text-xs border-collapse font-mono">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider bg-slate-50">
-                  <th className="p-2.5">Date &amp; Time</th>
-                  <th className="p-2.5">Product &amp; SKU</th>
-                  <th className="p-2.5">Type</th>
-                  <th className="p-2.5">Outlet</th>
-                  <th className="p-2.5 text-right">Qty Change</th>
-                  <th className="p-2.5 text-right">Resulting Stock</th>
-                  <th className="p-2.5">Audit Note / Ref #</th>
+                  <th className="p-2.5">{t('th_timestamp', 'Date & Time')}</th>
+                  <th className="p-2.5">{t('th_product_sku', 'Product & SKU')}</th>
+                  <th className="p-2.5">{t('th_type', 'Type')}</th>
+                  <th className="p-2.5">{t('th_outlet', 'Outlet')}</th>
+                  <th className="p-2.5 text-right">{t('th_qty_change', 'Qty Change')}</th>
+                  <th className="p-2.5 text-right">{t('th_resulting_stock', 'Resulting Stock')}</th>
+                  <th className="p-2.5">{t('th_audit_ref', 'Audit Note / Ref #')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -1793,7 +1793,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       <Modal
         isOpen={isAdjustModalOpen}
         onClose={() => setIsAdjustModalOpen(false)}
-        title="STOCK LEVEL AUDIT ADJUSTMENT"
+        title={t('modal_adjust_stock', 'STOCK LEVEL AUDIT ADJUSTMENT')}
         maxWidth="max-w-md"
       >
         <form onSubmit={handleAdjustSubmit} className="space-y-4 font-mono text-xs">

@@ -420,7 +420,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
                   : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
               }`}
             >
-              {tabId === 'profile' ? 'Profile & Tax' : tabId === 'locations' ? 'Locations' : 'Data & Backup'}
+              {tabId === 'profile' ? t('profile', 'Profile & Tax') : tabId === 'locations' ? t('locations', 'Locations') : t('data', 'Data & Backup')}
             </button>
           ))}
         </div>
@@ -437,13 +437,13 @@ export const SetupView: React.FC<SetupViewProps> = ({
       {activeSubTab === 'profile' && (
         <form onSubmit={handleSaveSettings} className="bg-white border border-slate-200 p-6 space-y-5 shadow-sm">
           <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider border-b border-slate-200 pb-3">
-            Business Profile &amp; General Configuration
+            {t('business_profile', 'Business Profile & General Configuration')}
           </h3>
 
           {/* Company Logo & Branding */}
           <div className="p-4 bg-slate-50 border border-slate-200 space-y-3">
             <label className="block text-[10px] font-bold uppercase text-slate-700">
-              Company Logo &amp; Document Brand
+              {t('business_logo_label', 'Company Logo & Document Brand')}
             </label>
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="w-24 h-24 bg-white border-2 border-dashed border-slate-300 flex items-center justify-center p-1 relative group shrink-0">
@@ -537,7 +537,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                Tax Identification / GSTIN / VAT Number
+                {t('tax_number_label', 'Tax Identification / GSTIN / VAT Number')}
               </label>
               <input
                 type="text"
@@ -553,7 +553,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
 
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">
-                Default General Sales Tax Rate (%)
+                {t('sales_tax_rate_label', 'Default General Sales Tax Rate (%)')}
               </label>
               <input
                 type="number"
@@ -574,7 +574,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1 flex items-center gap-1">
                 <DollarSign className="w-3 h-3 text-slate-500" />
-                <span>Default Currency</span>
+                <span>{t('store_currency', 'Default Currency')}</span>
               </label>
               <select
                 value={currencyCode}
@@ -592,7 +592,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1 flex items-center gap-1">
                 <Globe className="w-3 h-3 text-slate-500" />
-                <span>System Language</span>
+                <span>{t('system_language', 'System Language')}</span>
               </label>
               <select
                 value={language}
@@ -610,7 +610,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Phone Number</label>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('phone', 'Phone Number')}</label>
               <input
                 type="text"
                 value={phone}
@@ -620,7 +620,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Email Address</label>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('email', 'Email Address')}</label>
               <input
                 type="email"
                 value={email}
@@ -630,7 +630,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">Physical Address</label>
+              <label className="block text-[10px] font-bold uppercase text-slate-600 mb-1">{t('address', 'Physical Address')}</label>
               <input
                 type="text"
                 value={address}
@@ -656,7 +656,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
         <div className="bg-white border border-slate-200 p-6 space-y-6 shadow-sm">
           <div className="border-b border-slate-200 pb-3">
             <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
-              Store Outlets &amp; Warehouse Locations ({locations.length})
+              {t('locations', 'Store Outlets & Warehouse Locations')} ({locations.length})
             </h3>
             <p className="text-xs text-slate-600">
               Manage branches for multi-outlet POS sales and stock transfers.
@@ -682,7 +682,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
 
           {/* Add New Location Form */}
           <form onSubmit={handleAddLoc} className="p-4 bg-slate-50 border border-slate-200 space-y-3">
-            <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">+ Register New Branch Outlet</h4>
+            <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">+ {t('add_location', 'Register New Branch Outlet')}</h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <input
                 type="text"
@@ -712,7 +712,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
               type="submit"
               className="px-4 py-2 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black"
             >
-              Add Outlet Location
+              {t('add_location', 'Add Outlet Location')}
             </button>
           </form>
         </div>
@@ -741,7 +741,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
                 </div>
                 <div>
                   <h4 className="font-bold text-xs uppercase text-slate-900 flex items-center gap-2">
-                    <span>Automated Local JSON Backups</span>
+                    <span>{t('automated_backups', 'Automated Local JSON Backups')}</span>
                     <span
                       className={`text-[9px] font-bold px-2 py-0.5 uppercase border ${
                         autoSaveEnabled
@@ -1049,7 +1049,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
                 className="w-full py-2.5 bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-black flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
-                <span>Export Manual Backup (JSON)</span>
+                <span>{t('export_backup', 'Export Manual Backup (JSON)')}</span>
               </button>
             </div>
 
@@ -1064,7 +1064,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
               </p>
               <label className="w-full py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
                 <Upload className="w-4 h-4" />
-                <span>Select Backup File (JSON)</span>
+                <span>{t('import_backup', 'Select Backup File (JSON)')}</span>
                 <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
               </label>
             </div>
@@ -1101,7 +1101,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
                 className="px-4 py-2 bg-slate-900 text-white hover:bg-black text-xs font-bold uppercase flex items-center gap-1.5"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Load ACME Demo Dataset</span>
+                <span>{t('reset_demo_data', 'Load ACME Demo Dataset')}</span>
               </button>
 
               <button
@@ -1113,7 +1113,7 @@ export const SetupView: React.FC<SetupViewProps> = ({
                 className="px-4 py-2 bg-rose-700 text-white hover:bg-rose-800 text-xs font-bold uppercase flex items-center gap-1.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Erase All Data &amp; Reset Clean</span>
+                <span>{t('clear_all_data', 'Erase All Data & Reset Clean')}</span>
               </button>
             </div>
           </div>

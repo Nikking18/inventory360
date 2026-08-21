@@ -1048,7 +1048,7 @@ export const SellView: React.FC<SellViewProps> = ({
                           onClick={() => onRefundSale(s.id)}
                           className="px-2.5 py-1 bg-rose-50 border border-rose-300 text-rose-800 hover:bg-rose-100 text-[10px] font-bold uppercase"
                         >
-                          Process Refund
+                          {t('process_refund', 'Process Refund')}
                         </button>
                       )}
                     </td>
@@ -1075,10 +1075,10 @@ export const SellView: React.FC<SellViewProps> = ({
                 )}
                 <div>
                   <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 border border-emerald-300 uppercase">
-                    Select Product Variant
+                    {t('select_variant', 'Select Product Variant')}
                   </span>
                   <h3 className="font-bold text-sm text-slate-900 mt-0.5">{variantModalProduct.name}</h3>
-                  <p className="text-[10px] text-slate-500">Base SKU: {variantModalProduct.sku}</p>
+                  <p className="text-[10px] text-slate-500">{t('base_sku', 'Base SKU')}: {variantModalProduct.sku}</p>
                 </div>
               </div>
               <button
@@ -1092,7 +1092,7 @@ export const SellView: React.FC<SellViewProps> = ({
             {/* Variant Options Cards */}
             <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
               <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                Available Options &amp; Stock Levels
+                {t('available_options_stock', 'Available Options & Stock Levels')}
               </label>
 
               {variantModalProduct.variants?.map((v) => {
@@ -1141,7 +1141,7 @@ export const SellView: React.FC<SellViewProps> = ({
                         {formatCurrency(v.retailPrice || variantModalProduct.retailPrice, currencySymbol)}
                       </p>
                       <p className="text-[10px] text-slate-500">
-                        {v.stockQuantity} in stock
+                        {v.stockQuantity} {t('in_stock_label', 'in stock')}
                       </p>
                     </div>
                   </div>
@@ -1151,7 +1151,7 @@ export const SellView: React.FC<SellViewProps> = ({
 
             {/* Quantity Stepper */}
             <div className="flex items-center justify-between pt-2 border-t border-slate-200 text-xs">
-              <span className="font-bold text-slate-700 uppercase">Quantity:</span>
+              <span className="font-bold text-slate-700 uppercase">{t('order_quantity', 'Quantity')}:</span>
               <div className="flex items-center border border-slate-300 bg-white">
                 <button
                   onClick={() => setVariantQty((q) => Math.max(1, q - 1))}
@@ -1175,14 +1175,14 @@ export const SellView: React.FC<SellViewProps> = ({
                 onClick={() => setVariantModalProduct(null)}
                 className="flex-1 py-2.5 bg-slate-100 text-slate-800 font-bold text-xs uppercase hover:bg-slate-200 border border-slate-300"
               >
-                Cancel
+                {t('cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleAddVariantFromModal}
                 className="flex-2 py-2.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black flex items-center justify-center gap-1.5 shadow-xs"
               >
                 <ShoppingBag className="w-4 h-4 text-emerald-400" />
-                <span>Add Variant to Cart</span>
+                <span>{t('add_to_cart', 'Add Variant to Cart')}</span>
               </button>
             </div>
           </div>
