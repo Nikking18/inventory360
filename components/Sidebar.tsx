@@ -29,6 +29,7 @@ import {
   Database,
   Coffee,
 } from 'lucide-react';
+import { ProductHuntBadge } from './common/ProductHuntBadge';
 
 export type NavItemKey =
   | 'home'
@@ -317,25 +318,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </a>
 
         {/* Product Hunt Featured Badge */}
-        <div className="flex items-center justify-center pt-0.5">
-          <a
-            href="https://www.producthunt.com/products/inventory-360?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-inventory-360"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block transition-transform hover:opacity-95"
-            title="Inventory 360 on Product Hunt"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1228382&theme=dark&t=1787305904717"
-              alt="Inventory 360 - Local-first POS & inventory management, zero cloud, zero fee | Product Hunt"
-              width="250"
-              height="54"
-              style={{ width: '100%', maxWidth: '210px', height: 'auto', aspectRatio: '250 / 54' }}
-              loading="lazy"
-            />
-          </a>
-        </div>
+        <ProductHuntBadge className="w-full" />
 
         <button
           onClick={onOpenDataPolicy}

@@ -317,7 +317,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1228382&theme=dark&t=1787305904717"
+                src="/producthunt-badge.svg"
                 alt="Inventory 360 - Local-first POS & inventory management, zero cloud, zero fee | Product Hunt"
                 width="250"
                 height="54"
