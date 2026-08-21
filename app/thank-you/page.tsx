@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
-import { CommunityFooterButtons } from '../../components/common/CommunityFooterButtons';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -92,12 +91,11 @@ export default function ThankYouPage() {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-slate-200 pt-6 flex flex-col md:flex-row items-center justify-between text-[11px] text-slate-500 gap-4">
+      <div className="border-t border-slate-200 pt-4 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-2">
         <span>© {new Date().getFullYear()} Inventory 360 Enterprise. 100% Offline-Ready &amp; Private.</span>
-        <CommunityFooterButtons />
         <div className="flex items-center gap-4">
-          <Link href="/" className="hover:text-slate-800 underline font-bold">Launch App</Link>
-          <Link href="/privacy" className="hover:text-slate-800 underline">Privacy Policy</Link>
+          <Link href="/" className="hover:text-slate-800 underline">Home</Link>
+          <Link href="/privacy" className="hover:text-slate-800 underline">Privacy &amp; Data Policy</Link>
         </div>
       </div>
     </div>

@@ -28,7 +28,6 @@ import {
   DollarSign,
 } from 'lucide-react';
 import Link from 'next/link';
-import { CommunityFooterButtons } from '../common/CommunityFooterButtons';
 import { BusinessSettings } from '../../lib/types';
 import { CURRENCIES } from '../../lib/currencies';
 import { LANGUAGES, SupportedLanguage } from '../../lib/i18n';
@@ -305,6 +304,27 @@ export const LandingView: React.FC<LandingViewProps> = ({
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Sub-50ms Query Latency
             </span>
+          </div>
+
+          {/* Product Hunt Featured Badge */}
+          <div className="pt-2 flex justify-center">
+            <a
+              href="https://www.producthunt.com/products/inventory-360?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-inventory-360"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block transition-transform hover:scale-105"
+              title="Inventory 360 - Local-first POS & inventory management on Product Hunt"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/producthunt-badge.svg"
+                alt="Inventory 360 - Local-first POS & inventory management, zero cloud, zero fee | Product Hunt"
+                width="250"
+                height="54"
+                style={{ width: '250px', height: '54px', aspectRatio: '250 / 54' }}
+                loading="lazy"
+              />
+            </a>
           </div>
         </div>
 
@@ -846,14 +866,6 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 <li>{onOpenTour && <button onClick={onOpenTour} className="hover:text-emerald-700 font-medium">Interactive Tour</button>}</li>
               </ul>
             </div>
-          </div>
-
-          {/* Community & Support Footers (Buy me a coffee & Product Hunt) */}
-          <div className="border-t border-slate-200 pt-6 pb-2 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <span className="text-[11px] font-mono text-slate-600 font-bold uppercase tracking-wider">
-              Support Open Source &amp; Community
-            </span>
-            <CommunityFooterButtons />
           </div>
 
           <div className="border-t border-slate-200 pt-4 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-2 font-mono">

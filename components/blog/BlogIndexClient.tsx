@@ -14,7 +14,6 @@ import { BlogPost, BLOG_POSTS } from '../../lib/blogData';
 import { SupportedLanguage } from '../../lib/i18n';
 import { getBlogUIDictionary, getLocalizedPost } from '../../lib/blogI18n';
 import { BlogHeader } from './BlogHeader';
-import { CommunityFooterButtons } from '../common/CommunityFooterButtons';
 
 export const BlogIndexClient: React.FC = () => {
   const [language, setLanguage] = useState<SupportedLanguage>('en');
@@ -249,13 +248,32 @@ export const BlogIndexClient: React.FC = () => {
 
         {/* 5. CTA WORKSPACE CARD */}
         <div className="bg-slate-900 !text-white text-white p-8 border border-slate-800 shadow-xl space-y-4 text-center sm:text-left flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <h3 className="text-xl sm:text-2xl font-bold font-heading !text-white text-white">
               {ui.ctaTitle}
             </h3>
             <p className="text-xs !text-slate-200 text-slate-200 max-w-xl leading-relaxed">
               {ui.ctaDescription}
             </p>
+            <div className="pt-1">
+              <a
+                href="https://www.producthunt.com/products/inventory-360?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-inventory-360"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block transition-transform hover:opacity-95"
+                title="Inventory 360 on Product Hunt"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/producthunt-badge.svg"
+                  alt="Inventory 360 - Local-first POS & inventory management, zero cloud, zero fee | Product Hunt"
+                  width="250"
+                  height="54"
+                  style={{ width: '210px', height: 'auto', aspectRatio: '250 / 54' }}
+                  loading="lazy"
+                />
+              </a>
+            </div>
           </div>
 
           <Link
@@ -270,18 +288,15 @@ export const BlogIndexClient: React.FC = () => {
 
       {/* 6. FOOTER */}
       <footer className="bg-white border-t border-slate-200 py-6 text-xs text-slate-500 font-mono">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <Link href="/" className="hover:text-slate-900 font-bold">
             ← {ui.footerHome}
           </Link>
-          <CommunityFooterButtons />
+          <span>© {new Date().getFullYear()} {ui.footerRights}</span>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-slate-900">{ui.footerPrivacy}</Link>
             <Link href="/" className="hover:text-slate-900">{ui.home}</Link>
           </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 text-center text-[10px] text-slate-400">
-          <span>© {new Date().getFullYear()} {ui.footerRights}</span>
         </div>
       </footer>
     </div>
