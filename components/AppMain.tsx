@@ -47,6 +47,7 @@ import {
 import dynamic from 'next/dynamic';
 import { Sidebar, NavItemKey } from './Sidebar';
 import { DashboardView } from './views/DashboardView';
+import { GlobalFooter } from './common/GlobalFooter';
 
 const SellView = dynamic(() => import('./views/SellView').then((m) => m.SellView), {
   loading: () => <div className="p-8 text-center text-xs text-slate-500 font-mono">Loading POS Terminal...</div>,
@@ -1441,18 +1442,7 @@ export default function AppMain() {
             </div>
 
             {/* Global In-App Bottom Footer */}
-            <footer className="border-t border-slate-200 bg-white px-4 sm:px-8 py-3 text-[11px] font-mono text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 mt-auto">
-              <span>© {new Date().getFullYear()} Inventory 360 Enterprise • Local-First Architecture</span>
-              <div className="flex items-center gap-1.5 text-slate-600">
-                <span>Created with <span className="text-rose-500">❤️</span> by <strong className="text-slate-800">Nikhil Khanpara</strong></span>
-                <span className="text-slate-400">•</span>
-                <a href="https://github.com/Nikking18" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">GitHub</a>
-                <span className="text-slate-300">•</span>
-                <a href="https://www.linkedin.com/in/nikhilkhanpara/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">LinkedIn</a>
-                <span className="text-slate-300">•</span>
-                <a href="https://x.com/nikhilkhanpara" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">Twitter</a>
-              </div>
-            </footer>
+            <GlobalFooter language={(settings.language as SupportedLanguage) || 'en'} className="mt-auto" />
           </main>
 
           {/* Printable Receipt Hidden Render Target */}

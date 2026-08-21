@@ -17,6 +17,7 @@ import { SupportedLanguage } from '../../lib/i18n';
 import { getBlogUIDictionary, getLocalizedPost } from '../../lib/blogI18n';
 import { BlogContentRenderer } from '../common/BlogContentRenderer';
 import { BlogHeader } from './BlogHeader';
+import { GlobalFooter } from '../common/GlobalFooter';
 
 interface BlogPostClientProps {
   initialPost: BlogPost;
@@ -266,25 +267,17 @@ export const BlogPostClient: React.FC<BlogPostClientProps> = ({ initialPost, slu
       </main>
 
       {/* 5. FOOTER */}
-      <footer className="bg-white border-t border-slate-200 py-6 text-xs text-slate-500 font-mono">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <footer className="bg-white border-t border-slate-200 text-xs text-slate-500 font-mono">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2 flex flex-col sm:flex-row items-center justify-between gap-3">
           <Link href="/blog" className="hover:text-slate-900 font-bold">
             ← {ui.backToArticles}
           </Link>
-          <div className="flex items-center gap-1.5 text-xs text-slate-600">
-            <span>Created with <span className="text-rose-500">❤️</span> by <strong className="text-slate-800">Nikhil Khanpara</strong></span>
-            <span className="text-slate-400">•</span>
-            <a href="https://github.com/Nikking18" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">GitHub</a>
-            <span className="text-slate-300">•</span>
-            <a href="https://www.linkedin.com/in/nikhilkhanpara/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">LinkedIn</a>
-            <span className="text-slate-300">•</span>
-            <a href="https://x.com/nikhilkhanpara" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">Twitter</a>
-          </div>
           <div className="flex items-center gap-4">
             <Link href="/" className="hover:text-slate-900">{ui.home}</Link>
             <Link href="/privacy" className="hover:text-slate-900">{ui.footerPrivacy}</Link>
           </div>
         </div>
+        <GlobalFooter language={language} className="border-t-0" />
       </footer>
     </div>
   );

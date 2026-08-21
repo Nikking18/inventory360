@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ShieldCheck, ArrowLeft, Lock, Database, HardDrive, FileCheck } from 'lucide-react';
 import type { Metadata } from 'next';
+import { GlobalFooter } from '../../components/common/GlobalFooter';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy & Data Security | Inventory 360',
@@ -110,16 +111,12 @@ export default function PrivacyPolicyPage() {
         >
           Launch Inventory 360
         </Link>
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-600">
-          <span>Created with <span className="text-rose-500">❤️</span> by <strong className="text-slate-800">Nikhil Khanpara</strong></span>
-          <span className="text-slate-400">•</span>
-          <a href="https://github.com/Nikking18" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">GitHub</a>
-          <span className="text-slate-300">•</span>
-          <a href="https://www.linkedin.com/in/nikhilkhanpara/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">LinkedIn</a>
-          <span className="text-slate-300">•</span>
-          <a href="https://x.com/nikhilkhanpara" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">Twitter</a>
-        </div>
+        <span className="text-[10px] text-slate-500">
+          Last updated: August 2026 • Verified Local-First Privacy Compliance
+        </span>
       </div>
+
+      <GlobalFooter className="border-t-0 -mx-6 sm:-mx-12 -mb-6 sm:-mb-12 mt-6" />
     </div>
   );
 }

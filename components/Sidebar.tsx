@@ -9,14 +9,16 @@ import { formatDateTime } from '../lib/utils';
 import {
   LayoutDashboard,
   ShoppingBag,
-  BarChart3,
+  ShoppingCart,
   Package,
   Boxes,
+  Layers,
+  BarChart3,
   Users,
   Settings,
   Sparkles,
+  Truck,
   ShieldCheck,
-  ArrowUpRight,
   ChevronRight,
   Globe,
   Home,
@@ -27,9 +29,7 @@ import {
   X,
   Check,
   Database,
-  Coffee,
 } from 'lucide-react';
-import { ProductHuntBadge } from './common/ProductHuntBadge';
 
 export type NavItemKey =
   | 'home'
@@ -305,20 +305,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span>{t('feedback_btn', 'Send Feedback')}</span>
         </a>
 
-        {/* Buy Me a Coffee Button */}
-        <a
-          href="https://ko-fi.com/Y0H123WFGA"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full py-1.5 px-2 bg-rose-700 hover:bg-rose-800 border border-rose-800 text-white font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-2xs text-[10px]"
-          title="Buy Me a Coffee"
-        >
-          <Coffee className="w-3.5 h-3.5 text-white" />
-          <span>{t('buy_coffee_btn', 'Buy Me a Coffee')}</span>
-        </a>
 
-        {/* Product Hunt Featured Badge */}
-        <ProductHuntBadge className="w-full" />
 
         <button
           onClick={onOpenDataPolicy}
@@ -408,20 +395,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <ChevronRight className="w-4 h-4 text-slate-400" />
       </div>
 
-      {/* Creator Attribution */}
-      <div className="px-3 py-2 border-t border-slate-200 bg-white text-[10px] font-mono text-slate-500 flex flex-col gap-1">
-        <div className="flex items-center gap-1 text-slate-700">
-          <span>Created with <span className="text-rose-500">❤️</span> by</span>
-          <span className="font-bold text-slate-900">Nikhil Khanpara</span>
-        </div>
-        <div className="flex items-center gap-2 text-slate-500">
-          <a href="https://github.com/Nikking18" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">GitHub</a>
-          <span className="text-slate-300">•</span>
-          <a href="https://www.linkedin.com/in/nikhilkhanpara/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">LinkedIn</a>
-          <span className="text-slate-300">•</span>
-          <a href="https://x.com/nikhilkhanpara" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">Twitter</a>
-        </div>
-      </div>
+
 
       {/* Demo Store Data Confirmation Modal Popup */}
       {showDemoConfirmModal && (

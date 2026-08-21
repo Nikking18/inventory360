@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { AlertOctagon, Home, ShoppingBag } from 'lucide-react';
 import type { Metadata } from 'next';
+import { GlobalFooter } from '../components/common/GlobalFooter';
 
 export const metadata: Metadata = {
   title: '404 - Page Not Found | Inventory 360',
@@ -69,20 +70,13 @@ export default function NotFound() {
       {/* Bottom Footer Record */}
       <div className="border-t border-slate-200 pt-4 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-2 font-mono">
         <span>© {new Date().getFullYear()} Inventory 360 Enterprise. Local-First Architecture.</span>
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-600">
-          <span>Created with <span className="text-rose-500">❤️</span> by <strong className="text-slate-800">Nikhil Khanpara</strong></span>
-          <span className="text-slate-400">•</span>
-          <a href="https://github.com/Nikking18" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">GitHub</a>
-          <span className="text-slate-300">•</span>
-          <a href="https://www.linkedin.com/in/nikhilkhanpara/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">LinkedIn</a>
-          <span className="text-slate-300">•</span>
-          <a href="https://x.com/nikhilkhanpara" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">Twitter</a>
-        </div>
         <div className="flex items-center gap-4">
           <Link href="/privacy" className="hover:text-slate-800 underline">Privacy Policy</Link>
           <Link href="/" className="hover:text-slate-800 underline">System Status</Link>
         </div>
       </div>
+
+      <GlobalFooter className="border-t-0 -mx-6 sm:-mx-12 -mb-6 sm:-mb-12 mt-6" />
     </div>
   );
 }
