@@ -27,9 +27,7 @@ import {
   X,
   Check,
   Database,
-  Coffee,
 } from 'lucide-react';
-import { ProductHuntBadge } from './common/ProductHuntBadge';
 
 export type NavItemKey =
   | 'home'
@@ -304,21 +302,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <MessageSquarePlus className="w-3.5 h-3.5 text-emerald-700" />
           <span>{t('feedback_btn', 'Send Feedback')}</span>
         </a>
-
-        {/* Ko-fi Support Button */}
-        <a
-          href="https://ko-fi.com/Y0H123WFGA"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full py-1.5 px-2 bg-rose-700 hover:bg-rose-800 border border-rose-800 text-white font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-2xs text-[10px]"
-          title="Support Developer on Ko-fi"
-        >
-          <Coffee className="w-3.5 h-3.5 text-white" />
-          <span>Support on Ko-fi</span>
-        </a>
-
-        {/* Product Hunt Featured Badge */}
-        <ProductHuntBadge className="w-full" />
 
         <button
           onClick={onOpenDataPolicy}

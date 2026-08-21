@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ShieldCheck, ArrowLeft, Lock, Database, HardDrive, FileCheck } from 'lucide-react';
+import { CommunityFooterButtons } from '../../components/common/CommunityFooterButtons';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -102,14 +103,15 @@ export default function PrivacyPolicyPage() {
         </div>
       </div>
 
-      {/* Footer Navigation */}
-      <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs gap-4">
+      {/* Footer Navigation & Community Buttons */}
+      <div className="border-t border-slate-200 pt-6 flex flex-col md:flex-row items-center justify-between text-xs gap-4">
         <Link
           href="/"
           className="px-5 py-2.5 bg-slate-900 text-white font-bold uppercase tracking-wider hover:bg-black transition-colors shadow-xs"
         >
           Launch Inventory 360
         </Link>
+        <CommunityFooterButtons />
         <span className="text-[10px] text-slate-500">
           Last updated: August 2026 • Verified Local-First Privacy Compliance
         </span>
