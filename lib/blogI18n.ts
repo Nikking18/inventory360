@@ -5087,6 +5087,528 @@ export const BLOG_POST_TRANSLATIONS: Record<string, Partial<Record<SupportedLang
     "content": "\n### 1. Уязвимость Централизованных Облачных Касс в Ритейле\n\nПривязка кассового узла исключительно к внешним серверам парализует торговлю при первом же обрыве связи:\n\n```\n  [ ТРАДИЦИОННАЯ ОБЛАЧНАЯ АРХИТЕКТУРА (УЯЗВИМА) ]\n  Кассовый узел ──(Интернет/Wi-Fi)──▶ [ Центральный SaaS-сервер ] ──▶ [ База в облаке ]\n        ▲                                    ▲\n        │ 🔴 ОБРЫВ ОПТОВОЛОКНА / СБОЙ СЕТИ   │ 🔴 ПАДЕНИЕ ЦОД / DDOS-АТАКА НА ПРОВАЙДЕРА\n        └────────────────────────────────────┴────────────────────────────────────────\n                          ⛔ ПОЛНЫЙ ПАРАЛИЧ МАГАЗИНА:\n             • Невозможно сканировать штрихкоды и пробивать чеки\n             • Скопление очередей и уход покупателей\n             • Невосполнимый ущерб выручке\n\n  ────────────────────────────────────────────────────────────────────────────────────\n\n  [ СУВЕРЕННАЯ LOCAL-FIRST АРХИТЕКТУРА (НАДЕЖНА) ]\n  Кассовый узел ──(Внутренняя шина <1ms)──▶ [ Локальная IndexedDB ] ──▶ [ Локальный диск ]\n        │                                                                   │\n        └──────── 🟢 100% РАБОТОСПОСОБНОСТЬ С ИНТЕРНЕТОМ ИЛИ БЕЗ НЕГО ──────┘\n```\n\n---\n\n### 2. Что Такое Цифровой Суверенитет Данных в Эпоху SaaS-Монополий\n\n1. **Физический Контроль**: База данных хранится на накопителе вашего компьютера.\n2. **Мгновенный Экспорт**: Выгрузка в открытых форматах (JSON, CSV, Excel) в любой момент.\n3. **Отсутствие Привязки к Поставщику ПО (Vendor Lock-in)**.\n4. **Защита от Блокировки Данных из-за Неуплаты Подписки**.\n\n---\n\n### 3. Внутреннее Устройство Локального Движка: IndexedDB и OPFS\n\n* **IndexedDB**: Транзакционная NoSQL-база с B-Tree индексами, обеспечивающая поиск по штрихкоду менее чем за **15 миллисекунд**.\n* **OPFS (Origin Private File System)**: Прямой и безопасный доступ к файловой системе с нативной скоростью.\n\n---\n\n### 4. Стратегия Резервного Копирования «3-2-1» без Потери Данных\n\n1. **3 Копии Данных**: Рабочая база + 2 независимых бэкапа.\n2. **2 Разных Носителя**: Системный SSD + внешняя USB-флешка.\n3. **1 Внешняя Копия**: Зашифрованный архив в вашем личном облаке.\n\n---\n\n### 5. Метрики Аварийного Восстановления: Сведение RPO и RTO к Нулю\n\n* **RPO (Окно Потери Данных)**: **0 Секунд** в Inventory 360.\n* **RTO (Время Восстановления)**: **Менее 5 Секунд**.\n\n---\n\n### 6. Криптографическая Проверка: Контрольные Суммы SHA-256 и Схемы JSON\n\nКаждый архив подписывается хэшем SHA-256 и проверяется по строгой JSON-схеме для защиты от поврежденных файлов.\n\n---\n\n### 7. Автоматические Ежедневные Бэкапы через W3C File System Access API\n\nАвтоматическая запись архива на локальный диск при каждом закрытии кассовой смены без ручных скачиваний.\n\n---\n\n### 8. Резервное Копирование и Восстановление в Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) гарантирует:\n1. **Скачивание бэкапа в 1 клик** в разделе **Настройки > Резервные копии**.\n2. **Автоматические напоминания при закрытии кассы**.\n3. **Восстановление всей базы за 3 секунды**.\n4. **Экспорт отчетов на 11 языках** в CSV, Excel и PDF.\n"
   }
 },
+  'thermal-receipt-printing-escpos-bluetooth-guide': {
+  "es": {
+    "title": "Impresión de Tickets Térmicos y Protocolo ESC/POS: Facturación TPV de Alta Velocidad sin Internet",
+    "excerpt": "Guía técnica definitiva de impresión térmica para TPV: física de la impresión térmica directa, estándares de papel 58 mm vs. 80 mm, anatomía de comandos binarios ESC/POS, apertura de cajón portamonedas y configuración en el navegador.",
+    "category": "Hardware y Configuración",
+    "keywords": [
+      "impresora termica de tickets configuracion",
+      "comandos ESC POS protocolo impresion",
+      "impresora tickets 58mm vs 80mm",
+      "imprimir tickets desde el navegador web",
+      "abrir cajon portamonedas RJ11 comando",
+      "impresora termica bluetooth TPV",
+      "factura simplificada ticket requisitos legales",
+      "corte automatico papel ticket autocut",
+      "impresion tickets sin tinta termica directa",
+      "software TPV impresion tickets gratis"
+    ],
+    "tableOfContents": [
+      {
+        "id": "physics-thermal-printing",
+        "title": "1. La Física de la Impresión Térmica Directa y la Velocidad en Caja"
+      },
+      {
+        "id": "paper-width-standards-58mm-80mm",
+        "title": "2. Estándares de Ancho de Papel: 58 mm vs. 80 mm y Cálculo de Columnas"
+      },
+      {
+        "id": "escpos-protocol-binary-anatomy",
+        "title": "3. Anatomía del Protocolo Binario ESC/POS"
+      },
+      {
+        "id": "hardware-interface-shootout",
+        "title": "4. Comparativa de Conectividad: USB vs. Bluetooth vs. Red Ethernet/Wi-Fi"
+      },
+      {
+        "id": "browser-thermal-printing-pipelines",
+        "title": "5. Canales de Impresión en el Navegador: WebUSB vs. CSS de Impresión"
+      },
+      {
+        "id": "auto-cut-cash-drawer-pulse",
+        "title": "6. Corte Automático de Papel e Impulso Eléctrico al Cajón Portamonedas"
+      },
+      {
+        "id": "receipt-compliance-tax-anatomy",
+        "title": "7. Anatomía del Ticket de Venta y Requisitos Fiscales"
+      },
+      {
+        "id": "inventory-360-thermal-setup",
+        "title": "8. Configuración de Impresión Térmica Paso a Paso en Inventory 360"
+      }
+    ],
+    "content": "\n### 1. La Física de la Impresión Térmica Directa y la Velocidad en Caja\n\nEn un mostrador de cobro minorista de alto tráfico, la velocidad de impresión del ticket de venta determina directamente el rendimiento de las colas de caja.\n\nLas impresoras tradicionales de inyección de tinta o láser tardan entre **12 y 20 segundos** en calentar el fusor, alimentar hojas de papel y procesar el documento. Una impresora térmica directa emite un ticket completo en **menos de 0,8 segundos** a velocidades de hasta **250 mm/segundo**:\n\n```\n       [ FÍSICA DEL CABEZAL TÉRMICO DIRECTO ]\n\n  Cabezal con Micro-Resistencias Térmicas (203 Puntos/Pulgada - DPI)\n  ──────────────────────┬──────────────────────\n                        │ Impulso Eléctrico Calienta a 150°C - 200°C\n                        ▼\n  ┌────────────────────────────────────────────────────────┐\n  │ Capa Protectora Superior Transparente                  │\n  ├────────────────────────────────────────────────────────┤\n  │ Capa Química Termocrómica (Colorantes Leucocitarios)   │ ➔ Reacción Química:\n  ├────────────────────────────────────────────────────────┤   Pasa de Blanco a Negro\n  │ Papel Base de Celulosa                                 │   Instantáneamente\n  └────────────────────────────────────────────────────────┘\n```\n\n#### Ventajas Operativas Clave:\n1. **Cero Coste de Tinta**: No requiere cartuchos de tinta, cintas ni tóner. El único consumible es el rollo de papel térmico.\n2. **Cero Retraso Mecánico**: Sin piezas móviles complejas ni tiempos de calentamiento del fusor.\n3. **Mantenimiento Ultrabajo**: Cabezales con vida útil de más de **150 kilómetros de papel** y 1,5 millones de cortes automáticos.\n\n---\n\n### 2. Estándares de Ancho de Papel: 58 mm vs. 80 mm y Cálculo de Columnas\n\nEl sector minorista estandariza dos formatos de ancho de papel con distintas densidades de caracteres por línea:\n\n```\n      [ FORMATO COMPACTO 58 MM ]                [ FORMATO ESTÁNDAR 80 MM ]\n         Ancho: 58 mm (2.28\")                      Ancho: 80 mm (3.15\")\n      Área Imprimible: 48 mm (384 px)           Área Imprimible: 72 mm (576 px)\n      32 Caracteres / Línea (Fuente A)          48 Caracteres / Línea (Fuente A)\n   ┌──────────────────────────────┐          ┌────────────────────────────────────────┐\n   │ INVENTORY 360 BOUTIQUE       │          │ INVENTORY 360 HYPERMARKET              │\n   │ 2026-08-21 14:32   #INV-1092 │          │ 2026-08-21 14:32             #INV-1092 │\n   │ ---------------------------- │          │ -------------------------------------- │\n   │ 1x Teclado Mecanico    45.00 │          │ 1x Teclado Mecanico USB Pro      45.00 │\n   │ 2x Cable USB-C          9.00 │          │ 2x Cable USB-C Blindado 2m        9.00 │\n   │ ---------------------------- │          │ -------------------------------------- │\n   │ TOTAL:                 54.00 │          │ SUBTOTAL:                        44.63 │\n   └──────────────────────────────┘          │ IVA (21%):                        9.37 │\n                                             │ TOTAL:                           54.00 │\n                                             └────────────────────────────────────────┘\n```\n\n#### Tabla Comparativa de Formatos:\n\n| Métrica de Impresión | Estándar Compacto 58 mm | Estándar Profesional 80 mm |\n| :--- | :--- | :--- |\n| **Ancho Físico del Rollo** | $58\\text{ mm } (2.28\")$ | $80\\text{ mm } (3.15\")$ |\n| **Ancho Imprimible Efectivo** | $48\\text{ mm}$ | $72\\text{ mm}$ |\n| **Resolución en Píxeles (203 DPI)** | $384\\text{ puntos / línea}$ | $576\\text{ puntos / línea}$ |\n| **Columnas en Fuente A ($12 \\times 24\\text{ px}$)** | **32 Caracteres** | **48 Caracteres** |\n| **Columnas en Fuente B ($9 \\times 17\\text{ px}$)** | **42 Caracteres** | **64 Caracteres** |\n| **Mejor Caso de Uso** | Food trucks, puestos ambulantes, cafeterías | Supermercados, tiendas de moda, retail de gran volumen |\n\n---\n\n### 3. Anatomía del Protocolo Binario ESC/POS\n\nEl protocolo **ESC/POS** (desarrollado originalmente por Epson) es el estándar universal de la industria para controlar impresoras térmicas mediante secuencias de bytes binarios de escape:\n\n```\n                          [ FLUJO DE BYTES ESC/POS ]\n\n  Inicializar Impresora  ──▶ 0x1B 0x40           (ESC @)\n  Alinear al Centro      ──▶ 0x1B 0x61 0x01      (ESC a 1)\n  Texto en Negrita ON    ──▶ 0x1B 0x45 0x01      (ESC E 1)\n  Imprimir Texto         ──▶ \"INVENTORY 360\\n\"\n  Texto en Negrita OFF   ──▶ 0x1B 0x45 0x00      (ESC E 0)\n  Alinear a la Izquierda ──▶ 0x1B 0x61 0x00      (ESC a 0)\n  Avanzar y Cortar Papel ──▶ 0x1D 0x56 0x41 0x00 (GS V 65 0)\n  Pulsar Cajón Monedas   ──▶ 0x1B 0x70 0x00 0x19 0xFA (ESC p 0 25 250)\n```\n\n#### Opcodes Hexadecimales Fundamentales:\n* `0x1B 0x40` (**ESC @**): Reinicia el búfer interno y restaura los valores predeterminados.\n* `0x1B 0x45 0x01` (**ESC E 1**): Activa el modo de impresión en negrita de doble impacto.\n* `0x1D 0x56 0x41 0x00` (**GS V 'A' 0**): Ejecuta el corte completo del papel con cuchilla interna.\n* `0x1B 0x70 0x00 0x19 0xFA` (**ESC p 0 25 250**): Envía un pulso eléctrico de 24 V al conector RJ11 para abrir el cajón portamonedas en 50 milisegundos.\n\n---\n\n### 4. Comparativa de Conectividad: USB vs. Bluetooth vs. Red Ethernet/Wi-Fi\n\n| Interfaz de Conexión | Velocidad de Envío | Complejidad de Configuración | Movilidad | Caso de Uso Óptimo |\n| :--- | :--- | :--- | :--- | :--- |\n| **USB (Virtual COM / HID)** | 🟢 Instantánea (< 10 ms) | 🟢 Plug & Play inmediato | 🔴 Estación fija de mostrador | Cajas de cobro principales en tienda física |\n| **Bluetooth (SPP / BLE)** | 🟡 Media (~100-300 ms) | 🟡 Emparejamiento por dispositivo | 🟢 Totalmente móvil en mano | Cobro en terraza, pop-up stores y venta ambulante |\n| **Ethernet LAN (RJ45)** | 🟢 Muy rápida (< 20 ms) | 🟡 Requiere IP fija en el router | 🔴 Con cable de red | Impresoras de comandas de cocina y centros logísticos |\n| **Wi-Fi Inalámbrico** | 🟢 Rápida (< 50 ms) | 🔴 Requiere configuración SSID/WPA | 🟡 Movilidad dentro de la red local | Impresoras compartidas entre varios terminales TPV |\n\n---\n\n### 5. Canales de Impresión en el Navegador: WebUSB vs. CSS de Impresión\n\nLas aplicaciones web modernas como [Inventory 360](https://www.inventory360.shop) utilizan dos estrategias complementarias para imprimir directamente desde el navegador:\n\n* **Pipeline Universal mediante CSS de Impresión (@media print)**:\nFunciona en cualquier sistema operativo (Windows, macOS, Linux, Android, iOS) y con cualquier controlador de impresora instalado:\n\n```css\n@media print {\n  @page {\n    size: 80mm auto; /* Ajuste exacto al ancho del rollo térmico */\n    margin: 0mm;      /* Eliminación de márgenes de cabecera y pie */\n  }\n  body {\n    width: 72mm;\n    margin: 0 auto;\n    font-family: 'Courier New', monospace;\n    font-size: 12px;\n    line-height: 1.2;\n    color: #000;\n  }\n}\n```\n\n* **Pipeline de Bajo Nivel mediante WebUSB / Web Serial API**:\nPermite enviar secuencias de bytes binarios ESC/POS directamente al puerto USB de la impresora sin abrir el diálogo de impresión del sistema operativo.\n\n---\n\n### 6. Corte Automático de Papel e Impulso Eléctrico al Cajón Portamonedas\n\nEl puerto posterior **RJ11/RJ12** de las impresoras térmicas no es un puerto telefónico, sino una salida de relé de solenoide:\n\n```\n                 [ ESQUEMA DE CONEXIÓN DEL CAJÓN RJ11/RJ12 ]\n\n  Impresora Térmica ──[ Cable RJ11/RJ12 ]──▶ [ Solenoide del Cajón Portamonedas ]\n         │                                                    │\n  Comando ESC p 0 25 250 ──────▶ Pulso Eléctrico (24V, 1A, 50ms) ──▶ Abre el Pestillo\n```\n\n* **Corte Completo (Full Cut)**: La cuchilla guillotina corta el 100% del papel.\n* **Corte Parcial (Partial Cut)**: Deja un pequeño puente de 1 mm en el centro para que el ticket no caiga al suelo.\n\n---\n\n### 7. Anatomía del Ticket de Venta y Requisitos Fiscales\n\nUn ticket simplificado conforme a la normativa legal debe incluir obligatoriamente 7 bloques de datos:\n\n```\n  ┌────────────────────────────────────────────────────────┐\n  │ 1. DATOS FISCALES: Razón Social, CIF/NIF, Dirección    │\n  │ 2. IDENTIFICADOR: Número de Ticket y Serie Secuencial  │\n  │ 3. FECHA Y HORA: Marca temporal exacta de la venta     │\n  │ 4. DESGLOSE DE LÍNEAS: Cantidad, Concepto, Precio      │\n  │ 5. BASE IMPONIBLE Y TIPOS DE IVA DESGLOSADOS           │\n  │ 6. FORMA DE PAGO: Efectivo, Tarjeta, Bizum, etc.       │\n  │ 7. PIE LEGAL Y CÓDIGO QR TRIBUTARIO (SI APLICA)        │\n  └────────────────────────────────────────────────────────┘\n```\n\n---\n\n### 8. Configuración de Impresión Térmica Paso a Paso en Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) optimiza la emisión de tickets:\n\n1. **Seleccione el Ancho de Papel**: En **Configuración > Plantilla de Tickets**, elija entre **58 mm** u **80 mm**.\n2. **Personalice el Encabezado y Pie**: Añada el logotipo de su tienda, CIF fiscal, teléfono y política de devoluciones.\n3. **Impresión Instantánea en TPV**: Tras completar un cobro en la pantalla de **Venta (TPV)**, pulse **Imprimir Ticket** para emitir el comprobante en menos de 1 segundo.\n4. **Soporte Multilingüe en 11 Idiomas**: Emita tickets traducidos en español, inglés, francés, alemán, italiano, portugués, chino, japonés, ruso, árabe o hindi.\n"
+  },
+  "fr": {
+    "title": "Impression de Tickets Thermiques et Protocole ESC/POS : Facturation Caisse Rapide Hors-Ligne",
+    "excerpt": "Guide technique complet de l’impression thermique en caisse : principes physiques, formats de papier 58 mm vs. 80 mm, commandes binaires ESC/POS, déclenchement du tiroir-caisse et configuration Web.",
+    "category": "Matériel & Configuration",
+    "keywords": [
+      "imprimante thermique ticket de caisse",
+      "commandes ESC POS protocole impression",
+      "format ticket 58mm vs 80mm",
+      "imprimer ticket caisse navigateur web",
+      "ouverture tiroir caisse RJ11 commande",
+      "imprimante ticket bluetooth caisse POS",
+      "ticket de caisse mentions obligatoires",
+      "coupe automatique papier massicot",
+      "impression thermique directe sans encre",
+      "logiciel caisse enregistreuse impression ticket"
+    ],
+    "tableOfContents": [
+      {
+        "id": "physics-thermal-printing",
+        "title": "1. Physique de l’Impression Thermique Directe et Vitesse en Caisse"
+      },
+      {
+        "id": "paper-width-standards-58mm-80mm",
+        "title": "2. Formats de Papier : 58 mm vs. 80 mm et Calcul des Colonnes"
+      },
+      {
+        "id": "escpos-protocol-binary-anatomy",
+        "title": "3. Anatomie du Protocole Binaire ESC/POS"
+      },
+      {
+        "id": "hardware-interface-shootout",
+        "title": "4. Comparatif de Connectivité : USB vs. Bluetooth vs. Ethernet/Wi-Fi"
+      },
+      {
+        "id": "browser-thermal-printing-pipelines",
+        "title": "5. Impression Directe depuis le Navigateur : WebUSB vs. CSS Print"
+      },
+      {
+        "id": "auto-cut-cash-drawer-pulse",
+        "title": "6. Coupe Automatique du Papier et Impulsion Tiroir-Caisse"
+      },
+      {
+        "id": "receipt-compliance-tax-anatomy",
+        "title": "7. Anatomie du Ticket de Caisse et Mentions Légales Fiscales"
+      },
+      {
+        "id": "inventory-360-thermal-setup",
+        "title": "8. Configuration Thermique Pas à Pas dans Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Physique de l’Impression Thermique Directe et Vitesse en Caisse\n\nDans un commerce à fort passage, la rapidité d'impression du ticket de caisse détermine la fluidité des files d'attente :\n\n```\n  Imprimante Jet d'Encre / Laser ➔ 12 à 20 secondes (Préchauffage, entraînement mécanique)\n  Imprimante Thermique Directe   ➔ Moins de 0,8 seconde (Vitesse de 250 mm/seconde)\n```\n\n* **Zéro Cartouche d'Encre** : Le papier thermique réagit chimiquement sous l'effet de la chaleur (150°C à 200°C).\n* **Fiabilité Maximale** : Têtes d'impression certifiées pour plus de **150 kilomètres de papier**.\n\n---\n\n### 2. Formats de Papier : 58 mm vs. 80 mm et Calcul des Colonnes\n\n| Caractéristique | Format Compact 58 mm | Format Standard 80 mm |\n| :--- | :--- | :--- |\n| **Largeur du Rouleau** | $58\\text{ mm } (2.28\")$ | $80\\text{ mm } (3.15\")$ |\n| **Largeur Imprimable** | $48\\text{ mm}$ | $72\\text{ mm}$ |\n| **Résolution (203 DPI)** | $384\\text{ points / ligne}$ | $576\\text{ points / ligne}$ |\n| **Colonnes (Police A 12x24)** | **32 Caractères** | **48 Caractères** |\n| **Usage Recommandé** | Food trucks, vente ambulante, cafés | Supermarchés, boutiques de mode, grand commerce |\n\n---\n\n### 3. Anatomie du Protocole Binaire ESC/POS\n\n* `0x1B 0x40` (**ESC @**) : Réinitialisation de l'imprimante.\n* `0x1B 0x45 0x01` (**ESC E 1**) : Activation du gras.\n* `0x1D 0x56 0x41 0x00` (**GS V 65 0**) : Coupe automatique du papier.\n* `0x1B 0x70 0x00 0x19 0xFA` (**ESC p 0 25 250**) : Ouverture du tiroir-caisse via le port RJ11.\n\n---\n\n### 4. Comparatif de Connectivité : USB vs. Bluetooth vs. Ethernet/Wi-Fi\n\n* **USB** : Zéro latence (< 10 ms), idéal pour caisse fixe.\n* **Bluetooth** : Mobilité totale pour vente nomade et tablettes.\n* **Ethernet / Wi-Fi** : Partage d'une imprimante entre plusieurs terminaux de caisse.\n\n---\n\n### 5. Impression Directe depuis le Navigateur : WebUSB vs. CSS Print\n\n```css\n@media print {\n  @page {\n    size: 80mm auto;\n    margin: 0mm;\n  }\n  body {\n    width: 72mm;\n    margin: 0 auto;\n    font-family: 'Courier New', monospace;\n    font-size: 12px;\n  }\n}\n```\n\n---\n\n### 6. Coupe Automatique du Papier et Impulsion Tiroir-Caisse\n\nLe port **RJ11/RJ12** délivre une impulsion 24V de 50 ms pour déverrouiller instantanément le tiroir-caisse lors de la validation du paiement en espèces.\n\n---\n\n### 7. Anatomie du Ticket de Caisse et Mentions Légales Fiscales\n\nUn ticket valide doit comporter : identification légale de l'entreprise (SIRET/TVA), numéro de ticket séquentiel, date et heure, détail des articles, ventilation de la TVA, et mode de règlement.\n\n---\n\n### 8. Configuration Thermique Pas à Pas dans Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) propose :\n1. Choix du format 58 mm ou 80 mm dans **Paramètres > Tickets**.\n2. Personnalisation du logo, en-tête et pied de page.\n3. Impression immédiate en caisse (POS) en 1 clic.\n4. Tickets multilingues en 11 langues sans connexion internet.\n"
+  },
+  "de": {
+    "title": "Thermobondruck & ESC/POS-Protokoll: Schnelle Kassenbelege ohne Internetverbindung",
+    "excerpt": "Technischer Praxisleitfaden für Thermodruck im Einzelhandel: Thermodirektdruck-Physik, 58 mm vs. 80 mm Papierformate, ESC/POS-Steuerbefehle, Kassenladensteuerung und Druck aus dem Webbrowser.",
+    "category": "Hardware & Einrichtung",
+    "keywords": [
+      "Thermobondrucker Einrichtung Kasse",
+      "ESC POS Befehle Protokoll Bondrucker",
+      "Bonrollen 58mm vs 80mm Vergleich",
+      "Kassenbon drucken Webbrowser POS",
+      "Kassenlade öffnen RJ11 Steuerbefehl",
+      "Bluetooth Thermodrucker Kasse",
+      "Kassenbon gesetzliche Pflichtangaben",
+      "Automatischer Papierschnitt Autocut",
+      "Thermodirektdruck ohne Tinte",
+      "Kassensystem Bondrucker Software"
+    ],
+    "tableOfContents": [
+      {
+        "id": "physics-thermal-printing",
+        "title": "1. Die Physik des Thermodirektdrucks und Kassengeschwindigkeit"
+      },
+      {
+        "id": "paper-width-standards-58mm-80mm",
+        "title": "2. Papierbreiten-Standards: 58 mm vs. 80 mm und Spaltenberechnung"
+      },
+      {
+        "id": "escpos-protocol-binary-anatomy",
+        "title": "3. Anatomie des ESC/POS-Binärprotokolls"
+      },
+      {
+        "id": "hardware-interface-shootout",
+        "title": "4. Schnittstellen-Vergleich: USB vs. Bluetooth vs. Netzwerk (LAN/WLAN)"
+      },
+      {
+        "id": "browser-thermal-printing-pipelines",
+        "title": "5. Drucken aus dem Browser: WebUSB vs. Druck-CSS"
+      },
+      {
+        "id": "auto-cut-cash-drawer-pulse",
+        "title": "6. Automatischer Papierschnitt und Kassenladen-Impuls"
+      },
+      {
+        "id": "receipt-compliance-tax-anatomy",
+        "title": "7. Kassenbon-Aufbau und steuerliche Pflichtangaben"
+      },
+      {
+        "id": "inventory-360-thermal-setup",
+        "title": "8. Thermobondruck-Einrichtung in Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Die Physik des Thermodirektdrucks und Kassengeschwindigkeit\n\nAn stark frequentierten Kassen entscheidet die Druckgeschwindigkeit des Kassenbons über die Wartezeit der Kunden:\n\n```\n  Tintenstrahl- / Laserdrucker ➔ 12 bis 20 Sekunden Druckzeit\n  Thermodirektdrucker        ➔ Unter 0,8 Sekunden (bis zu 250 mm/s)\n```\n\n* **Keine Tinte / kein Toner erforderlich**: Spezialbeschichtetes Thermopapier verfärbt sich bei Hitzeeinwirkung (150°C–200°C) sekundenschnell schwarz.\n* **Wartungsarm**: Druckköpfe ausgelegt für über **150 Kilometer Papier**.\n\n---\n\n### 2. Papierbreiten-Standards: 58 mm vs. 80 mm und Spaltenberechnung\n\n| Eigenschaft | Kompaktformat 58 mm | Standardformat 80 mm |\n| :--- | :--- | :--- |\n| **Rollenbreite** | $58\\text{ mm } (2.28\")$ | $80\\text{ mm } (3.15\")$ |\n| **Druckbreite** | $48\\text{ mm}$ | $72\\text{ mm}$ |\n| **Auflösung (203 DPI)** | $384\\text{ Punkte / Zeile}$ | $576\\text{ Punkte / Zeile}$ |\n| **Zeichen pro Zeile (Font A)** | **32 Zeichen** | **48 Zeichen** |\n| **Einsatzbereich** | Mobile Kassen, Cafés, Kioske | Supermärkte, Bekleidung, Vollsortiment |\n\n---\n\n### 3. Anatomie des ESC/POS-Binärprotokolls\n\n* `0x1B 0x40` (**ESC @**): Drucker initialisieren.\n* `0x1B 0x45 0x01` (**ESC E 1**): Fettschrift aktivieren.\n* `0x1D 0x56 0x41 0x00` (**GS V 65 0**): Papierschnitt ausführen.\n* `0x1B 0x70 0x00 0x19 0xFA` (**ESC p 0 25 250**): Kassenlade via RJ11 öffnen.\n\n---\n\n### 4. Schnittstellen-Vergleich: USB vs. Bluetooth vs. Netzwerk (LAN/WLAN)\n\n* **USB**: Null Latenz (< 10 ms) für feste Kassenplätze.\n* **Bluetooth**: Kabellose Freiheit für mobile Verkaufsstände und Tablets.\n* **Netzwerk (LAN/WLAN)**: Gemeinsame Druckernutzung über mehrere Kassen.\n\n---\n\n### 5. Drucken aus dem Browser: WebUSB vs. Druck-CSS\n\n```css\n@media print {\n  @page {\n    size: 80mm auto;\n    margin: 0mm;\n  }\n  body {\n    width: 72mm;\n    margin: 0 auto;\n    font-family: 'Courier New', monospace;\n    font-size: 12px;\n  }\n}\n```\n\n---\n\n### 6. Automatischer Papierschnitt und Kassenladen-Impuls\n\nDer **RJ11/RJ12-Port** steuert das Öffnen der Kassenlade über einen kurzen 24V-Spannungsimpuls beim Kassiervorgang.\n\n---\n\n### 7. Kassenbon-Aufbau und steuerliche Pflichtangaben\n\nPflichtangaben nach GoBD/Kassensicherungsverordnung: Firmenname, Steuernummer/USt-IdNr., Rechnungsnummer, Datum/Uhrzeit, Artikelaufstellung, Steuersätze und Zahlungsart.\n\n---\n\n### 8. Thermobondruck-Einrichtung in Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) bietet:\n1. Auswahl zwischen 58 mm und 80 mm in **Einstellungen > Belegvorlage**.\n2. Anpassung von Kopf- und Fußzeilen sowie Steuernummern.\n3. 1-Klick-Bondruck direkt aus dem POS-Modul.\n4. Mehrsprachige Belegausgabe in 11 Sprachen offline.\n"
+  },
+  "hi": {
+    "title": "थर्मल रसीद प्रिंटिंग और ESC/POS प्रोटोकॉल सेटअप: हाई-स्पीड ऑफ़लाइन बिलिंग गाइड",
+    "excerpt": "रिटेल पीओएस थर्मल प्रिंटिंग की संपूर्ण गाइड: डायरेक्ट थर्मल प्रिंटिंग सिद्धांत, 58mm बनाम 80mm पेपर साइज, ESC/POS बाइनरी कमांड, कैश ड्रॉअर ऑटो-ओपन और ब्राउज़र से डायरेक्ट प्रिंटिंग।",
+    "category": "हार्डवेयर और सेटअप",
+    "keywords": [
+      "थर्मल बिल प्रिंटर सेटअप पीओएस",
+      "ESC POS कमांड प्रिंटिंग प्रोटोकॉल",
+      "थर्मल रसीद 58mm vs 80mm",
+      "वेब ब्राउज़र से बिल प्रिंट करना",
+      "कैश ड्रॉअर खोलने का कमांड RJ11",
+      "ब्लूटूथ थर्मल प्रिंटर बिलिंग मशीन",
+      "जीएसटी बिल रसीद कानूनी नियम",
+      "ऑटो कटर थर्मल प्रिंटर",
+      "बिना स्याही थर्मल प्रिंटर",
+      "मुफ्त पीओएस बिलिंग सॉफ्टवेयर"
+    ],
+    "tableOfContents": [
+      {
+        "id": "physics-thermal-printing",
+        "title": "1. डायरेक्ट थर्मल प्रिंटिंग की कार्यप्रणाली और गति"
+      },
+      {
+        "id": "paper-width-standards-58mm-80mm",
+        "title": "2. पेपर साइज मानक: 58mm बनाम 80mm"
+      },
+      {
+        "id": "escpos-protocol-binary-anatomy",
+        "title": "3. ESC/POS बाइनरी प्रोटोकॉल संरचना"
+      },
+      {
+        "id": "hardware-interface-shootout",
+        "title": "4. कनेक्टिविटी तुलना: USB बनाम ब्लूटूथ बनाम Wi-Fi"
+      },
+      {
+        "id": "browser-thermal-printing-pipelines",
+        "title": "5. ब्राउज़र से डायरेक्ट प्रिंटिंग: WebUSB और CSS"
+      },
+      {
+        "id": "auto-cut-cash-drawer-pulse",
+        "title": "6. ऑटो-कटर और कैश ड्रॉअर ऑटो-ओपन सिस्टम"
+      },
+      {
+        "id": "receipt-compliance-tax-anatomy",
+        "title": "7. जीएसटी रसीद संरचना और कानूनी नियम"
+      },
+      {
+        "id": "inventory-360-thermal-setup",
+        "title": "8. Inventory 360 में थर्मल प्रिंटर सेटअप"
+      }
+    ],
+    "content": "\n### 1. डायरेक्ट थर्मल प्रिंटिंग की कार्यप्रणाली और गति\n\nदुकान में ग्राहकों की कतार जल्दी खत्म करने के लिए थर्मल प्रिंटर सबसे तेज़ साधन है:\n\n```\n  इंकजेट / लेज़र प्रिंटर ➔ 12 से 20 सेकंड (गर्म होने और पेपर फीड का समय)\n  थर्मल रसीद प्रिंटर     ➔ 0.8 सेकंड से भी कम (250 mm/सेकंड की गति)\n```\n\n* **स्याही का शून्य खर्च**: थर्मल पेपर गर्मी (150°C-200°C) के संपर्क में आते ही काला हो जाता है।\n* **लंबा जीवन**: 150 किलोमीटर से अधिक पेपर प्रिंटिंग क्षमता।\n\n---\n\n### 2. पेपर साइज मानक: 58mm बनाम 80mm\n\n| विशेषता | कॉम्पैक्ट 58 mm | स्टैंडर्ड 80 mm |\n| :--- | :--- | :--- |\n| **रोल चौड़ाई** | $58\\text{ mm } (2.28\")$ | $80\\text{ mm } (3.15\")$ |\n| **प्रिंट एरिया** | $48\\text{ mm}$ | $72\\text{ mm}$ |\n| **अक्षर प्रति लाइन** | **32 अक्षर** | **48 अक्षर** |\n| **उपयोग** | छोटी दुकानें, कैफे, फूड वैन | सुपरमार्केट, कपड़े के शोरूम, बड़े स्टोर |\n\n---\n\n### 3. ESC/POS बाइनरी प्रोटोकॉल संरचना\n\n* `0x1B 0x40` (**ESC @**): प्रिंटर रीसेट।\n* `0x1B 0x45 0x01` (**ESC E 1**): बोल्ड टेक्स्ट चालू।\n* `0x1D 0x56 0x41 0x00` (**GS V 65 0**): पेपर ऑटो-कट।\n* `0x1B 0x70 0x00 0x19 0xFA` (**ESC p 0 25 250**): कैश ड्रॉअर खोलना (RJ11)।\n\n---\n\n### 4. कनेक्टिविटी तुलना: USB बनाम ब्लूटूथ बनाम Wi-Fi\n\n* **USB**: सबसे तेज़ और स्थिर (काउंटर पीओएस हेतु)।\n* **ब्लूटूथ**: मोबाइल और टैबलेट बिलिंग हेतु सर्वश्रेष्ठ।\n* **Wi-Fi / LAN**: एक प्रिंटर से कई काउंटरों की बिलिंग।\n\n---\n\n### 5. ब्राउज़र से डायरेक्ट प्रिंटिंग: WebUSB और CSS\n\n```css\n@media print {\n  @page {\n    size: 80mm auto;\n    margin: 0mm;\n  }\n  body {\n    width: 72mm;\n    margin: 0 auto;\n    font-family: 'Courier New', monospace;\n    font-size: 12px;\n  }\n}\n```\n\n---\n\n### 6. ऑटो-कटर और कैश ड्रॉअर ऑटो-ओपन सिस्टम\n\nबिल कटते ही प्रिंटर का **RJ11 पोर्ट** 24V का करंट भेजकर गल्ले (कैश ड्रॉअर) को अपने आप खोल देता है।\n\n---\n\n### 7. जीएसटी रसीद संरचना और कानूनी नियम\n\nदुकान का नाम, जीएसटी नंबर, बिल नंबर, दिनांक/समय, उत्पाद सूची, टैक्स दरें और भुगतान विधि का विवरण होना अनिवार्य है।\n\n---\n\n### 8. Inventory 360 में थर्मल प्रिंटर सेटअप\n\n[Inventory 360](https://www.inventory360.shop) में:\n1. **Settings > Receipt Template** में 58mm या 80mm चुनें।\n2. दुकान का नाम, फोन और जीएसटी नंबर जोड़ें।\n3. पीओएस पर बिल बनते ही 1-क्लिक में रसीद प्रिंट करें।\n4. 11 भाषाओं में बहुभाषी रसीद प्रिंटिंग उपलब्ध।\n"
+  },
+  "ja": {
+    "title": "レシートプリンター設定＆ESC/POSプロトコル完全詳解：超高速オフラインPOS会計レシート印刷",
+    "excerpt": "小売POSレシート印刷の技術マニュアル：感熱ダイレクトサーマル印刷の仕組み、58mm vs 80mm紙幅規格、ESC/POSバイナリコマンド制御、自動キャッシュドロア連動、Webブラウザからのゼロ遅延印刷。",
+    "category": "機器設定＆ハードウェア",
+    "keywords": [
+      "レシートプリンター 設定 POSレジ",
+      "ESC POS コマンド プロトコル 制御",
+      "感熱紙 58mm 80mm 比較 違い",
+      "ブラウザからレシート印刷 WebPOS",
+      "キャッシュドロア 自動開閉 RJ11",
+      "Bluetooth レシートプリンター 小型",
+      "インボイス制度 レシート 必要項目",
+      "オートカッター レシート 切り離し",
+      "インク不要 サーマルプリンター",
+      "無料 POSレジ レシート印刷ソフト"
+    ],
+    "tableOfContents": [
+      {
+        "id": "physics-thermal-printing",
+        "title": "1. 感熱ダイレクトサーマル印刷の物理機構と会計速度"
+      },
+      {
+        "id": "paper-width-standards-58mm-80mm",
+        "title": "2. レシート用紙規格：58mm vs. 80mmと印字カラム計算"
+      },
+      {
+        "id": "escpos-protocol-binary-anatomy",
+        "title": "3. ESC/POSバイナリコマンドの構造詳解"
+      },
+      {
+        "id": "hardware-interface-shootout",
+        "title": "4. 接続インターフェース比較：USB vs. Bluetooth vs. 有線LAN/Wi-Fi"
+      },
+      {
+        "id": "browser-thermal-printing-pipelines",
+        "title": "5. Webブラウザからの直接印刷：WebUSB vs. 印刷専用CSS"
+      },
+      {
+        "id": "auto-cut-cash-drawer-pulse",
+        "title": "6. オートカッター制御とキャッシュドロア開閉パルス信号"
+      },
+      {
+        "id": "receipt-compliance-tax-anatomy",
+        "title": "7. インボイス・適格請求書レシートの記載要件"
+      },
+      {
+        "id": "inventory-360-thermal-setup",
+        "title": "8. Inventory 360でのレシートプリンター設定手順"
+      }
+    ],
+    "content": "\n### 1. 感熱ダイレクトサーマル印刷の物理機構と会計速度\n\n混雑するレジ前において、レシート発行速度はお客様の待ち時間に直結します：\n\n```\n  インクジェット / レーザー複合機 ➔ 12〜20秒（給紙機構・ウォームアップ遅延）\n  サーマルレシートプリンター     ➔ 0.8秒未満（毎秒250mmの超高速印字）\n```\n\n* **インクカートリッジ完全不要**：熱変色染料を塗布した感熱紙にサーマルヘッド（150℃〜200℃）で直接発色。\n* **高耐久性**：150km以上の用紙走行および150万回のオートカット耐性。\n\n---\n\n### 2. レシート用紙規格：58mm vs. 80mmと印字カラム計算\n\n| 項目 | コンパクト58mm幅 | 標準80mm幅 |\n| :--- | :--- | :--- |\n| **ロール紙幅** | $58\\text{ mm } (2.28\")$ | $80\\text{ mm } (3.15\")$ |\n| **有効印字幅** | $48\\text{ mm}$ | $72\\text{ mm}$ |\n| **印字ドット数 (203 DPI)** | $384\\text{ dots / 行}$ | $576\\text{ dots / 行}$ |\n| **1行文字数 (Font A 12x24)** | **32文字** | **48文字** |\n| **推奨業態** | キッチンカー、カフェ、移動販売 | スーパー、アパレル、総合小売店 |\n\n---\n\n### 3. ESC/POSバイナリコマンドの構造詳解\n\n* `0x1B 0x40` (**ESC @**): プリンター初期化。\n* `0x1B 0x45 0x01` (**ESC E 1**): 太字強調印字。\n* `0x1D 0x56 0x41 0x00` (**GS V 65 0**): 用紙フルカット。\n* `0x1B 0x70 0x00 0x19 0xFA` (**ESC p 0 25 250**): キャッシュドロア開放パルス (RJ11)。\n\n---\n\n### 4. 接続インターフェース比較：USB vs. Bluetooth vs. 有線LAN/Wi-Fi\n\n* **USB**: 遅延ゼロ（< 10ms）で固定レジに最適。\n* **Bluetooth**: タブレット会計・催事出店に最適なコードレス運用。\n* **有線LAN / Wi-Fi**: 複数レジから1台のプリンターを共有。\n\n---\n\n### 5. Webブラウザからの直接印刷：WebUSB vs. 印刷専用CSS\n\n```css\n@media print {\n  @page {\n    size: 80mm auto;\n    margin: 0mm;\n  }\n  body {\n    width: 72mm;\n    margin: 0 auto;\n    font-family: 'Courier New', monospace;\n    font-size: 12px;\n  }\n}\n```\n\n---\n\n### 6. オートカッター制御とキャッシュドロア開閉パルス信号\n\n会計確定時、プリンター背面の**RJ11/RJ12端子**から24V 50msの電気パルスが送られ、ドロアのラッチを自動開放します。\n\n---\n\n### 7. インボイス・適格請求書レシートの記載要件\n\n事業者名・登録番号（T番号）、取引日時、品名、税率区分別合計（8% / 10%）、消費税額の明記が必要です。\n\n---\n\n### 8. Inventory 360でのレシートプリンター設定手順\n\n[Inventory 360](https://www.inventory360.shop) による実践：\n1. **設定 > レシート設定**で58mmまたは80mmを選択。\n2. 店舗情報・インボイス登録番号を設定。\n3. 会計完了時にワンクリックで即座にレシート印刷。\n4. 11言語対応の多言語レシート発行に対応。\n"
+  },
+  "zh": {
+    "title": "热敏小票打印机与 ESC/POS 协议指令全解析：实体收银极速离线出单实战",
+    "excerpt": "实体零售收银小票打印技术专著：直接热敏成像物理原理、58mm 与 80mm 纸宽版式对比、ESC/POS 核心二进制字节指令集、钱箱自动弹开信号及纯网页端无插件极速出单。",
+    "category": "硬件与设备配置",
+    "keywords": [
+      "热敏小票打印机设置 POS",
+      "ESC POS 指令集 打印协议",
+      "热敏纸 58mm 与 80mm 区别",
+      "网页前端直接打印小票 无插件",
+      "RJ11 钱箱自动弹开指令",
+      "蓝牙便携小票机 连接配置",
+      "合规收银小票 必要要素",
+      "小票机自动切刀 Autocut",
+      "热敏无墨打印原理",
+      "免费收银系统小票打印软件"
+    ],
+    "tableOfContents": [
+      {
+        "id": "physics-thermal-printing",
+        "title": "1. 直接热敏打印成像物理原理与收银结账速度"
+      },
+      {
+        "id": "paper-width-standards-58mm-80mm",
+        "title": "2. 热敏纸规格标准：58mm 与 80mm 版面字数排版测算"
+      },
+      {
+        "id": "escpos-protocol-binary-anatomy",
+        "title": "3. ESC/POS 二进制通讯指令集底层解密"
+      },
+      {
+        "id": "hardware-interface-shootout",
+        "title": "4. 硬件通讯接口全景横评：USB vs. 蓝牙 vs. 网络 (有线/Wi-Fi)"
+      },
+      {
+        "id": "browser-thermal-printing-pipelines",
+        "title": "5. 现代浏览器端原生打印管道：WebUSB 与 打印专用 CSS"
+      },
+      {
+        "id": "auto-cut-cash-drawer-pulse",
+        "title": "6. 自动切刀机构控制与 RJ11 钱箱电脉冲弹开"
+      },
+      {
+        "id": "receipt-compliance-tax-anatomy",
+        "title": "7. 合规零售小票版面构成与财务要素"
+      },
+      {
+        "id": "inventory-360-thermal-setup",
+        "title": "8. 在 Inventory 360 中配置热敏小票打印机"
+      }
+    ],
+    "content": "\n### 1. 直接热敏打印成像物理原理与收银结账速度\n\n在高峰期实体收银台，出票速度决定排队长度：\n\n```\n  传统喷墨 / 激光打印机 ➔ 耗时 12 至 20 秒（机械进纸、预热熔影慢）\n  直接热敏小票打印机   ➔ 耗时小于 0.8 秒（速度高达 250 mm/秒）\n```\n\n* **完全零油墨耗材**：热敏微电阻瞬间加热至 150°C–200°C，涂层瞬间显色。\n* **工业级稳定性**：打印头寿命超 **150 公里走纸长度**，切刀寿命超 150 万次。\n\n---\n\n### 2. 热敏纸规格标准：58mm 与 80mm 版面字数排版测算\n\n| 参数指标 | 58 mm 便携紧凑型 | 80 mm 标准商用型 |\n| :--- | :--- | :--- |\n| **纸卷物理宽度** | $58\\text{ mm } (2.28\")$ | $80\\text{ mm } (3.15\")$ |\n| **实际可打印宽度** | $48\\text{ mm}$ | $72\\text{ mm}$ |\n| **行像素点数 (203 DPI)** | $384\\text{ dots / 行}$ | $576\\text{ dots / 行}$ |\n| **每行单字节字符 (Font A)** | **32 字符** | **48 字符** |\n| **推荐适用场景** | 移动摊位、咖啡轻食、奶茶店 | 大型超市、品牌连锁服装店、多SKU零售 |\n\n---\n\n### 3. ESC/POS 二进制通讯指令集底层解密\n\n* `0x1B 0x40` (**ESC @**)：打印机初始化复位。\n* `0x1B 0x45 0x01` (**ESC E 1**)：文字加粗模式开启。\n* `0x1D 0x56 0x41 0x00` (**GS V 65 0**)：执行全切刀动作。\n* `0x1B 0x70 0x00 0x19 0xFA` (**ESC p 0 25 250**)：向 RJ11 钱箱输出 24V 50ms 脉冲弹开锁扣。\n\n---\n\n### 4. 硬件通讯接口全景横评：USB vs. 蓝牙 vs. 网络 (有线/Wi-Fi)\n\n* **USB**：零延迟（< 10ms），固定收银台最稳选择。\n* **蓝牙**：移动收款、手持 PDA 及平板收银首选。\n* **网络 (有线/Wi-Fi)**：多台收银机共享一台收银机。\n\n---\n\n### 5. 现代浏览器端原生打印管道：WebUSB 与 打印专用 CSS\n\n```css\n@media print {\n  @page {\n    size: 80mm auto;\n    margin: 0mm;\n  }\n  body {\n    width: 72mm;\n    margin: 0 auto;\n    font-family: 'Courier New', monospace;\n    font-size: 12px;\n  }\n}\n```\n\n---\n\n### 6. 自动切刀机构控制与 RJ11 钱箱电脉冲弹开\n\n点击收银结算完成后，小票机通过背面 **RJ11 端口** 自动释放电磁阀脉冲开箱。\n\n---\n\n### 7. 合规零售小票版面构成与财务要素\n\n必须包含：商户名称/税号、流水小票单号、日期时间、明细品名数量单价、税额拆分及支付方式。\n\n---\n\n### 8. 在 Inventory 360 中配置热敏小票打印机\n\n[Inventory 360](https://www.inventory360.shop) 提供：\n1. 在 **设置 > 小票模板** 中自由切换 58mm / 80mm 规格。\n2. 自定义店铺 Logo、页眉、页脚及退换货政策。\n3. 收银端 1 键高速无感打印。\n4. 支持 11 种语言跨国小票出单。\n"
+  },
+  "ar": {
+    "title": "طباعة الإيصالات الحرارية وبروتوكول ESC/POS: فوترة الكاشير بسرعة فائقة بدون إنترنت",
+    "excerpt": "دليل تقني لطباعة الإيصالات الحرارية في نقاط البيع: فيزياء الطباعة الحرارية، مقاسات الورق 58 مم و 80 مم، أوامر بروتوكول ESC/POS، فتح درج النقد التلقائي، والطباعة المباشرة من المتصفح.",
+    "category": "الأجهزة والإعدادات",
+    "keywords": [
+      "إعداد طابعة الفواتير الحرارية كاشير",
+      "أوامر بروتوكول ESC POS للطباعة",
+      "مقارنة ورق الإيصالات 58mm و 80mm",
+      "طباعة الفاتورة من المتصفح مباشرة",
+      "أمر فتح درج الكاشير RJ11",
+      "طابعة إيصالات بلوتوث نقاط البيع",
+      "الشروط القانونية للفاتورة المبسطة",
+      "القطع التلقائي لورق الإيصالات",
+      "طابعة حرارية بدون حبر",
+      "برنامج كاشير لطباعة الفواتير"
+    ],
+    "tableOfContents": [
+      {
+        "id": "physics-thermal-printing",
+        "title": "1. فيزياء الطباعة الحرارية المباشرة وسرعة الكاشير"
+      },
+      {
+        "id": "paper-width-standards-58mm-80mm",
+        "title": "2. معايير عرض الورق: 58 مم مقابل 80 مم"
+      },
+      {
+        "id": "escpos-protocol-binary-anatomy",
+        "title": "3. تفاصيل بروتوكول الأوامر الثنائية ESC/POS"
+      },
+      {
+        "id": "hardware-interface-shootout",
+        "title": "4. مقارنة التوصيل: USB مقابل البلوتوث والشبكة"
+      },
+      {
+        "id": "browser-thermal-printing-pipelines",
+        "title": "5. الطباعة من المتصفح: WebUSB و CSS المخصص"
+      },
+      {
+        "id": "auto-cut-cash-drawer-pulse",
+        "title": "6. القطع التلقائي للورق ونبضة فتح درج النقد"
+      },
+      {
+        "id": "receipt-compliance-tax-anatomy",
+        "title": "7. عناصر الفاتورة الضريبية القانونية"
+      },
+      {
+        "id": "inventory-360-thermal-setup",
+        "title": "8. إعداد الطباعة الحرارية في Inventory 360"
+      }
+    ],
+    "content": "\n### 1. فيزياء الطباعة الحرارية المباشرة وسرعة الكاشير\n\nسرعة طباعة الفاتورة تمنع تكدس طوابير الزبائن عند الكاشير:\n\n```\n  طابعات الحبر / الليزر ➔ 12 إلى 20 ثانية (تسخين وتغذية الورق)\n  الطابعات الحرارية المباشرة ➔ أقل من 0.8 ثانية (بسرعة 250 مم/ثانية)\n```\n\n* **بدون حبر تماماً**: ورق حراري معالج كيميائياً يتغير لونه للأسود بالحرارة.\n* **عمر افتراضي طويل**: يتحمل طباعة أكثر من **150 كيلومتر من الورق**.\n\n---\n\n### 2. معايير عرض الورق: 58 مم مقابل 80 مم\n\n| الخاصية | مقاس 58 مم المدمج | مقاس 80 مم القياسي |\n| :--- | :--- | :--- |\n| **عرض الورق** | $58\\text{ مم } (2.28\")$ | $80\\text{ مم } (3.15\")$ |\n| **عرض الطباعة** | $48\\text{ مم}$ | $72\\text{ مم}$ |\n| **الأحرف بالسطر** | **32 حرفاً** | **48 حرفاً** |\n| **الاستخدام الأفضل** | الأكشاك، المقاهي الصغيرة | السوبرماركت، محلات الملابس الكبرى |\n\n---\n\n### 3. تفاصيل بروتوكول الأوامر الثنائية ESC/POS\n\n* `0x1B 0x40` (**ESC @**): إعادة ضبط الطابعة.\n* `0x1B 0x45 0x01` (**ESC E 1**): تفعيل الخط العريض.\n* `0x1D 0x56 0x41 0x00` (**GS V 65 0**): قطع الورق تلقائياً.\n* `0x1B 0x70 0x00 0x19 0xFA` (**ESC p 0 25 250**): نبضة فتح درج النقد عبر منفذ RJ11.\n\n---\n\n### 4. مقارنة التوصيل: USB مقابل البلوتوث والشبكة\n\n* **USB**: سرعة فورية وثبات تام للكاشير الثابت.\n* **البلوتوث**: حرية الحركة للأجهزة اللوحية والمبيعات المتنقلة.\n* **الشبكة (Wi-Fi / LAN)**: مشاركة الطابعة بين عدة أجهزة نقاط بيع.\n\n---\n\n### 5. الطباعة من المتصفح: WebUSB و CSS المخصص\n\n```css\n@media print {\n  @page {\n    size: 80mm auto;\n    margin: 0mm;\n  }\n  body {\n    width: 72mm;\n    margin: 0 auto;\n    font-family: 'Courier New', monospace;\n    font-size: 12px;\n  }\n}\n```\n\n---\n\n### 6. القطع التلقائي للورق ونبضة فتح درج النقد\n\nيرسل منفذ **RJ11** نبضة كهربائية 24V لفتح قفل درج الكاشير فور إنهاء البيع نقداً.\n\n---\n\n### 7. عناصر الفاتورة الضريبية القانونية\n\nالاسم التجاري، الرقم الضريبي، رقم الإيصال المتسلسل، الوقت والتاريخ، تفاصيل المنتجات والأسعار، تفصيل الضريبة، ورمز QR.\n\n---\n\n### 8. إعداد الطباعة الحرارية في Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) يوفر:\n1. اختيار مقاس 58 مم أو 80 مم في **الإعدادات > قوالب الفواتير**.\n2. تخصيص شعار المتجر وبيانات الضريبة.\n3. طباعة فورية بنقرة واحدة في شاشة المبيعات (POS).\n4. فواتير بـ 11 لغة بدون إنترنت.\n"
+  },
+  "pt": {
+    "title": "Impressão de Cupons Térmicos e Protocolo ESC/POS: Faturamento Rápido no PDV Offline",
+    "excerpt": "Guia definitivo de impressão térmica para ponto de venda: física da impressão térmica direta, padrões de bobina 58 mm vs. 80 mm, anatomia de comandos binários ESC/POS, abertura de gaveta de dinheiro e impressão web.",
+    "category": "Hardware e Configuração",
+    "keywords": [
+      "impressora termica cupom nao fiscal configuracao",
+      "comandos ESC POS protocolo de impressao",
+      "bobina termica 58mm vs 80mm",
+      "imprimir cupom pelo navegador web PDV",
+      "abrir gaveta de dinheiro comando RJ11",
+      "impressora termica bluetooth frente de caixa",
+      "cupom fiscal requisitos e leiaute",
+      "corte automatico papel guilhotina",
+      "impressao termica sem tinta",
+      "software PDV impressao de cupons gratis"
+    ],
+    "tableOfContents": [
+      {
+        "id": "physics-thermal-printing",
+        "title": "1. A Física da Impressão Térmica Direta e Velocidade no Caixa"
+      },
+      {
+        "id": "paper-width-standards-58mm-80mm",
+        "title": "2. Padrões de Largura de Bobina: 58 mm vs. 80 mm e Colunagem"
+      },
+      {
+        "id": "escpos-protocol-binary-anatomy",
+        "title": "3. Anatomia do Protocolo Binário ESC/POS"
+      },
+      {
+        "id": "hardware-interface-shootout",
+        "title": "4. Comparativo de Conexões: USB vs. Bluetooth vs. Rede (Ethernet/Wi-Fi)"
+      },
+      {
+        "id": "browser-thermal-printing-pipelines",
+        "title": "5. Impressão Direta pelo Navegador: WebUSB vs. CSS de Impressão"
+      },
+      {
+        "id": "auto-cut-cash-drawer-pulse",
+        "title": "6. Corte Automático de Papel e Pulso na Gaveta de Dinheiro"
+      },
+      {
+        "id": "receipt-compliance-tax-anatomy",
+        "title": "7. Anatomia do Cupom de Venda e Requisitos Fiscais"
+      },
+      {
+        "id": "inventory-360-thermal-setup",
+        "title": "8. Configuração de Impressão Térmica no Inventory 360"
+      }
+    ],
+    "content": "\n### 1. A Física da Impressão Térmica Direta e Velocidade no Caixa\n\nNo caixa do varejo, a velocidade de emissão do cupom reduz diretamente as filas:\n\n```\n  Impressora Jato de Tinta / Laser ➔ 12 a 20 segundos\n  Impressora Térmica Direta        ➔ Menos de 0,8 segundo (até 250 mm/s)\n```\n\n* **Zero Tinta ou Toner**: O papel termocrômico reage quimicamente ao calor (150°C–200°C).\n* **Alta Durabilidade**: Cabeças de impressão para mais de **150 km de papel**.\n\n---\n\n### 2. Padrões de Largura de Bobina: 58 mm vs. 80 mm e Colunagem\n\n| Característica | Formato 58 mm | Formato 80 mm |\n| :--- | :--- | :--- |\n| **Largura da Bobina** | $58\\text{ mm } (2.28\")$ | $80\\text{ mm } (3.15\")$ |\n| **Largura Imprimível** | $48\\text{ mm}$ | $72\\text{ mm}$ |\n| **Caracteres por Linha (Fonte A)** | **32 Caracteres** | **48 Caracteres** |\n| **Melhor Aplicação** | Venda móvel, quiosques, lanchonetes | Mercados, lojas de roupas, grande varejo |\n\n---\n\n### 3. Anatomia do Protocolo Binário ESC/POS\n\n* `0x1B 0x40` (**ESC @**): Inicialização da impressora.\n* `0x1B 0x45 0x01` (**ESC E 1**): Ativa negrito.\n* `0x1D 0x56 0x41 0x00` (**GS V 65 0**): Corte total do papel.\n* `0x1B 0x70 0x00 0x19 0xFA` (**ESC p 0 25 250**): Abertura da gaveta RJ11.\n\n---\n\n### 4. Comparativo de Conexões: USB vs. Bluetooth vs. Rede (Ethernet/Wi-Fi)\n\n* **USB**: Conexão instantânea para caixas fixos.\n* **Bluetooth**: Mobilidade total para celulares e tablets.\n* **Rede (Ethernet/Wi-Fi)**: Compartilhamento de impressora entre caixas.\n\n---\n\n### 5. Impressão Direta pelo Navegador: WebUSB vs. CSS de Impressão\n\n```css\n@media print {\n  @page {\n    size: 80mm auto;\n    margin: 0mm;\n  }\n  body {\n    width: 72mm;\n    margin: 0 auto;\n    font-family: 'Courier New', monospace;\n    font-size: 12px;\n  }\n}\n```\n\n---\n\n### 6. Corte Automático de Papel e Pulso na Gaveta de Dinheiro\n\nA porta **RJ11/RJ12** envia um pulso de 24V para abrir a gaveta de dinheiro no ato do pagamento.\n\n---\n\n### 7. Anatomia do Cupom de Venda e Requisitos Fiscais\n\nDados da empresa (CNPJ/IE), número sequencial do cupom, data/hora, itens, alíquotas de impostos e forma de pagamento.\n\n---\n\n### 8. Configuração de Impressão Térmica no Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) oferece:\n1. Escolha entre 58 mm ou 80 mm em **Configurações > Modelo de Cupom**.\n2. Personalização de cabeçalho, rodapé e CNPJ.\n3. Impressão em 1 clique no PDV.\n4. Cupons em 11 idiomas offline.\n"
+  },
+  "it": {
+    "title": "Stampa Scontrini Termici e Protocollo ESC/POS: Fatturazione Rapida per POS Cassa Offline",
+    "excerpt": "Guida tecnica alla stampa termica nel retail: fisica della stampa termica diretta, standard carta 58 mm vs. 80 mm, comandi binari ESC/POS, apertura automatica cassetto rendiresto e stampa web.",
+    "category": "Hardware e Configurazione",
+    "keywords": [
+      "stampante termica scontrini configurazione",
+      "comandi ESC POS protocollo stampa",
+      "rotoli termici 58mm vs 80mm",
+      "stampare scontrino dal browser web cassa",
+      "apertura cassetto cassa comando RJ11",
+      "stampante termica bluetooth cassa POS",
+      "scontrino commerciale elementi obbligatori",
+      "taglio automatico carta scontrino autocut",
+      "stampa termica diretta senza inchiostro",
+      "software cassa stampa scontrini gratis"
+    ],
+    "tableOfContents": [
+      {
+        "id": "physics-thermal-printing",
+        "title": "1. La Fisica della Stampa Termica Diretta e Velocità in Cassa"
+      },
+      {
+        "id": "paper-width-standards-58mm-80mm",
+        "title": "2. Standard di Larghezza Carta: 58 mm vs. 80 mm e Calcolo Colonne"
+      },
+      {
+        "id": "escpos-protocol-binary-anatomy",
+        "title": "3. Anatomia del Protocollo Binario ESC/POS"
+      },
+      {
+        "id": "hardware-interface-shootout",
+        "title": "4. Confronto Interfacce: USB vs. Bluetooth vs. Rete (LAN/Wi-Fi)"
+      },
+      {
+        "id": "browser-thermal-printing-pipelines",
+        "title": "5. Canali di Stampa dal Browser: WebUSB vs. CSS di Stampa"
+      },
+      {
+        "id": "auto-cut-cash-drawer-pulse",
+        "title": "6. Taglio Automatico Carta e Impulso Cassetto Contanti"
+      },
+      {
+        "id": "receipt-compliance-tax-anatomy",
+        "title": "7. Anatomia dello Scontrino e Dati Fiscali Obbligatori"
+      },
+      {
+        "id": "inventory-360-thermal-setup",
+        "title": "8. Configurazione Stampa Termica in Inventory 360"
+      }
+    ],
+    "content": "\n### 1. La Fisica della Stampa Termica Diretta e Velocità in Cassa\n\nNelle casse ad alto traffico, la velocità di stampa dello scontrino riduce le code:\n\n```\n  Stampante Inkjet / Laser ➔ 12-20 secondi di attesa\n  Stampante Termica Diretta ➔ Meno di 0,8 secondi (fino a 250 mm/s)\n```\n\n* **Zero Inchiostro o Toner**: La carta termica reagisce al calore della testina (150°C–200°C).\n* **Affidabilità Estrema**: Oltre **150 km di carta stampabile**.\n\n---\n\n### 2. Standard di Larghezza Carta: 58 mm vs. 80 mm e Calcolo Colonne\n\n| Caratteristica | Formato 58 mm | Formato 80 mm |\n| :--- | :--- | :--- |\n| **Larghezza Rotolo** | $58\\text{ mm } (2.28\")$ | $80\\text{ mm } (3.15\")$ |\n| **Larghezza Stampabile** | $48\\text{ mm}$ | $72\\text{ mm}$ |\n| **Caratteri per Riga (Font A)** | **32 Caratteri** | **48 Caratteri** |\n| **Uso Ideale** | Chioschi, bar, food truck | Supermercati, negozi di abbigliamento, retail |\n\n---\n\n### 3. Anatomia del Protocollo Binario ESC/POS\n\n* `0x1B 0x40` (**ESC @**): Reset stampante.\n* `0x1B 0x45 0x01` (**ESC E 1**): Grassetto attivo.\n* `0x1D 0x56 0x41 0x00` (**GS V 65 0**): Taglio carta.\n* `0x1B 0x70 0x00 0x19 0xFA` (**ESC p 0 25 250**): Apertura cassetto cassa (RJ11).\n\n---\n\n### 4. Confronto Interfacce: USB vs. Bluetooth vs. Rete (LAN/Wi-Fi)\n\n* **USB**: Velocità massima e stabilità per cassa fissa.\n* **Bluetooth**: Libertà senza fili per tablet e smartphone.\n* **Rete (LAN/Wi-Fi)**: Condivisione stampante tra postazioni cassa.\n\n---\n\n### 5. Canali di Stampa dal Browser: WebUSB vs. CSS di Stampa\n\n```css\n@media print {\n  @page {\n    size: 80mm auto;\n    margin: 0mm;\n  }\n  body {\n    width: 72mm;\n    margin: 0 auto;\n    font-family: 'Courier New', monospace;\n    font-size: 12px;\n  }\n}\n```\n\n---\n\n### 6. Taglio Automatico Carta e Impulso Cassetto Contanti\n\nLa porta **RJ11/RJ12** trasmette un impulso a 24V per sbloccare automaticamente il cassetto portadenaro al saldo in contanti.\n\n---\n\n### 7. Anatomia dello Scontrino e Dati Fiscali Obbligatori\n\nDati aziendali e Partita IVA, numero progressivo scontrino, data/ora, riepilogo articoli e scorporo aliquote IVA.\n\n---\n\n### 8. Configurazione Stampa Termica in Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) include:\n1. Scelta formato 58 mm o 80 mm in **Impostazioni > Layout Scontrino**.\n2. Personalizzazione intestazione, Partita IVA e messaggi di cortesia.\n3. Stampa istantanea in 1 clic al POS.\n4. Scontrini in 11 lingue senza bisogno di connessione internet.\n"
+  },
+  "ru": {
+    "title": "Термопечать Чеков и Протокол ESC/POS: Скоростная Офлайн-Фискализация на Кассе",
+    "excerpt": "Техническое руководство по термопечати чеков: физика прямой термопечати, форматы ленты 58 мм vs. 80 мм, бинарные команды протокола ESC/POS, автооткрытие денежного ящика и печать из браузера.",
+    "category": "Оборудование и Настройка",
+    "keywords": [
+      "термопринтер чеков настройка касса",
+      "команды ESC POS протокол печати",
+      "чековая лента 58мм против 80мм",
+      "печать чека из веб браузера кассы",
+      "открытие денежного ящика команда RJ11",
+      "bluetooth термопринтер чеков POS",
+      "обязательные реквизиты кассового чека",
+      "автоотрез чека гильотина",
+      "термопечать чеков без чернил",
+      "программа для кассы печать чеков бесплатно"
+    ],
+    "tableOfContents": [
+      {
+        "id": "physics-thermal-printing",
+        "title": "1. Физика Прямой Термопечати и Скорость Обслуживания на Кассе"
+      },
+      {
+        "id": "paper-width-standards-58mm-80mm",
+        "title": "2. Стандарты Чековой Ленты: 58 мм vs. 80 мм и Расчет Колонок"
+      },
+      {
+        "id": "escpos-protocol-binary-anatomy",
+        "title": "3. Анатомия Бинарного Протокола ESC/POS"
+      },
+      {
+        "id": "hardware-interface-shootout",
+        "title": "4. Сравнение Интерфейсов: USB vs. Bluetooth vs. Сеть (Ethernet/Wi-Fi)"
+      },
+      {
+        "id": "browser-thermal-printing-pipelines",
+        "title": "5. Прямая Печать из Браузера: WebUSB vs. Стили CSS Print"
+      },
+      {
+        "id": "auto-cut-cash-drawer-pulse",
+        "title": "6. Автоматический Отрез Ленты и Электроимпульс Денежного Ящика"
+      },
+      {
+        "id": "receipt-compliance-tax-anatomy",
+        "title": "7. Анатомия Кассового Чека и Фискальные Реквизиты"
+      },
+      {
+        "id": "inventory-360-thermal-setup",
+        "title": "8. Настройка Термопечати в Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Физика Прямой Термопечати и Скорость Обслуживания на Кассе\n\nНа кассе с плотным потоком покупателей скорость печати чека ликвидирует очереди:\n\n```\n  Струйный / Лазерный принтер ➔ 12–20 секунд (прогрев и протяжка листа)\n  Термопринтер чеков          ➔ Менее 0,8 секунды (скорость до 250 мм/с)\n```\n\n* **Полное отсутствие чернил**: Термочувствительная бумага мгновенно чернеет при нагреве термоголовкой (150°C–200°C).\n* **Высокая надежность**: Ресурс головки превышает **150 километров чековой ленты**.\n\n---\n\n### 2. Стандарты Чековой Ленты: 58 мм vs. 80 мм и Расчет Колонок\n\n| Характеристика | Компактная 58 мм | Стандартная 80 мм |\n| :--- | :--- | :--- |\n| **Ширина Рулона** | $58\\text{ мм } (2.28\")$ | $80\\text{ мм } (3.15\")$ |\n| **Печатная Область** | $48\\text{ мм}$ | $72\\text{ мм}$ |\n| **Символов в Строке (Font A)** | **32 символа** | **48 символов** |\n| **Сфера Применения** | Киоски, кофе с собой, выездная торговля | Супермаркеты, бутики одежды, гипермаркеты |\n\n---\n\n### 3. Анатомия Бинарного Протокола ESC/POS\n\n* `0x1B 0x40` (**ESC @**): Инициализация принтера.\n* `0x1B 0x45 0x01` (**ESC E 1**): Включение жирного шрифта.\n* `0x1D 0x56 0x41 0x00` (**GS V 65 0**): Полный отрез бумаги.\n* `0x1B 0x70 0x00 0x19 0xFA` (**ESC p 0 25 250**): Импульс открытия денежного ящика (RJ11).\n\n---\n\n### 4. Сравнение Интерфейсов: USB vs. Bluetooth vs. Сеть (Ethernet/Wi-Fi)\n\n* **USB**: Нулевая задержка (< 10 мс) для стационарных касс.\n* **Bluetooth**: Мобильность для планшетов и смартфонов.\n* **Сеть (LAN/Wi-Fi)**: Печать на один принтер с нескольких касс.\n\n---\n\n### 5. Прямая Печать из Браузера: WebUSB vs. Стили CSS Print\n\n```css\n@media print {\n  @page {\n    size: 80mm auto;\n    margin: 0mm;\n  }\n  body {\n    width: 72mm;\n    margin: 0 auto;\n    font-family: 'Courier New', monospace;\n    font-size: 12px;\n  }\n}\n```\n\n---\n\n### 6. Автоматический Отрез Ленты и Электроимпульс Денежного Ящика\n\nПорт **RJ11/RJ12** передает 24V импульс длительностью 50 мс для моментального срабатывания соленоида денежного ящика.\n\n---\n\n### 7. Анатомия Кассового Чека и Фискальные Реквизиты\n\nНаименование компании/ИНН, номер чека, дата/время, список товаров и количество, ставки НДС и способ оплаты.\n\n---\n\n### 8. Настройка Термопечати в Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) предоставляет:\n1. Выбор формата 58 мм или 80 мм в **Настройки > Шаблон чека**.\n2. Настройка логотипа, ИНН и текста в шапке/подвале.\n3. Печать чека в 1 клик прямо из кассового модуля (POS).\n4. Выпуск чеков на 11 языках без подключения к интернету.\n"
+  }
+},
   'omnichannel-ecommerce-inventory-synchronization': {
     es: {
       title: 'Sincronización de Inventario Omnicanal: Conectando Tiendas Físicas, Shopify, Amazon y Marketplaces',
