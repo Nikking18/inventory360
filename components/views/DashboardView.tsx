@@ -1,23 +1,8 @@
-'use client';
-
 import React, { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useTranslation } from '../../context/I18nContext';
 import { Product, Sale, PurchaseOrder, Location, Customer, BusinessSettings } from '../../lib/types';
 import { formatCurrency, round2 } from '../../lib/utils';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip as ChartTooltip,
-  Legend,
-  Filler,
-  ChartOptions,
-} from 'chart.js';
-import { Line, Bar } from 'react-chartjs-2';
 import {
   TrendingUp,
   AlertTriangle,
@@ -45,17 +30,14 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  ChartTooltip,
-  Legend,
-  Filler
-);
+const SalesChart = dynamic(() => import('../dashboard/SalesChart'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full bg-slate-50 border border-slate-100 flex items-center justify-center text-xs text-slate-400 font-mono">
+      Loading Analytics Telemetry...
+    </div>
+  ),
+});
 
 interface DashboardViewProps {
   products: Product[];
@@ -529,11 +511,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {/* Center Column: Interactive Chart.js View */}
           <div className="lg:col-span-6 h-48 w-full relative">
             {isMounted ? (
-              chartType === 'line' ? (
-                <Line data={chartData} options={chartOptions as any} />
-              ) : (
-                <Bar data={chartData} options={chartOptions as any} />
-              )
+              <SalesChart chartType={chartType} chartData={chartData} chartOptions={chartOptions} />
             ) : (
               <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-xs text-slate-500">
                 {t('loading_chart', 'Loading Chart...')}
