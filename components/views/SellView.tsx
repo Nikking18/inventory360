@@ -1229,13 +1229,13 @@ export const SellView: React.FC<SellViewProps> = ({
               {/* 3 Supported Receipt Paper Formats */}
               <div className="space-y-2">
                 <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                  Select Receipt Paper Format
+                  {t('select_receipt_format', 'Select Receipt Paper Format')}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: '80mm' as const, label: '80mm Thermal', desc: 'Standard POS', icon: Printer },
-                    { id: '58mm' as const, label: '58mm Compact', desc: 'Mobile Thermal', icon: Smartphone },
-                    { id: 'A4' as const, label: 'A4 / Letter', desc: 'Full Invoice', icon: FileText },
+                    { id: '80mm' as const, label: t('format_80mm_title', '80mm Thermal'), desc: t('format_80mm_short_desc', 'Standard POS'), icon: Printer },
+                    { id: '58mm' as const, label: t('format_58mm_title', '58mm Compact'), desc: t('format_58mm_short_desc', 'Mobile Thermal'), icon: Smartphone },
+                    { id: 'A4' as const, label: t('format_a4_title', 'A4 / Letter'), desc: t('format_a4_short_desc', 'Full Invoice'), icon: FileText },
                   ].map((fmt) => {
                     const Icon = fmt.icon;
                     const isSelected = localFormat === fmt.id;
@@ -1257,7 +1257,7 @@ export const SellView: React.FC<SellViewProps> = ({
                         {isSelected && (
                           <div className="mt-1 flex items-center gap-0.5 text-[8px] font-bold text-emerald-400 uppercase">
                             <Check className="w-2.5 h-2.5" />
-                            <span>Active</span>
+                            <span>{t('active_badge', 'Active')}</span>
                           </div>
                         )}
                       </button>
@@ -1269,8 +1269,8 @@ export const SellView: React.FC<SellViewProps> = ({
               {/* Auto-Print Toggle */}
               <div className="p-3 border border-slate-200 bg-slate-50 flex items-center justify-between">
                 <div>
-                  <p className="font-bold text-slate-900 text-xs uppercase">Auto-Print Receipts</p>
-                  <p className="text-[10px] text-slate-500">Automatically trigger print dialog when sale completes</p>
+                  <p className="font-bold text-slate-900 text-xs uppercase">{t('auto_print_receipts', 'Auto-Print Receipts')}</p>
+                  <p className="text-[10px] text-slate-500">{t('auto_print_desc', 'Automatically trigger print dialog when sale completes')}</p>
                 </div>
                 <button
                   onClick={() => saveAutoPrint(!autoPrintEnabled)}
@@ -1294,13 +1294,13 @@ export const SellView: React.FC<SellViewProps> = ({
                 className="flex-1 py-2.5 bg-white border border-slate-300 hover:border-slate-900 text-slate-800 font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
               >
                 <Printer className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Print Test ({localFormat})</span>
+                <span>{t('print_test_btn', 'Print Test')} ({localFormat})</span>
               </button>
               <button
                 onClick={() => setIsPrinterModalOpen(false)}
                 className="flex-1 py-2.5 bg-slate-900 text-white font-bold text-xs uppercase hover:bg-black transition-colors"
               >
-                Done
+                {t('done', 'Done')}
               </button>
             </div>
           </div>
@@ -1333,16 +1333,16 @@ export const SellView: React.FC<SellViewProps> = ({
               </div>
               <div>
                 <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 px-2 py-0.5 border border-emerald-300">
-                  Sale Recorded Successfully
+                  {t('sale_recorded_successfully', 'Sale Recorded Successfully')}
                 </span>
                 <h3 className="font-bold text-base text-slate-900 uppercase mt-1">
-                  Receipt #{completedSaleModal.saleNumber}
+                  {t('receipt_hash', 'Receipt #')}#{completedSaleModal.saleNumber}
                 </h3>
                 <p className="text-2xl font-bold text-slate-900 mt-1">
                   {formatCurrency(completedSaleModal.total, currencySymbol)}
                 </p>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Paid via {completedSaleModal.paymentMethod} • {completedSaleModal.items.length} line item(s)
+                  {t('paid_via', 'Paid via')} {completedSaleModal.paymentMethod} • {completedSaleModal.items.length} {t('line_items', 'line item(s)')}
                 </p>
               </div>
             </div>
@@ -1352,9 +1352,9 @@ export const SellView: React.FC<SellViewProps> = ({
               <div className="flex items-center justify-between">
                 <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-widest flex items-center gap-1.5">
                   <Printer className="w-3.5 h-3.5 text-slate-900" />
-                  <span>Select Printer Format to Print:</span>
+                  <span>{t('select_printer_format', 'Select Printer Format to Print:')}</span>
                 </label>
-                <span className="text-[10px] text-slate-500">1-Click Dispatch</span>
+                <span className="text-[10px] text-slate-500">{t('one_click_dispatch', '1-Click Dispatch')}</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -1372,13 +1372,13 @@ export const SellView: React.FC<SellViewProps> = ({
                       <Printer className="w-4 h-4 text-emerald-600" />
                       {localFormat === '80mm' && (
                         <span className="text-[8px] font-bold uppercase bg-slate-900 text-white px-1.5 py-0.2">
-                          Active
+                          {t('active_badge', 'Active')}
                         </span>
                       )}
                     </div>
-                    <p className="font-bold text-xs text-slate-900 uppercase mt-1.5">80mm Thermal</p>
+                    <p className="font-bold text-xs text-slate-900 uppercase mt-1.5">{t('format_80mm_title', '80mm Thermal')}</p>
                     <p className="text-[9px] text-slate-500 leading-tight mt-0.5">
-                      Standard POS roll for Epson, Star, Munbyn
+                      {t('format_80mm_desc', 'Standard POS roll for Epson, Star, Munbyn')}
                     </p>
                   </div>
                   <button
@@ -1389,7 +1389,7 @@ export const SellView: React.FC<SellViewProps> = ({
                     }}
                     className="w-full py-1.5 bg-slate-900 hover:bg-black text-white text-[10px] font-bold uppercase tracking-wider transition-colors shadow-2xs"
                   >
-                    Print 80mm
+                    {t('print_80mm_btn', 'Print 80mm')}
                   </button>
                 </div>
 
@@ -1407,13 +1407,13 @@ export const SellView: React.FC<SellViewProps> = ({
                       <Smartphone className="w-4 h-4 text-blue-600" />
                       {localFormat === '58mm' && (
                         <span className="text-[8px] font-bold uppercase bg-slate-900 text-white px-1.5 py-0.2">
-                          Active
+                          {t('active_badge', 'Active')}
                         </span>
                       )}
                     </div>
-                    <p className="font-bold text-xs text-slate-900 uppercase mt-1.5">58mm Compact</p>
+                    <p className="font-bold text-xs text-slate-900 uppercase mt-1.5">{t('format_58mm_title', '58mm Compact')}</p>
                     <p className="text-[9px] text-slate-500 leading-tight mt-0.5">
-                      Narrow slip for Mobile Bluetooth &amp; Handheld
+                      {t('format_58mm_desc', 'Narrow slip for Mobile Bluetooth & Handheld')}
                     </p>
                   </div>
                   <button
@@ -1424,7 +1424,7 @@ export const SellView: React.FC<SellViewProps> = ({
                     }}
                     className="w-full py-1.5 bg-slate-900 hover:bg-black text-white text-[10px] font-bold uppercase tracking-wider transition-colors shadow-2xs"
                   >
-                    Print 58mm
+                    {t('print_58mm_btn', 'Print 58mm')}
                   </button>
                 </div>
 
@@ -1442,13 +1442,13 @@ export const SellView: React.FC<SellViewProps> = ({
                       <FileText className="w-4 h-4 text-amber-600" />
                       {localFormat === 'A4' && (
                         <span className="text-[8px] font-bold uppercase bg-slate-900 text-white px-1.5 py-0.2">
-                          Active
+                          {t('active_badge', 'Active')}
                         </span>
                       )}
                     </div>
-                    <p className="font-bold text-xs text-slate-900 uppercase mt-1.5">A4 / Letter</p>
+                    <p className="font-bold text-xs text-slate-900 uppercase mt-1.5">{t('format_a4_title', 'A4 / Letter')}</p>
                     <p className="text-[9px] text-slate-500 leading-tight mt-0.5">
-                      Full page tax invoice bill for Laser/Inkjet
+                      {t('format_a4_desc', 'Full page tax invoice bill for Laser/Inkjet')}
                     </p>
                   </div>
                   <button
@@ -1459,7 +1459,7 @@ export const SellView: React.FC<SellViewProps> = ({
                     }}
                     className="w-full py-1.5 bg-slate-900 hover:bg-black text-white text-[10px] font-bold uppercase tracking-wider transition-colors shadow-2xs"
                   >
-                    Print A4 Bill
+                    {t('print_a4_btn', 'Print A4 Bill')}
                   </button>
                 </div>
               </div>
@@ -1471,7 +1471,7 @@ export const SellView: React.FC<SellViewProps> = ({
                 onClick={() => setCompletedSaleModal(null)}
                 className="flex-1 py-2.5 bg-slate-100 text-slate-800 font-bold text-xs uppercase hover:bg-slate-200 border border-slate-300 transition-colors"
               >
-                Start New Sale
+                {t('start_new_sale', 'Start New Sale')}
               </button>
               <button
                 onClick={() => {
@@ -1481,7 +1481,7 @@ export const SellView: React.FC<SellViewProps> = ({
                 className="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition-colors shadow-sm"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>Print ({localFormat}) &amp; Done</span>
+                <span>{t('print_btn', 'Print')} ({localFormat}) &amp; {t('done', 'Done')}</span>
               </button>
             </div>
           </div>

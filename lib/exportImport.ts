@@ -1818,6 +1818,17 @@ export async function importWorkspaceJSON(jsonString: string): Promise<boolean> 
   }
 }
 
+function resolveLanguage(lang?: SupportedLanguage): SupportedLanguage {
+  if (lang && lang !== 'en') return lang;
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('inventory360_language') as SupportedLanguage;
+      if (saved) return saved;
+    } catch {}
+  }
+  return lang || 'en';
+}
+
 export function exportToCSV<T extends Record<string, any>>(
   filename: string,
   rows: T[],
@@ -1825,7 +1836,8 @@ export function exportToCSV<T extends Record<string, any>>(
   currencySymbol?: string
 ): void {
   if (!rows || !rows.length) return;
-  const translatedRows = translateRowData(rows, language, currencySymbol);
+  const activeLang = resolveLanguage(language);
+  const translatedRows = translateRowData(rows, activeLang, currencySymbol);
   const keys = Object.keys(translatedRows[0]);
   const header = keys.map((k) => `"${k.replace(/"/g, '""')}"`).join(',');
   const csvLines = translatedRows.map((row) =>
@@ -1852,7 +1864,8 @@ export function exportToExcel<T extends Record<string, any>>(
   currencySymbol?: string
 ): void {
   if (!rows || !rows.length) return;
-  const translatedRows = translateRowData(rows, language, currencySymbol);
+  const activeLang = resolveLanguage(language);
+  const translatedRows = translateRowData(rows, activeLang, currencySymbol);
   const keys = Object.keys(translatedRows[0]);
 
   let tableHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">`;
@@ -1899,7 +1912,8 @@ export function exportToPDF<T extends Record<string, any>>(
   currencySymbol?: string
 ): void {
   if (!rows || !rows.length) return;
-  const translatedRows = translateRowData(rows, language, currencySymbol);
+  const activeLang = resolveLanguage(language);
+  const translatedRows = translateRowData(rows, activeLang, currencySymbol);
   const keys = Object.keys(translatedRows[0]);
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
   const leftMargin = 36;
@@ -1922,16 +1936,16 @@ export function exportToPDF<T extends Record<string, any>>(
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(50, 50, 50);
-  const translatedTitle = translateLabel(title, language, currencySymbol);
+  const translatedTitle = translateLabel(title, activeLang, currencySymbol);
   doc.text(translatedTitle.toUpperCase(), headerTextX, 46);
 
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(90, 90, 90);
   const taxInfo = taxNumber ? ` | GSTIN/TAX ID: ${taxNumber}` : '';
-  const officialRecordLabel = translateLabel('Official Inventory Record', language);
-  const generatedLabel = translateLabel('Generated', language);
-  const totalRecordsLabel = translateLabel('Total Records', language);
+  const officialRecordLabel = translateLabel('Official Inventory Record', activeLang);
+  const generatedLabel = translateLabel('Generated', activeLang);
+  const totalRecordsLabel = translateLabel('Total Records', activeLang);
   doc.text(`${officialRecordLabel} | ${generatedLabel}: ${new Date().toLocaleString()} | ${totalRecordsLabel}: ${rows.length}${taxInfo}`, headerTextX, 58);
 
   doc.setDrawColor(0, 0, 0);
@@ -2001,6 +2015,7 @@ export function downloadPOSlipPDF(
   taxNumber?: string,
   language: SupportedLanguage = 'en'
 ): void {
+  const activeLang = resolveLanguage(language);
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const pageWidth = 595.28;
   const leftMargin = 36;
@@ -2027,7 +2042,7 @@ export function downloadPOSlipPDF(
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 80, 80);
-  doc.text(translateLabel('PO_HEADER', language), brandX, 50);
+  doc.text(translateLabel('PO_HEADER', activeLang), brandX, 50);
 
   if (taxNumber) {
     doc.setFontSize(7.5);
@@ -2040,19 +2055,19 @@ export function downloadPOSlipPDF(
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text(translateLabel('PURCHASE_ORDER', language), rightMargin, 38, { align: 'right' });
+  doc.text(translateLabel('PURCHASE_ORDER', activeLang), rightMargin, 38, { align: 'right' });
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(30, 30, 30);
-  doc.text(`${translateLabel('PO_NUMBER', language)}: ${po.poNumber}`, rightMargin, 51, { align: 'right' });
+  doc.text(`${translateLabel('PO_NUMBER', activeLang)}: ${po.poNumber}`, rightMargin, 51, { align: 'right' });
 
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 100, 100);
-  const issuedLabel = translateLabel('ISSUED', language);
-  const statusLabel = translateLabel('Status', language);
-  const translatedStatus = translateLabel(po.status, language);
+  const issuedLabel = translateLabel('ISSUED', activeLang);
+  const statusLabel = translateLabel('Status', activeLang);
+  const translatedStatus = translateLabel(po.status, activeLang);
   doc.text(`${issuedLabel}: ${new Date(po.createdAt).toLocaleDateString()} | ${statusLabel}: ${translatedStatus.toUpperCase()}`, rightMargin, 63, { align: 'right' });
 
   // Top Rule
@@ -2074,7 +2089,7 @@ export function downloadPOSlipPDF(
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(90, 90, 90);
-  doc.text(translateLabel('VENDOR_DETAILS', language), leftMargin + 10, cardY + 14);
+  doc.text(translateLabel('VENDOR_DETAILS', activeLang), leftMargin + 10, cardY + 14);
 
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
@@ -2084,8 +2099,8 @@ export function downloadPOSlipPDF(
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(70, 70, 70);
-  doc.text(translateLabel('APPROVED_VENDOR', language), leftMargin + 10, cardY + 44);
-  doc.text(translateLabel('PAYMENT_TERMS', language), leftMargin + 10, cardY + 54);
+  doc.text(translateLabel('APPROVED_VENDOR', activeLang), leftMargin + 10, cardY + 44);
+  doc.text(translateLabel('PAYMENT_TERMS', activeLang), leftMargin + 10, cardY + 54);
 
   // Card 2: Ship-To Destination
   const rightCardX = leftMargin + cardWidth + 14;
@@ -2097,7 +2112,7 @@ export function downloadPOSlipPDF(
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(90, 90, 90);
-  doc.text(translateLabel('SHIP_TO', language), rightCardX + 10, cardY + 14);
+  doc.text(translateLabel('SHIP_TO', activeLang), rightCardX + 10, cardY + 14);
 
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
@@ -2107,9 +2122,9 @@ export function downloadPOSlipPDF(
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(70, 70, 70);
-  const expectedDateLabel = translateLabel('EXPECTED_DATE', language);
+  const expectedDateLabel = translateLabel('EXPECTED_DATE', activeLang);
   doc.text(`${expectedDateLabel}: ${po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : 'ASAP'}`, rightCardX + 10, cardY + 44);
-  doc.text(translateLabel('ATTN_RECEIVING', language), rightCardX + 10, cardY + 54);
+  doc.text(translateLabel('ATTN_RECEIVING', activeLang), rightCardX + 10, cardY + 54);
 
   // 3. Line Items Table (Includes Item-Level Tax % column)
   const tableData = po.items.map((item, idx) => [
@@ -2121,11 +2136,11 @@ export function downloadPOSlipPDF(
     `${curr}${item.total.toFixed(2)}`,
   ]);
 
-  const colItemDesc = translateLabel('ITEM_DESC', language);
-  const colUnitPrice = translateLabel('UNIT_PRICE', language);
-  const colTaxRate = translateLabel('TAX_RATE', language);
-  const colOrderQty = translateLabel('ORDER_QTY', language);
-  const colLineTotal = translateLabel('LINE_TOTAL', language);
+  const colItemDesc = translateLabel('ITEM_DESC', activeLang);
+  const colUnitPrice = translateLabel('UNIT_PRICE', activeLang);
+  const colTaxRate = translateLabel('TAX_RATE', activeLang);
+  const colOrderQty = translateLabel('ORDER_QTY', activeLang);
+  const colLineTotal = translateLabel('LINE_TOTAL', activeLang);
 
   autoTable(doc, {
     startY: 158,
@@ -2175,7 +2190,7 @@ export function downloadPOSlipPDF(
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(80, 80, 80);
-  doc.text(translateLabel('TERMS_INSTRUCTIONS', language), leftMargin + 10, finalY + 14);
+  doc.text(translateLabel('TERMS_INSTRUCTIONS', activeLang), leftMargin + 10, finalY + 14);
 
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
@@ -2192,10 +2207,10 @@ export function downloadPOSlipPDF(
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(70, 70, 70);
-  doc.text(translateLabel('SUBTOTAL', language), totalsX + 10, finalY + 16);
+  doc.text(translateLabel('SUBTOTAL', activeLang), totalsX + 10, finalY + 16);
   doc.text(`${curr}${po.subtotal.toFixed(2)}`, rightMargin - 10, finalY + 16, { align: 'right' });
 
-  doc.text(translateLabel('TAX_TOTAL', language), totalsX + 10, finalY + 30);
+  doc.text(translateLabel('TAX_TOTAL', activeLang), totalsX + 10, finalY + 30);
   doc.text(`${curr}${(po.tax || 0).toFixed(2)}`, rightMargin - 10, finalY + 30, { align: 'right' });
 
   doc.setDrawColor(0, 0, 0);
@@ -2205,7 +2220,7 @@ export function downloadPOSlipPDF(
   doc.setFontSize(9.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text(translateLabel('TOTAL_AMOUNT', language), totalsX + 10, finalY + 54);
+  doc.text(translateLabel('TOTAL_AMOUNT', activeLang), totalsX + 10, finalY + 54);
   doc.text(`${curr}${po.total.toFixed(2)}`, rightMargin - 10, finalY + 54, { align: 'right' });
 
   // 5. Signatures & Approvals (Positioned near bottom)
@@ -2219,14 +2234,14 @@ export function downloadPOSlipPDF(
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text(translateLabel('AUTH_OFFICER', language), leftMargin, sigY + 12);
-  doc.text(translateLabel('RECEIVING_ACCEPT', language), rightMargin - 210, sigY + 12);
+  doc.text(translateLabel('AUTH_OFFICER', activeLang), leftMargin, sigY + 12);
+  doc.text(translateLabel('RECEIVING_ACCEPT', activeLang), rightMargin - 210, sigY + 12);
 
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 100, 100);
-  doc.text(translateLabel('AUTH_SIGN', language), leftMargin, sigY + 22);
-  doc.text(translateLabel('RECEIVER_SIGN', language), rightMargin - 210, sigY + 22);
+  doc.text(translateLabel('AUTH_SIGN', activeLang), leftMargin, sigY + 22);
+  doc.text(translateLabel('RECEIVER_SIGN', activeLang), rightMargin - 210, sigY + 22);
 
   // 6. Running Footer
   doc.setDrawColor(220, 220, 220);
@@ -2251,6 +2266,7 @@ export function downloadPickListPDF(
   taxNumber?: string,
   language: SupportedLanguage = 'en'
 ): void {
+  const activeLang = resolveLanguage(language);
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const pageWidth = 595.28;
   const leftMargin = 36;
@@ -2274,7 +2290,7 @@ export function downloadPickListPDF(
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 80, 80);
-  doc.text(translateLabel('PICK_HEADER', language), brandX, 50);
+  doc.text(translateLabel('PICK_HEADER', activeLang), brandX, 50);
 
   if (taxNumber) {
     doc.setFontSize(7.5);
@@ -2286,14 +2302,14 @@ export function downloadPickListPDF(
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text(translateLabel('BATCH_PICK_LIST', language), rightMargin, 38, { align: 'right' });
+  doc.text(translateLabel('BATCH_PICK_LIST', activeLang), rightMargin, 38, { align: 'right' });
 
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 100, 100);
-  const generatedLabel = translateLabel('Generated', language);
-  const queuedLabel = translateLabel('ORDERS_QUEUED', language);
-  const pendingLabel = translateLabel('PENDING_SHIPMENTS', language);
+  const generatedLabel = translateLabel('Generated', activeLang);
+  const queuedLabel = translateLabel('ORDERS_QUEUED', activeLang);
+  const pendingLabel = translateLabel('PENDING_SHIPMENTS', activeLang);
   doc.text(`${generatedLabel}: ${new Date().toLocaleString()}`, rightMargin, 51, { align: 'right' });
   doc.text(`${queuedLabel}: ${pendingOrdersCount} ${pendingLabel}`, rightMargin, 63, { align: 'right' });
 
@@ -2312,7 +2328,7 @@ export function downloadPickListPDF(
   doc.setFontSize(8.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text(translateLabel('PICK_INSTRUCTIONS_TITLE', language), leftMargin + 10, 100);
+  doc.text(translateLabel('PICK_INSTRUCTIONS_TITLE', activeLang), leftMargin + 10, 100);
 
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
@@ -2334,11 +2350,11 @@ export function downloadPickListPDF(
     '________',
   ]);
 
-  const colCheck = translateLabel('CHECK', language);
-  const colItemCode = translateLabel('ITEM_CODE', language);
-  const colProductDesc = translateLabel('Product Name', language);
-  const colPickQty = translateLabel('PICK_QTY', language);
-  const colPickerSign = translateLabel('PICKER_SIGN', language);
+  const colCheck = translateLabel('CHECK', activeLang);
+  const colItemCode = translateLabel('ITEM_CODE', activeLang);
+  const colProductDesc = translateLabel('Product Name', activeLang);
+  const colPickQty = translateLabel('PICK_QTY', activeLang);
+  const colPickerSign = translateLabel('PICKER_SIGN', activeLang);
 
   autoTable(doc, {
     startY: 136,
@@ -2385,8 +2401,8 @@ export function downloadPickListPDF(
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text(translateLabel('PICKER_SIGNOFF', language), leftMargin, sigY + 12);
-  doc.text(translateLabel('SUPERVISOR_AUDIT', language), rightMargin - 210, sigY + 12);
+  doc.text(translateLabel('PICKER_SIGNOFF', activeLang), leftMargin, sigY + 12);
+  doc.text(translateLabel('SUPERVISOR_AUDIT', activeLang), rightMargin - 210, sigY + 12);
 
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');

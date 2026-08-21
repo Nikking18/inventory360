@@ -390,11 +390,11 @@ export const SetupView: React.FC<SetupViewProps> = ({
   };
 
   const handleExportProductsCSV = () => {
-    exportToCSV('Catalog_Master_Export', products);
+    exportToCSV('Catalog_Master_Export', products, (settings.language as SupportedLanguage) || 'en', settings.currencySymbol);
   };
 
   const handleExportSalesCSV = () => {
-    exportToCSV('Sales_Ledger_Export', sales);
+    exportToCSV('Sales_Ledger_Export', sales, (settings.language as SupportedLanguage) || 'en', settings.currencySymbol);
   };
 
   return (
