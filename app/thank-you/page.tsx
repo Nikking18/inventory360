@@ -6,6 +6,17 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Thank You | Inventory 360 Enterprise',
   description: 'Thank you for choosing Inventory 360. Your local-first retail operations workspace is configured and ready.',
+  alternates: {
+    canonical: 'https://www.inventory360.shop/thank-you',
+  },
+  openGraph: {
+    title: 'Thank You | Inventory 360 Enterprise',
+    description: 'Thank you for choosing Inventory 360. Your local-first retail operations workspace is configured and ready.',
+    url: 'https://www.inventory360.shop/thank-you',
+    siteName: 'Inventory 360',
+    type: 'website',
+    images: [{ url: 'https://www.inventory360.shop/og-image.png', width: 1200, height: 630, alt: 'Inventory 360 Enterprise' }],
+  },
 };
 
 export default function ThankYouPage() {

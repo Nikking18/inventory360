@@ -6,6 +6,17 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Privacy Policy & Data Security | Inventory 360',
   description: 'Learn how Inventory 360 protects your business privacy using zero-tracking, 100% local-first IndexedDB storage architecture.',
+  alternates: {
+    canonical: 'https://www.inventory360.shop/privacy',
+  },
+  openGraph: {
+    title: 'Privacy Policy & Data Security | Inventory 360',
+    description: 'Learn how Inventory 360 protects your business privacy using zero-tracking, 100% local-first IndexedDB storage architecture.',
+    url: 'https://www.inventory360.shop/privacy',
+    siteName: 'Inventory 360',
+    type: 'website',
+    images: [{ url: 'https://www.inventory360.shop/og-image.png', width: 1200, height: 630, alt: 'Inventory 360 Privacy Policy' }],
+  },
 };
 
 export default function PrivacyPolicyPage() {
