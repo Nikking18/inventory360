@@ -408,6 +408,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <ChevronRight className="w-4 h-4 text-slate-400" />
       </div>
 
+      {/* Creator Attribution */}
+      <div className="px-3 py-2 border-t border-slate-200 bg-white text-[10px] font-mono text-slate-500 flex flex-col gap-1">
+        <div className="flex items-center gap-1 text-slate-700">
+          <span>Created with <span className="text-rose-500">❤️</span> by</span>
+          <span className="font-bold text-slate-900">Nikhil Khanpara</span>
+        </div>
+        <div className="flex items-center gap-2 text-slate-500">
+          <a href="https://github.com/Nikking18" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">GitHub</a>
+          <span className="text-slate-300">•</span>
+          <a href="https://www.linkedin.com/in/nikhilkhanpara/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">LinkedIn</a>
+          <span className="text-slate-300">•</span>
+          <a href="https://x.com/nikhilkhanpara" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">Twitter</a>
+        </div>
+      </div>
+
       {/* Demo Store Data Confirmation Modal Popup */}
       {showDemoConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 font-mono">

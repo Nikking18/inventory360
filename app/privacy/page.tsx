@@ -110,9 +110,15 @@ export default function PrivacyPolicyPage() {
         >
           Launch Inventory 360
         </Link>
-        <span className="text-[10px] text-slate-500">
-          Last updated: August 2026 • Verified Local-First Privacy Compliance
-        </span>
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-600">
+          <span>Created with <span className="text-rose-500">❤️</span> by <strong className="text-slate-800">Nikhil Khanpara</strong></span>
+          <span className="text-slate-400">•</span>
+          <a href="https://github.com/Nikking18" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">GitHub</a>
+          <span className="text-slate-300">•</span>
+          <a href="https://www.linkedin.com/in/nikhilkhanpara/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">LinkedIn</a>
+          <span className="text-slate-300">•</span>
+          <a href="https://x.com/nikhilkhanpara" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">Twitter</a>
+        </div>
       </div>
     </div>
   );

@@ -870,6 +870,15 @@ export const LandingView: React.FC<LandingViewProps> = ({
 
           <div className="border-t border-slate-200 pt-4 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-2 font-mono">
             <span>© {new Date().getFullYear()} Inventory 360. All master data secured via browser IndexedDB.</span>
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-600">
+              <span>Created with ❤️ by <strong className="text-slate-800">Nikhil Khanpara</strong></span>
+              <span className="text-slate-400">•</span>
+              <a href="https://github.com/Nikking18" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-slate-900 font-bold underline">GitHub</a>
+              <span className="text-slate-300">•</span>
+              <a href="https://www.linkedin.com/in/nikhilkhanpara/" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-slate-900 font-bold underline">LinkedIn</a>
+              <span className="text-slate-300">•</span>
+              <a href="https://x.com/nikhilkhanpara" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-slate-900 font-bold underline">Twitter</a>
+            </div>
             <span>Version 2026.1 // Enterprise Local-First Release</span>
           </div>
         </footer>

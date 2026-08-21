@@ -93,6 +93,15 @@ export default function ThankYouPage() {
       {/* Footer */}
       <div className="border-t border-slate-200 pt-4 flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-2">
         <span>© {new Date().getFullYear()} Inventory 360 Enterprise. 100% Offline-Ready &amp; Private.</span>
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-600">
+          <span>Created with <span className="text-rose-500">❤️</span> by <strong className="text-slate-800">Nikhil Khanpara</strong></span>
+          <span className="text-slate-400">•</span>
+          <a href="https://github.com/Nikking18" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">GitHub</a>
+          <span className="text-slate-300">•</span>
+          <a href="https://www.linkedin.com/in/nikhilkhanpara/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">LinkedIn</a>
+          <span className="text-slate-300">•</span>
+          <a href="https://x.com/nikhilkhanpara" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 underline font-medium">Twitter</a>
+        </div>
         <div className="flex items-center gap-4">
           <Link href="/" className="hover:text-slate-800 underline">Home</Link>
           <Link href="/privacy" className="hover:text-slate-800 underline">Privacy &amp; Data Policy</Link>
