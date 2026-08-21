@@ -316,6 +316,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span>Support on Ko-fi</span>
         </a>
 
+        {/* Product Hunt Featured Badge */}
+        <div className="flex items-center justify-center pt-0.5">
+          <a
+            href="https://www.producthunt.com/products/inventory-360?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-inventory-360"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block transition-transform hover:opacity-95"
+            title="Inventory 360 on Product Hunt"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1228382&theme=dark&t=1787305904717"
+              alt="Inventory 360 - Local-first POS & inventory management, zero cloud, zero fee | Product Hunt"
+              width="250"
+              height="54"
+              style={{ width: '100%', maxWidth: '210px', height: 'auto', aspectRatio: '250 / 54' }}
+              loading="lazy"
+            />
+          </a>
+        </div>
+
         <button
           onClick={onOpenDataPolicy}
           className="w-full py-1.5 px-2 bg-white border border-slate-300 text-slate-800 hover:text-black font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:border-slate-400 transition-colors shadow-2xs"

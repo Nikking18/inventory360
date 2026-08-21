@@ -305,6 +305,27 @@ export const LandingView: React.FC<LandingViewProps> = ({
               <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Sub-50ms Query Latency
             </span>
           </div>
+
+          {/* Product Hunt Featured Badge */}
+          <div className="pt-2 flex justify-center">
+            <a
+              href="https://www.producthunt.com/products/inventory-360?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-inventory-360"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block transition-transform hover:scale-105"
+              title="Inventory 360 - Local-first POS & inventory management on Product Hunt"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1228382&theme=dark&t=1787305904717"
+                alt="Inventory 360 - Local-first POS & inventory management, zero cloud, zero fee | Product Hunt"
+                width="250"
+                height="54"
+                style={{ width: '250px', height: '54px', aspectRatio: '250 / 54' }}
+                loading="lazy"
+              />
+            </a>
+          </div>
         </div>
 
         {/* 3. INTERACTIVE LIVE DASHBOARD PREVIEW WIDGET */}
