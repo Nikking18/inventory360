@@ -52,6 +52,11 @@
 
 /* Print Styles */
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
   body {
     background-color: #FFFFFF !important;
     color: #000000 !important;
@@ -68,6 +73,27 @@
     padding: 20px !important;
     box-shadow: none !important;
     border: none !important;
+    color: #000000 !important;
+  }
+  .print-container,
+  .print-container th,
+  .print-container td,
+  .print-container p,
+  .print-container span,
+  .print-container div,
+  .print-container h1,
+  .print-container h2,
+  .print-container h3,
+  .print-container table {
+    color: #000000 !important;
+  }
+  .print-container .text-rose-700,
+  .print-container .text-red-600 {
+    color: #b91c1c !important;
+  }
+  .print-container .text-emerald-800,
+  .print-container .text-emerald-700 {
+    color: #065f46 !important;
   }
 }
 
