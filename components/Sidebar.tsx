@@ -169,7 +169,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="w-3 h-3 bg-white -rotate-45" />
           </div>
           <span className="font-heading font-extrabold text-xs uppercase tracking-[0.25em] text-slate-900">
-            INVENTORY<span className="text-emerald-600">360</span>
+            INVENTORY<span className="text-emerald-800 font-extrabold">360</span>
           </span>
         </button>
         {onOpenLanding && (
@@ -183,8 +183,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      {/* Navigation Stack */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      {/* Navigation Items */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.key;
@@ -258,13 +258,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span
-                className={`w-2 h-2 rounded-full shrink-0 ${
-                  autoSaveConfig?.enabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
-                }`}
-              />
-              <span className="font-bold uppercase tracking-wider text-slate-800 text-[10px]">
-                {autoSaveConfig?.enabled ? t('auto_save_active', 'Auto-Save Active') : t('auto_save_off', 'Auto-Save Off')}
+              <HardDrive className="w-3.5 h-3.5 text-emerald-700" />
+              <span className="font-bold text-slate-800 uppercase">
+                {t('auto_save_title', 'Auto-Save')}
               </span>
             </div>
             <span className="text-[9px] font-bold text-slate-500 group-hover:text-emerald-700 uppercase">
@@ -316,11 +312,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="inline-block hover:opacity-90 transition-opacity"
             title="Buy Me a Coffee at ko-fi.com"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              width="143"
               height="36"
-              style={{ border: '0px', height: '36px' }}
+              style={{ border: '0px', width: '143px', height: '36px', aspectRatio: '580 / 146' }}
               src="https://storage.ko-fi.com/cdn/kofi3.png?v=6"
               alt="Buy Me a Coffee at ko-fi.com"
+              loading="lazy"
             />
           </a>
         </div>
@@ -329,7 +328,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onOpenDataPolicy}
           className="w-full py-1.5 px-2 bg-white border border-slate-300 text-slate-800 hover:text-black font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:border-slate-400 transition-colors shadow-2xs"
         >
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
           <span>{t('data_policy_btn', 'Data Policy & Backup')}</span>
         </button>
 
@@ -341,7 +340,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span>{t('interactive_tour', 'Interactive Tour')}</span>
         </button>
 
-        {/* Functional Demo Button (Replaces static Demo Store / Main Portal row) */}
+        {/* Functional Demo Button */}
         <button
           type="button"
           onClick={() => setShowDemoConfirmModal(true)}
@@ -362,6 +361,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onChange={(e) => onCurrencyChange && onCurrencyChange(e.target.value)}
             className="bg-transparent text-slate-900 font-bold focus:outline-none cursor-pointer text-[10px] w-full"
             title="Change Global Currency"
+            aria-label="Select Currency Code"
           >
             <option value="USD">$ USD</option>
             <option value="EUR">€ EUR</option>
@@ -383,6 +383,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onChange={(e) => onLanguageChange && onLanguageChange(e.target.value)}
             className="bg-transparent text-slate-900 font-bold focus:outline-none cursor-pointer text-[10px] w-full"
             title="Change Language"
+            aria-label="Select Interface Language"
           >
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>

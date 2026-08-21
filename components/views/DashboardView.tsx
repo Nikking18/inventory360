@@ -483,6 +483,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           {/* Location Outlet Selector */}
           <select
+            id="dashboard-location-selector"
+            aria-label={t('select_outlet_label', 'Select Store Outlet Location')}
             value={selectedLocation}
             onChange={(e) => onLocationChange(e.target.value)}
             className="text-xs bg-white border border-slate-300 px-3 py-2 font-mono text-slate-900 focus:outline-none focus:border-slate-900 shadow-2xs cursor-pointer"
@@ -513,7 +515,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <p className="text-3xl sm:text-4xl font-mono font-bold text-slate-900 tracking-tight">
               {formatCurrency(totalRevenue, currencySymbol)}
             </p>
-            <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-700">
+            <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-800">
               <TrendingUp className="w-4 h-4" />
               <span>
                 {totalOrders > 0
@@ -521,7 +523,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   : t('no_sales', 'Ready for sales transactions')}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 font-mono">{t('recent_transactions', 'Verified POS & Online receipts.')}</p>
+            <p className="text-[11px] text-slate-600 font-mono">{t('recent_transactions', 'Verified POS & Online receipts.')}</p>
           </div>
 
           {/* Center Column: Interactive Chart.js View */}
@@ -533,7 +535,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <Bar data={chartData} options={chartOptions as any} />
               )
             ) : (
-              <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-xs text-slate-400">
+              <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-xs text-slate-500">
                 {t('loading_chart', 'Loading Chart...')}
               </div>
             )}
@@ -566,10 +568,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-emerald-600" />
-                <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900">
+                <Users className="w-4 h-4 text-emerald-700" />
+                <h2 className="font-bold text-sm uppercase tracking-wider text-slate-900">
                   {t('recent_buyers', 'Recent Buyers')}
-                </h3>
+                </h2>
               </div>
               <button
                 onClick={() => onNavigate('customers')}
@@ -581,7 +583,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             {recentBuyers.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-400 italic">
+              <div className="p-8 text-center text-xs text-slate-600 font-medium">
                 {t('no_buyers_found', 'No customer purchase records available for this outlet.')}
               </div>
             ) : (
@@ -628,7 +630,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             )}
           </div>
 
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-600">
             <span>{t('tracking_buyers', 'Tracking active buyer history')}</span>
             <button
               onClick={() => onNavigate('customers')}
@@ -645,9 +647,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-sky-600" />
-                <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900">
+                <h2 className="font-bold text-sm uppercase tracking-wider text-slate-900">
                   {t('recent_invoices', 'Recent Invoices')}
-                </h3>
+                </h2>
               </div>
               <button
                 onClick={() => onNavigate('sell', 'sales-history')}
@@ -659,7 +661,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             {recentInvoices.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-400 italic">
+              <div className="p-8 text-center text-xs text-slate-600 font-medium">
                 {t('no_invoices_found', 'No invoices recorded yet for this location.')}
               </div>
             ) : (
@@ -675,13 +677,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         <span className="text-[9px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 uppercase border border-emerald-300">
                           {inv.status}
                         </span>
-                        <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.2 border border-slate-200 hidden sm:inline">
+                        <span className="text-[10px] text-slate-600 bg-slate-100 px-1.5 py-0.2 border border-slate-200 hidden sm:inline">
                           {inv.paymentMethod}
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-600 truncate">
                         {inv.customerName || t('walk_in_customer', 'Walk-in Customer')} •{' '}
-                        <span className="text-slate-400">
+                        <span className="text-slate-500">
                           {new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </p>
@@ -713,7 +715,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             )}
           </div>
 
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-600">
             <span>{t('esc_pos_printing', 'Instant ESC/POS & Thermal Printing')}</span>
             <button
               onClick={() => onNavigate('sell', 'quick-sale')}
@@ -731,10 +733,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-slate-900" />
             <div>
-              <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900">
+              <h2 className="font-bold text-sm uppercase tracking-wider text-slate-900">
                 {t('recent_transactions_ledger', 'Recent Transactions & Financial Ledger')}
-              </h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              </h2>
+              <p className="text-[11px] text-slate-600 mt-0.5">
                 {t('realtime_stream_desc', 'Real-time stream of in-store sales, online marketplace syncs, and profit telemetry.')}
               </p>
             </div>
@@ -750,7 +752,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {recentTransactions.length === 0 ? (
-          <div className="p-8 text-center text-xs text-slate-400 italic">
+          <div className="p-8 text-center text-xs text-slate-600 font-medium">
             {t('no_tx_found', 'No transaction records found.')}
           </div>
         ) : (

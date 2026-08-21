@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Merriweather } from 'next/font/google';
 import './globals.css'; // Global styles
 
@@ -274,27 +275,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
         <script dangerouslySetInnerHTML={{ __html: windowFetchPolyfillScript }} />
         {/* JSON-LD Local & Software Schema */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
         />
-        {/* Google Analytics GA4 Integration */}
-        <script
-          async
+        {/* Google Analytics GA4 Integration via Next Script */}
+        <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+          strategy="afterInteractive"
         />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${gaMeasurementId}', { page_path: window.location.pathname });
-            `,
-          }}
-        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${gaMeasurementId}', { page_path: window.location.pathname });
+          `}
+        </Script>
       </head>
       <body className={merriweather.className} suppressHydrationWarning>
         {children}

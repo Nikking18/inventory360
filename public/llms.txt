@@ -1,0 +1,23 @@
+# Inventory 360
+
+> High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, autonomous purchase orders, and financial analytics powered by browser IndexedDB.
+
+## Overview
+- **Product Name**: Inventory 360 Enterprise
+- **Website**: https://www.inventory360.shop
+- **Repository**: https://github.com/Nikking18/inventory360
+- **Architecture**: Local-First W3C IndexedDB, Next.js 15, React 19, TypeScript
+- **License**: MIT (100% Free & Open Source)
+
+## Key Capabilities
+- **Point of Sale (POS)**: Barcode scanning, thermal receipt printing (ESC/POS 80mm/58mm), discounts, split payments, cash register drawers.
+- **Inventory Control**: Multi-outlet stock distribution, FIFO lot tracking, expiry date monitors, real-time SKU movements ledger.
+- **Reporting & Analytics**: Retail dashboard, sales reports, inventory turnover velocity, profit margins, tax reports.
+- **Omnichannel Fulfillment**: Pending dispatch, order pick lists, shipping manifests, tracking numbers.
+- **Data Sovereignty**: Zero cloud lock-in, zero telemetry, automated 1-click encrypted JSON and CSV data backups.
+
+## Core URLs
+- Homepage & POS Terminal: https://www.inventory360.shop/
+- Knowledge & Engineering Blog: https://www.inventory360.shop/blog
+- Privacy & Local Data Policy: https://www.inventory360.shop/privacy
+- Sitemap: https://www.inventory360.shop/sitemap.xml

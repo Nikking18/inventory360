@@ -40,6 +40,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <input
               type="text"
               placeholder="Filter products, SKU..."
+              aria-label="Filter products by name or SKU"
               value={searchQuery || ''}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full text-xs bg-white text-slate-900 placeholder:text-slate-400 border border-slate-300 rounded-none px-3 py-1.5 focus:outline-none focus:border-slate-900 transition-colors"
@@ -54,6 +55,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               Type
             </span>
             <select
+              aria-label="Filter by report aggregation type"
               value={reportType}
               onChange={(e) => onReportTypeChange(e.target.value)}
               className="text-xs bg-white text-slate-900 border border-slate-300 rounded-none px-2.5 py-1.5 focus:outline-none focus:border-slate-900 font-mono"
@@ -72,6 +74,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               Measure
             </span>
             <select
+              aria-label="Filter by performance measure metric"
               value={measure}
               onChange={(e) => onMeasureChange(e.target.value)}
               className="text-xs bg-white text-slate-900 border border-slate-300 rounded-none px-2.5 py-1.5 focus:outline-none focus:border-slate-900 font-mono"
@@ -91,6 +94,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             Date
           </span>
           <select
+            aria-label="Filter by date range interval"
             value={dateRange}
             onChange={(e) => onDateRangeChange(e.target.value)}
             className="text-xs bg-white text-slate-900 border border-slate-300 rounded-none px-2.5 py-1.5 focus:outline-none focus:border-slate-900 font-mono"
@@ -111,6 +115,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             Location
           </span>
           <select
+            aria-label="Filter by store location outlet"
             value={selectedLocation}
             onChange={(e) => onLocationChange(e.target.value)}
             className="text-xs bg-white text-slate-900 border border-slate-300 rounded-none px-2.5 py-1.5 focus:outline-none focus:border-slate-900 font-mono"

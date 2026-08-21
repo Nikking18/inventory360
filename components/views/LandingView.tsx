@@ -174,6 +174,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   <DollarSign className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   <select
                     value={settings.currencyCode || 'USD'}
+                    aria-label="Change Global Currency"
                     onChange={async (e) => {
                       const found = CURRENCIES.find((c) => c.code === e.target.value);
                       if (found) {
@@ -200,6 +201,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   <Globe className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   <select
                     value={settings.language || 'en'}
+                    aria-label="Change Global Language"
                     onChange={async (e) => {
                       await onUpdateSettings({
                         ...settings,

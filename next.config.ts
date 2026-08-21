@@ -30,6 +30,10 @@ const securityHeaders = [
     value: 'camera=(self), microphone=(), geolocation=(), browsing-topics=()',
   },
   {
+    key: 'Cross-Origin-Opener-Policy',
+    value: 'same-origin-allow-popups',
+  },
+  {
     key: 'Content-Security-Policy',
     value: `
       default-src 'self';
