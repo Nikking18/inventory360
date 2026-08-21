@@ -2477,122 +2477,528 @@ export const BLOG_POST_TRANSLATIONS: Record<string, Partial<Record<SupportedLang
     "content": "\n### 1. Финансовые и Юридические Риски Списания Просрочки\n\nВ торговле продуктами питания, напитками, косметикой и аптечным ассортиментом штучный учет без привязки к срокам годности приводит к колоссальным потерям:\n\n```\n[ Поступление Товара ] ➔ [ Приемка по Партиям ] ➔ [ Выкладка на Полки ]\n                                                          │\n                       ┌──────────────────────────────────┴──────────────────────────────────┐\n                       ▼                                                                     ▼\n             [ Продано в Срок Годности ]                                           [ Просрочено на Полке ]\n                       │                                                                     │\n            🟢 Полная Торговая Наценка                                            🔴 100% Списание Себестоимости (COGS)\n                                                                                  🔴 Расходы на Утилизацию Отходов\n                                                                                  🔴 Штрафы Роспотребнадзора\n```\n\nПо данным FAO, розничные сети теряют от **1.8% до 4.2% годовой выручки** исключительно на списаниях просроченной продукции. При обороте 100 млн рублей в год это составляет **от 1.8 до 4.2 млн рублей чистых прямых убытков**.\n\n---\n\n### 2. FIFO vs. FEFO: Математика Ротации Складских Запасов\n\n1. **FIFO (First-In, First-Out)**: Списание по времени поступления на склад ($T_{\\text{приход}}$).\n2. **FEFO (First-Expired, First-Out)**: Приоритетная продажа товаров с ближайшим сроком годности ($T_{\\text{срок}}$).\n\n#### Операционное Сравнение FIFO vs. FEFO:\n\n| Параметр / Метрика | FIFO (Первым Пришел, Первым Ушел) | FEFO (Первым Истекает, Первым Ушел) |\n| :--- | :--- | :--- |\n| **Ключ Сортировки** | Дата и время приемки накладной | Официальный срок годности товара |\n| **Отрасли Применения** | Электроника, одежда, крепеж, сухие смеси | Молочка, кулинария, косметика, вакцины |\n| **Защита от Пересорта** | 🔴 Низкая (Свежие партии с коротким сроком сгорают) | 🟢 Высокая (Короткие сроки сразу идут в продажу) |\n| **Формат Штрихкода** | Обычный 1D EAN-13 | GS1-128 / 2D DataMatrix (Честный Знак) |\n| **Снижение Списаний** | Базовый уровень | **Снижение потерь от порчи на 42%–68%** |\n\n---\n\n### 3. Стандарты Регулирования: ХАССП, ЕАЭС и GMP\n\n1. **ХАССП / Честный Знак**: Обязательный учет каждой маркированной единицы и фиксация сроков годности.\n2. **Техрегламенты ЕАЭС по Косметике**: Контроль сроков годности и периода использования после вскрытия (PAO).\n3. **GMP**: Сквозная прослеживаемость от завода до чека покупателя.\n\n---\n\n### 4. 5-Минутный Регламент Выборочного Отзыва Партии\n\n```\n[ Этап 1: УВЕДОМЛЕНИЕ ОТ ПОСТАВЩИКА ]\n   │  ➔ Выявлен брак партии: SKU #ALM-100, Партия #LOT-9921\n   ▼\n[ Этап 2: ПОИСК В БАЗЕ (< 30 Секунд) ]\n   │  ➔ Запрос в IndexedDB: 14 шт на складе 4B | 6 шт на полке ряда 2.\n   ▼\n[ Этап 3: БЛОКИРОВКА В 1 КЛИК (< 15 Секунд) ]\n   │  ➔ Статус изменен на \"КАРАНТИН_ОТОЗВАН\".\n   │  ➔ Кассовый узел автоматически отклоняет штрихкод этого лота.\n   ▼\n[ Этап 4: ВЫГРУЗКА СПИСКА ПОКУПАТЕЛЕЙ (< 2 Минут) ]\n   │  ➔ Лог продаж: 18 шт продано 12 клиентам.\n   │  ➔ Экспорт контактов для срочного смс/email оповещения.\n```\n\n---\n\n### 5. Каскадная Система Предупреждений за 30/60/90 Дней\n\n```\n[ 90 Дней до Срока ] ➔ 🟢 Мониторинг скорости продаж по полной цене.\n[ 60 Дней до Срока ] ➔ 🟡 Желтое Предупреждение: Перемещение на передний план.\n[ 30 Дней до Срока ] ➔ 🟠 Автоматическая промо-скидка 25% или бандл.\n[ 10 Дней до Срока ] ➔ 🔴 Финальная распродажа (-50%) или списание.\n[ 0 Дней (Просрочено) ] ➔ ⛔ Запрет Продажи: Полный отказ в чеке на кассе.\n```\n\n---\n\n### 6. Кодирование GS1-128 и DataMatrix: Теги Партий и Сроков\n\n| Идентификатор (AI) | Данные | Пример | Расшифровка |\n| :--- | :--- | :--- | :--- |\n| **(01)** | GTIN код товара | `00850012345678` | Артикул SKU |\n| **(10)** | Номер Партии / Серии | `LOT-9921` | Производственная серия |\n| **(17)** | Срок Годности (`ГГММДД`) | `261130` | Годен до 30.11.2026 |\n| **(21)** | Индивидуальный Серийный Номер | `SN-883492` | Уникальный код единицы |\n\n---\n\n### 7. Учет Списаний: Расчет Реального Ущерба от Порчи\n\n$$\\text{Уровень Потерь от Порчи (\\%)} = \\left( \\frac{\\text{Стоимость Списанной Просрочки (руб)}}{\\text{Себестоимость Проданных Скоропортящихся Товаров (COGS руб)}} \\right) \\times 100$$\n\nВнедрение FEFO снижает списания с **6.15% до менее чем 1.2%**, сохраняя для магазина **более 1 500 000 рублей чистой прибыли** ежегодно.\n\n---\n\n### 8. Настройка Партий и Сроков Годности в Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) автоматизирует партионный учет:\n1. **Ввод Партии при Приемке**: Регистрация серии и даты экспирации для автоматической FEFO-очереди.\n2. **Цветовая Индикация**: Наглядные индикаторы рисков за 30, 60 и 90 дней до конца срока.\n3. **Выборочный Карантин**: Блокировка отдельной партии с сохранением продаж остальных серий.\n4. **Аудиторские Отчеты на 11 Языках**: Выгрузка полной истории движения в CSV, Excel и PDF.\n"
   }
 },
-  'barcode-label-printing-sku-system-guide': {
-    es: {
-      title: 'Sistemas de Código de Barras y SKU en Retail: Guía de Generación, Impresión Térmica y Escaneo',
-      excerpt: 'Aprende a estructurar jerarquías de códigos SKU, diferencias entre Code 128 y QR, y configuración de impresoras térmicas para cobros ultrarrápidos.',
-      category: 'Hardware y Guías',
-      keywords: ['Código de Barras', 'Generador SKU', 'Impresión Térmica', 'Escáner POS'],
-      content: `
-### 1. Estructura de Jerarquía de Códigos SKU
-
-Un sistema SKU (Stock Keeping Unit) profesional debe ser alfanumérico, legible y contener la información clave del producto sin ambigüedades.
-
-### 2. Generación e Impresión Térmica en Inventory 360
-1. **Generación Instantánea de Code 128 y QR**: Cada producto añadido al catálogo recibe automáticamente sus códigos vectoriales de alta definición.
-2. **Impresión Térmica en 1 Clic**: Compatible con rollos estándar de 80mm y 58mm sin controladores adicionales.
-`,
-    },
-    fr: {
-      title: 'Systèmes de Codes-Barres et SKU : Génération, Impression Thermique et Scan Rapide',
-      excerpt: 'Comment concevoir une taxonomie SKU infaillible, choisir entre Code 128 et QR codes, et calibrer les imprimantes thermiques pour le passage en caisse.',
-      category: 'Matériel & Guides',
-      keywords: ['Code-Barres', 'Générateur SKU', 'Imprimante Thermique', 'Scanner POS'],
-      content: `
-### 1. Taxonomie et Hiérarchie des Codes SKU
-
-Un système SKU professionnel doit permettre l'identification instantanée de la catégorie, de la variante et de la taille du produit.
-`,
-    },
-    de: {
-      title: 'Barcode- & SKU-Systeme im Handel: Leitfaden zu Generierung, Thermodruck und Scan-Hardware',
-      excerpt: 'Strukturierung professioneller SKU-Nummernkreise, Unterschiede zwischen Code 128 und QR sowie Einrichtung von Thermodruckern für sub-50ms Kassiervorgänge.',
-      category: 'Hardware & Anleitungen',
-      keywords: ['Barcode', 'SKU-System', 'Thermodrucker', 'POS-Scanner'],
-      content: `
-### 1. Strukturierung professioneller SKU-Nummernkreise
-
-Inventory 360 generiert automatisch standardkonforme Code 128 und QR-Codes für Thermodrucker und mobile Scanner.
-`,
-    },
-    hi: {
-      title: 'रिटेल बारकोड और SKU सिस्टम: जनरेशन, थर्मल लेबल प्रिंटिंग और स्कैनर सेटअप',
-      excerpt: 'स्मार्ट SKU पदानुक्रम कैसे बनाएं, Code 128 और QR कोड में अंतर, और 50ms त्वरित चेकआउट के लिए थर्मल प्रिंटर को कैसे कॉन्फ़िगर करें।',
-      category: 'हार्डवेयर और गाइड',
-      keywords: ['बारकोड', 'SKU जनरेटर', 'थर्मल प्रिंटर', 'पीओएस स्कैनर'],
-      content: `
-### 1. स्मार्ट बारकोड और SKU सिस्टम
-
-Inventory 360 आपके उत्पादों के लिए स्वचालित रूप से Code 128 और QR बारकोड तैयार करता है जिसे किसी भी थर्मल प्रिंटर पर आसानी से प्रिंट किया जा सकता है।
-`,
-    },
-    ja: {
-      title: 'リテール向けバーコード＆SKU体系構築：生成・サーマル印刷・スキャナー設定',
-      excerpt: '論理的なSKU体系の設計、Code 128とQRコードの使い分け、50ms以下の超高速レジ会計を実現するサーマルプリンター設定。',
-      category: 'ハードウェア＆導入ガイド',
-      keywords: ['バーコード', 'SKU体系', 'サーマルプリンター', 'POSスキャナー'],
-      content: `
-### 1. バーコードとSKUの論理的体系化
-
-Inventory 360はCode 128およびQRコードを自動生成し、サーマルラベルプリンターでのワンクリック印刷をサポートします。
-`,
-    },
-    zh: {
-      title: '零售条形码与SKU编码系统构建：生成规范、热敏打印与扫码枪调优',
-      excerpt: '如何设计严谨的SKU层级体系、Code 128与二维码应用场景对比，以及配置热敏打印机实现50毫秒极速扫码收银。',
-      category: '硬件与实操指南',
-      keywords: ['条形码', 'SKU编码系统', '热敏打印', '扫码枪设置'],
-      content: `
-### 1. 零售条形码与SKU编码规范
-
-Inventory 360 支持一键生成高密度 Code 128 与二维码资产，适配 80mm 与 58mm 热敏打印机。
-`,
-    },
-    ar: {
-      title: 'أنظمة الباركود وأكواد SKU للتجزئة: الإنشاء، الطباعة الحرارية، وإعداد الماسحات',
-      excerpt: 'تعلم كيفية تنظيم تسلسل أكواد SKU، الفروق بين Code 128 وQR، وضبط الطابعات الحرارية لعمليات بيع فائقة السرعة.',
-      category: 'الأجهزة والأدلة',
-      keywords: ['باركود', 'توليد SKU', 'طباعة حرارية', 'ماسح نقاط البيع'],
-      content: `
-### 1. أنظمة الباركود الذكية
-
-يتيح Inventory 360 إنشاء وطباعة ملصقات الباركود والـ QR الحرارية بنقرة واحدة لسرعة فائقة في عمليات البيع.
-`,
-    },
-    pt: {
-      title: 'Sistemas de Código de Barras e SKU no Varejo: Geração, Impressão Térmica e Leitores',
-      excerpt: 'Como estruturar uma hierarquia de SKUs inteligente, comparar Code 128 e QR codes, e configurar impressoras térmicas para checkout ultrarrápido.',
-      category: 'Hardware e Tutoriais',
-      keywords: ['Código de Barras', 'Gerador de SKU', 'Impressão Térmica', 'Leitor PDV'],
-      content: `
-### 1. Padronização de Códigos de Barras e SKU
-
-O Inventory 360 gera etiquetas térmicas em Code 128 e QR code prontas para impressão direta em impressoras térmicas.
-`,
-    },
-    it: {
-      title: 'Sistemi Barcode e Codici SKU per il Retail: Creazione, Stampa Termica e Lettori',
-      excerpt: 'Come progettare una tassonomia SKU efficiente, scegliere tra Code 128 e QR code, e configurare stampanti termiche per pagamenti in tempo reale.',
-      category: 'Hardware e Guide',
-      keywords: ['Codice a Barre', 'Generatore SKU', 'Stampa Termica', 'Scanner POS'],
-      content: `
-### 1. Tassonomia Barcode e Codici SKU
-
-Generazione automatica di etichette barcode ad alta risoluzione compatibili con stampanti termiche standard.
-`,
-    },
-    ru: {
-      title: 'Штрихкодирование и SKU Системы в Ритейле: Генерация, Термопечать и Сканеры',
-      excerpt: 'Построение логичной структуры артикулов SKU, выбор между Code 128 и QR, настройка термопринтеров для расчетов быстрее 50 мс.',
-      category: 'Оборудование и Инструкции',
-      keywords: ['Штрихкод', 'Генератор SKU', 'Термопечать', 'POS Сканер'],
-      content: `
-### 1. Стандарты Штрихкодирования и Артикулов SKU
-
-Автоматическая генерация этикеток Code 128 и QR для мгновенной печати на термопринтерах.
-`,
-    },
+  'barcode-qr-code-inventory-setup-label-printing': {
+  "es": {
+    "title": "Sistemas de Inventario con Códigos de Barras y QR: Guía Paso a Paso de Impresión de Etiquetas y Escaneo (Listo para GS1 Sunrise 2027)",
+    "excerpt": "Manual exhaustivo de ingeniería y operaciones para implementar códigos 1D Code 128, códigos QR 2D, estándares GS1 Digital Link, impresoras térmicas (Zebra, Brother, Rollo, Dymo) y lectores USB/Bluetooth para reconocimiento en menos de 50ms y cero errores de stock.",
+    "category": "Hardware y Guías",
+    "keywords": [
+      "configuración sistema inventario código de barras",
+      "códigos de barras 2D GS1 Sunrise 2027",
+      "impresión etiquetas código QR TPV",
+      "generador código de barras Code 128",
+      "configurar impresora térmica Zebra etiquetas",
+      "lector código de barras USB Bluetooth",
+      "estándar retail GS1 Digital Link",
+      "convención nombres SKU código de barras",
+      "transferencia térmica vs térmica directa",
+      "reducción de errores de escaneo código de barras"
+    ],
+    "tableOfContents": [
+      {
+        "id": "optical-data-capture-physics",
+        "title": "1. Física de la Captura Óptica de Datos y Análisis de Errores"
+      },
+      {
+        "id": "barcode-symbology-matrix",
+        "title": "2. Simbologías 1D vs. 2D (Code 128, UPC, QR y DataMatrix)"
+      },
+      {
+        "id": "gs1-sunrise-2027-standard",
+        "title": "3. GS1 Sunrise 2027: Transición a Códigos 2D y Digital Links"
+      },
+      {
+        "id": "sku-barcode-formatting-rules",
+        "title": "4. Arquitectura Maestra de SKU y Formato de Códigos de Barras"
+      },
+      {
+        "id": "direct-thermal-vs-thermal-transfer",
+        "title": "5. Tecnología de Impresión Térmica: Térmica Directa vs. Transferencia Térmica"
+      },
+      {
+        "id": "label-media-dpi-resolutions",
+        "title": "6. Tamaño de Etiquetas, Resolución DPI y Densidad de Impresión"
+      },
+      {
+        "id": "scanner-hardware-configuration",
+        "title": "7. Configuración de Lectores: Emulación Teclado HID y Sufijos"
+      },
+      {
+        "id": "inventory-360-barcode-setup",
+        "title": "8. Generación e Impresión de Códigos de Barras en Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Física de la Captura Óptica de Datos y Análisis de Errores\n\nLa introducción manual de datos mediante teclado en las cajas de cobro y en los muelles de carga de almacén es la principal causa de discrepancias y desajustes en el libro mayor de inventario.\n\nEstudios empíricos de ingeniería industrial demuestran una diferencia abismal entre la mecanografía humana y el escaneo óptico automatizado:\n\n```\n[ Escritura Manual con Teclado ] ➔ 1 Error cada 300 Pulsaciones (Tasa de Error: 0.33%)\n                                           │  (El error tipográfico crea un SKU fantasma o cuenta errónea)\n                                           ▼\n[ Escaneo Láser 1D Code 128 ]    ➔ 1 Error cada 3.000.000 de Escaneos (Tasa: 0.000033%)\n                                           │  (Mejora de precisión del 99.99%)\n                                           ▼\n[ Escaneo Matriz 2D QR / DM ]    ➔ 1 Error cada 10.500.000 de Escaneos (Tasa: 0.0000095%)\n                                              (Capa de Corrección de Errores Reed-Solomon)\n```\n\n#### Impacto Operativo Real de los Errores Humanos:\nEn una tienda minorista que procesa 800 transacciones diarias con una media de 4 artículos por venta:\n* **Entrada Manual por Teclado**: Genera entre **10 y 12 errores de recuento al día** (más de 3.600 descuadres de stock por año).\n* **Escaneo Óptico de Códigos de Barras**: Genera **menos de 1 error cada 2.5 años**, manteniendo una integridad del 100% en el inventario.\n\n---\n\n### 2. Simbologías 1D vs. 2D (Code 128, UPC, QR y DataMatrix)\n\nLa elección de la simbología adecuada depende de la densidad de información requerida, el área de impresión disponible y el tipo de lector óptico utilizado.\n\n#### Matriz Comparativa de Simbologías:\n\n| Simbología | Tipo | Capacidad Máxima de Datos | Corrección de Errores | Mejor Caso de Uso en Retail |\n| :--- | :--- | :--- | :--- | :--- |\n| **Code 128** | 1D Lineal | Hasta 128 caracteres ASCII | Verificación por Checksum | Inventario interno, etiquetas de estantería, SKUs de tienda |\n| **UPC-A / EAN-13** | 1D Lineal | Fijo: 12 o 13 dígitos numéricos | Dígito de control único | Envases de fabricantes, venta internacional en TPV |\n| **Código QR (Modelo 2)** | 2D Matricial | 7.089 numéricos / 4.296 alfanuméricos | Reed-Solomon (7% a 30% recuperación) | Interacción con clientes, URLs web, portales de garantía |\n| **GS1 DataMatrix** | 2D Matricial | 3.116 numéricos / 2.335 alfanuméricos | ECC 200 de alta densidad | Farmacia, instrumental médico, microenvases de cosmética |\n\n> **Regla de Ingeniería**: Para estanterías de almacén y etiquetas estándar de precios en tienda, **Code 128** sigue siendo el estándar universal indiscutible por su total compatibilidad con escáneres láser 1D y su nulo coste de procesamiento.\n\n---\n\n### 3. GS1 Sunrise 2027: Transición a Códigos 2D y Digital Links\n\nLa organización internacional de estándares **GS1** ha establecido que para el año **2027 (iniciativa GS1 Sunrise)**, los terminales punto de venta minoristas de todo el mundo deberán procesar **Códigos de Barras 2D mediante GS1 Digital Link**.\n\n#### Arquitectura del GS1 Digital Link:\nUn único código QR 2D sustituye tanto al código de barras UPC/EAN tradicional como al código QR promocional, integrando una URI web estándar con atributos estructurados del producto:\n\n```\nhttps://id.marca.com/01/00850012345678/10/LOT-9921?17=261130&21=SN-883492\n │                   │  │              │  │        │  │      │  └─ Número de Serie Único (SN)\n │                   │  │              │  │        │  └──────┴──── Fecha de Caducidad (AAMMDD)\n │                   │  │              │  └────────┴────────────── Número de Lote / Batch\n │                   │  └──────────────┴────────────────────────── Código GTIN de Producto\n └───────────────────┴──────────────────────────────────────────── Dominio Oficial de la Marca\n```\n\n#### Dinámica de Escaneo Dual:\n1. **Lector TPV en Caja**: Extrae los Identificadores de Aplicación GS1 estructurados para registrar la venta en menos de 15ms, verificar la caducidad y descontar el lote exacto.\n2. **Smartphone del Consumidor**: Resuelve la URL web para mostrar información nutricional, alérgenos, certificado de autenticidad e instrucciones de reciclaje.\n\n[Inventory 360](https://www.inventory360.shop) está preparado de forma nativa para GS1 Sunrise 2027, generando códigos Code 128 y QR vectoriales de alta resolución directamente en su navegador.\n\n---\n\n### 4. Arquitectura Maestra de SKU y Formato de Códigos de Barras\n\nUna nomenclatura de SKU desorganizada genera confusión en el personal y retrasos en la lectura óptica.\n\n#### Reglas de Oro para la Arquitectura de SKUs:\n1. **Eliminar Glifos Ambiguos**: Nunca combine la letra `O` con el número `0`, ni la letra `I` mayúscula con la `l` minúscula o el número `1`.\n2. **Caracteres Alfanuméricos Estrictos**: Utilice únicamente letras mayúsculas `A-Z`, números `0-9` y guiones (`-`). Evite espacios, barras (`/`) o caracteres especiales (`@#$%^&*`).\n3. **Longitud Óptima**: Mantenga los SKUs entre **8 y 12 caracteres** para asegurar proporciones de código 1D legibles en rollos de etiquetas compactos.\n4. **Prefijado Semántico Jerárquico**:\n   $$\\text{Estructura SKU} = \\text{[Departamento]}-\\text{[Categoría]}-\\text{[Atributo]}-\\text{[Secuencia]}$$\n\n#### Ejemplo de Formulación de SKU Profesional:\n\n| Descripción del Producto | Departamento | Categoría | Atributo | SKU Maestro Formulado |\n| :--- | :--- | :--- | :--- | :--- |\n| **Café Orgánico Cold-Brew 350ml** | Bebidas (`BEV`) | Café (`COF`) | 350ml (`12Z`) | `BEV-COF-12Z-01` |\n| **Camisa Lino Hombre Azul M** | Ropa (`APP`) | Camisa (`SHT`) | Azul M (`NVM`) | `APP-SHT-NVM-04` |\n| **Ratón Ergonómico Inalámbrico Gris** | Hardware (`HDW`) | Entrada (`INP`) | Gris (`GRY`) | `HDW-INP-GRY-08` |\n\n---\n\n### 5. Tecnología de Impresión Térmica: Térmica Directa vs. Transferencia Térmica\n\nElegir una tecnología de impresión inadecuada provoca etiquetas borrosas o descoloridas que interrumpen la operativa del almacén.\n\n```\n                      ┌─────────────────────────────────────────┐\n                      │    TECNOLOGÍAS DE IMPRESIÓN TÉRMICA     │\n                      └────────────────────┬────────────────────┘\n                                           │\n                    ┌──────────────────────┴──────────────────────┐\n                    ▼                                             ▼\n        [ TÉRMICA DIRECTA (TD) ]                      [ TRANSFERENCIA TÉRMICA (TT) ]\n  ├── El calor activa papel termosensible        ├── El cabezal funde una cinta de tinta (Ribbon)\n  ├── Cero tinta, tóner o consumibles extra      ├── Requiere cinta de cera o resina\n  ├── Vida útil estimada: 6 a 12 meses           ├── Vida útil estimada: 5 a más de 20 años\n  └── Se borra con calor, luz solar y roce       └── Resistente a químicos, agua, frío y UV\n```\n\n#### Matriz de Elección: Térmica Directa vs. Transferencia Térmica:\n\n| Parámetro Operativo | Térmica Directa (TD) | Transferencia Térmica (TT) |\n| :--- | :--- | :--- |\n| **¿Requiere Cinta / Ribbon?** | ❌ No requiere (Mantenimiento mínimo) | ✔️ Sí (Cera, Cera-Resina o Resina Pura) |\n| **Durabilidad de la Etiqueta** | Media (Se degrada con sol, calor y roce) | Extrema (Inmune a químicos, congelador y UV) |\n| **Mejor Aplicación** | TPV minorista de alta rotación, recibos, envíos de paquetería rápida (SEUR, Correos, DHL) | Estanterías permanentes de almacén, etiquetado exterior, congelados y farmacia |\n| **Modelos de Impresoras** | Rollo, Dymo 450/550, Zebra ZD220d | Zebra ZD421t, TSC TE200, Sato WS4 |\n\n---\n\n### 6. Tamaño de Etiquetas, Resolución DPI y Densidad de Impresión\n\nPara evitar cortes o lecturas defectuosas, la plantilla debe calibrarse con la resolución nativa de puntos por pulgada (DPI) de la impresora:\n\n$$\\text{Anchura en Píxeles} = \\text{Anchura Física (Pulgadas)} \\times \\text{DPI de la Impresora}$$\n\n#### Dimensiones Estándar de Etiquetas en Retail (a 203 DPI estándar):\n\n| Formato de Etiqueta | Medida en Pulgadas | Medida en mm | Dimensiones en Píxeles (203 DPI) | Aplicación Típica |\n| :--- | :--- | :--- | :--- | :--- |\n| **Etiqueta Compacta de Precio** | $1.50\" \\times 0.50\"$ | $38\\text{mm} \\times 13\\text{mm}$ | $304\\text{px} \\times 101\\text{px}$ | Joyería, gafas, cosméticos, cables |\n| **Código de Barras de Producto** | $2.25\" \\times 1.25\"$ | $57\\text{mm} \\times 32\\text{mm}$ | $456\\text{px} \\times 253\\text{px}$ | Mercancía general de tienda, moda |\n| **Ubicación de Estantería** | $4.00\" \\times 2.00\"$ | $101\\text{mm} \\times 51\\text{mm}$ | $812\\text{px} \\times 406\\text{px}$ | Ubicaciones de racks, estantes, pallets |\n| **Etiqueta de Envío y Despacho** | $4.00\" \\times 6.00\"$ | $101\\text{mm} \\times 152\\text{mm}$ | $812\\text{px} \\times 1218\\text{px}$ | Paquetería y logística (UPS, DHL, FedEx) |\n\n---\n\n### 7. Configuración de Lectores: Emulación Teclado HID y Sufijos\n\nLa mayoría de lectores de códigos de barras 1D/2D USB y Bluetooth (Honeywell, Zebra, Netum, Eyoyo) funcionan en **Modo de Emulación de Teclado HID**.\n\nAl escanear, el lector actúa como un mecanógrafo ultrarrápido que introduce caracteres a **500 caracteres por segundo**.\n\n#### Lista de Verificación para Escaneo y Cobro en < 50ms:\n1. **Activar Sufijo de Retorno de Carro (`CR / Enter` o `LF`)**: Escanee el código de configuración *Add Enter Suffix* del manual de su lector. Esto envía el formulario o añade el artículo al carrito de forma inmediata sin que el cajero tenga que pulsar `Enter` manualmente.\n2. **Desactivar Retardo entre Caracteres**: Establezca el retardo en `0ms` para transmitir la cadena completa en una ráfaga atómica.\n3. **Modo Continuo / Presentación**: Para lectores de sobremesa manos libres, active el sensor óptico continuo para que se active automáticamente al pasar el producto por delante de la lente.\n\n---\n\n### 8. Generación e Impresión de Códigos de Barras en Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) simplifica la gestión de códigos de barras en un flujo local directo en su navegador:\n\n1. **Generación Instantánea de Code 128 y QR**: Cada producto registrado en su catálogo recibe de forma automática activos vectoriales nítidos de código de barras.\n2. **Impresión de Etiquetas Térmicas en 1 Clic**: En **Catálogo** o **Inventario**, seleccione los artículos deseados y pulse **Imprimir Etiquetas**. Seleccione entre rollos térmicos estándar ($2.25\" \\times 1.25\"$) u hojas de etiquetas múltiples ($30\\text{-por hoja Avery 5160}$).\n3. **Escaneo Ultrarrápido en TPV en < 50ms**: En la terminal **Venta (TPV)**, los escaneos se resuelven en menos de 15ms directamente desde IndexedDB local, actualizando líneas de venta y totales al instante.\n4. **Exportación Multilingüe y Compatibilidad Total**: Exporte catálogos completos de códigos de barras con descripciones y precios en CSV o PDF en 11 idiomas con total privacidad offline.\n"
   },
+  "fr": {
+    "title": "Systèmes de Code-Barres et QR Code : Impression d'Étiquettes et Configuration de Scan (Prêt pour GS1 Sunrise 2027)",
+    "excerpt": "Guide technique et opérationnel pour déployer les codes 1D Code 128, QR codes 2D, standards GS1 Digital Link, imprimantes thermiques (Zebra, Brother, Rollo, Dymo) et lecteurs USB/Bluetooth pour une identification en moins de 50ms.",
+    "category": "Matériel & Guides",
+    "keywords": [
+      "système inventaire code barre configuration",
+      "code barre 2D GS1 Sunrise 2027",
+      "impression étiquette QR code caisse",
+      "générateur code barre Code 128",
+      "imprimante thermique étiquette Zebra",
+      "lecteur code barre USB Bluetooth douchette",
+      "standard retail GS1 Digital Link",
+      "nomenclature SKU code barre",
+      "thermique direct vs transfert thermique",
+      "réduction erreur scan caisse"
+    ],
+    "tableOfContents": [
+      {
+        "id": "optical-data-capture-physics",
+        "title": "1. Physique de la Capture Optique et Analyse des Erreurs"
+      },
+      {
+        "id": "barcode-symbology-matrix",
+        "title": "2. Symbologies 1D vs. 2D (Code 128, UPC, QR et DataMatrix)"
+      },
+      {
+        "id": "gs1-sunrise-2027-standard",
+        "title": "3. GS1 Sunrise 2027 : Transition vers les Codes 2D et Digital Links"
+      },
+      {
+        "id": "sku-barcode-formatting-rules",
+        "title": "4. Architecture Maître des SKU et Règles de Formatage"
+      },
+      {
+        "id": "direct-thermal-vs-thermal-transfer",
+        "title": "5. Impression Thermique : Thermique Direct vs. Transfert Thermique"
+      },
+      {
+        "id": "label-media-dpi-resolutions",
+        "title": "6. Dimensions d'Étiquettes, Résolution DPI et Densité d'Impression"
+      },
+      {
+        "id": "scanner-hardware-configuration",
+        "title": "7. Configuration des Lecteurs : Émulation Clavier HID et Suffixes"
+      },
+      {
+        "id": "inventory-360-barcode-setup",
+        "title": "8. Génération et Impression de Codes-Barres dans Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Physique de la Capture Optique et Analyse des Erreurs\n\nLa saisie manuelle au clavier en caisse ou sur les quais d'entrepôt est la première source d'erreurs et de stocks fantômes dans le commerce.\n\nLes études d'ingénierie démontrent un écart colossal de fiabilité entre la saisie humaine et le scan optique :\n\n```\n[ Saisie Manuelle au Clavier ] ➔ 1 Erreur toutes les 300 Frappes (Taux d'Erreur : 0,33%)\n                                         │  (Une coquille crée un faux SKU ou un écart d'inventaire)\n                                         ▼\n[ Scan Laser 1D Code 128 ]     ➔ 1 Erreur tous les 3 000 000 de Scans (Taux : 0,000033%)\n                                         │  (Fiabilité améliorée de 99,99%)\n                                         ▼\n[ Scan Matrice 2D QR / DM ]    ➔ 1 Erreur tous les 10 500 000 de Scans (Taux : 0,0000095%)\n                                            (Algorithme de Correction d'Erreurs Reed-Solomon)\n```\n\n#### Impact Opérationnel Concret :\nPour un point de vente réalisant 800 passages en caisse par jour avec 4 articles par panier :\n* **Saisie Manuelle** : Génère **10 à 12 erreurs de stock par jour** (plus de 3 600 lignes de stocks faussées par an).\n* **Scan Optique par Code-Barres** : Génère **moins d'une erreur tous les 2,5 ans**, garantissant l'intégrité totale du grand livre d'inventaire.\n\n---\n\n### 2. Symbologies 1D vs. 2D (Code 128, UPC, QR et DataMatrix)\n\n| Symbologie | Type | Capacité Maximale | Correction d'Erreurs | Meilleur Usage Commerce |\n| :--- | :--- | :--- | :--- | :--- |\n| **Code 128** | 1D Linéaire | Jusqu'à 128 caractères ASCII | Somme de contrôle (Checksum) | Gestion interne de stock, étiquettes rayons, SKUs magasin |\n| **UPC-A / EAN-13** | 1D Linéaire | Fixe : 12 ou 13 chiffres | Clé de contrôle unique | Emballages industriels, passage en caisse retail mondial |\n| **QR Code (Modèle 2)** | 2D Matrice | 7 089 numériques / 4 296 alphanumériques | Reed-Solomon (7% à 30% récupérables) | Engagement client, redirection URL, notices et garanties |\n| **GS1 DataMatrix** | 2D Matrice | 3 116 numériques / 2 335 alphanumériques | Haute densité ECC 200 | Pharmacie, dispositifs médicaux, micro-cosmétiques |\n\n> **Règle Métier** : Pour les bacs de stockage et les étiquettes de prix standard, le **Code 128** reste la référence absolue grâce à sa compatibilité universelle avec les douchettes laser 1D.\n\n---\n\n### 3. GS1 Sunrise 2027 : Transition vers les Codes 2D et Digital Links\n\nL'organisation mondiale **GS1** a fixé à **2027 (initiative GS1 Sunrise)** l'obligation pour les points de vente d'accepter les **codes-barres 2D basés sur le GS1 Digital Link**.\n\n#### Architecture du GS1 Digital Link :\nUn code 2D unique remplace à la fois le code-barres EAN traditionnel et le QR code promotionnel via une URI web standardisée :\n\n```\nhttps://id.marque.com/01/00850012345678/10/LOT-9921?17=261130&21=SN-883492\n │                   │  │              │  │        │  │      │  └─ Numéro de Série Individuel (SN)\n │                   │  │              │  │        │  └──────┴──── Date d'Expiration (AAMMJJ)\n │                   │  │              │  └────────┴────────────── Numéro de Lot de Fabrication\n │                   │  └──────────────┴────────────────────────── Identifiant Produit GTIN\n └───────────────────┴──────────────────────────────────────────── Résolution de Domaine de Marque\n```\n\n#### Double Rôle du Scan :\n1. **Douchette en Caisse** : Extrait instantanément les identifiants GS1 pour enregistrer la vente, contrôler la péremption et décompter le lot exact.\n2. **Smartphone du Client** : Ouvre la page web affichant la traçabilité, les allergènes et les consignes de recyclage.\n\n---\n\n### 4. Architecture Maître des SKU et Règles de Formatage\n\n1. **Supprimer les Caractères Ambigus** : Jamais de lettre `O` avec le chiffre `0`, ni de lettre `I` avec la minuscule `l` ou le chiffre `1`.\n2. **Caractères Alphanumériques Purs** : Uniquement majuscules `A-Z`, chiffres `0-9` et tirets (`-`). Pas d'espaces ni de symboles spéciaux.\n3. **Longueur Optimale** : Entre **8 et 12 caractères**.\n4. **Structure Sémantique Hiérarchique** :\n   $$\\text{Format SKU} = \\text{[Département]}-\\text{[Catégorie]}-\\text{[Attribut]}-\\text{[Séquence]}$$\n\n#### Exemple de Nomenclature :\n\n| Description de l'Article | Département | Catégorie | Attribut | SKU Maître Formulé |\n| :--- | :--- | :--- | :--- | :--- |\n| **Café Cold-Brew Bio 350ml** | Boisson (`BEV`) | Café (`COF`) | 350ml (`12Z`) | `BEV-COF-12Z-01` |\n| **Chemise Lin Homme Marine M** | Prêt-à-porter (`APP`) | Chemise (`SHT`) | Marine M (`NVM`) | `APP-SHT-NVM-04` |\n| **Souris Ergonomique Sans Fil Gris** | Informatique (`HDW`) | Périphérique (`INP`) | Gris (`GRY`) | `HDW-INP-GRY-08` |\n\n---\n\n### 5. Impression Thermique : Thermique Direct vs. Transfert Thermique\n\n```\n                      ┌─────────────────────────────────────────┐\n                      │    TECHNOLOGIES D'IMPRESSION THERMIQUE  │\n                      └────────────────────┬────────────────────┘\n                                           │\n                    ┌──────────────────────┴──────────────────────┐\n                    ▼                                             ▼\n        [ THERMIQUE DIRECT (TD) ]                     [ TRANSFERT THERMIQUE (TT) ]\n  ├── La chaleur active le papier thermosensible ├── La tête thermique fait fondre un ruban encreur\n  ├── Zéro encre, zéro toner, zéro ruban        ├── Nécessite un ruban cire ou résine\n  ├── Durée de vie : 6 à 12 mois                ├── Durée de vie : 5 à plus de 20 ans\n  └── Sensible à la chaleur et aux UV           └── Résiste aux solvants, au gel et aux UV\n```\n\n#### Matrice de Choix :\n\n| Paramètre | Thermique Direct (TD) | Transfert Thermique (TT) |\n| :--- | :--- | :--- |\n| **Ruban Requis ?** | ❌ Non (Maintenance minimale) | ✔️ Oui (Cire, Cire-Résine ou Résine pure) |\n| **Durabilité** | Moyenne (S'efface avec le temps et la chaleur) | Extrême (Résiste aux solvants et au gel) |\n| **Application Idéale** | Caisses retail, étiquettes de colis (Colissimo, DHL, UPS) | Rayonnages longue durée, stockage extérieur, chaîne du froid |\n| **Imprimantes Typiques** | Rollo, Dymo 450/550, Zebra ZD220d | Zebra ZD421t, TSC TE200, Sato WS4 |\n\n---\n\n### 6. Dimensions d'Étiquettes, Résolution DPI et Densité d'Impression\n\n$$\\text{Largeur en Pixels} = \\text{Largeur Physique (Pouces)} \\times \\text{Résolution DPI}$$\n\n#### Formats Standards (à 203 DPI) :\n\n| Format | Dimensions (Pouces) | Dimensions (mm) | Pixels (203 DPI) | Usage Recommandé |\n| :--- | :--- | :--- | :--- | :--- |\n| **Mini Étiquette Bijou** | $1.50\" \\times 0.50\"$ | $38\\text{mm} \\times 13\\text{mm}$ | $304\\text{px} \\times 101\\text{px}$ | Bijouterie, lunettes, cosmétique |\n| **Étiquette Produit Standard** | $2.25\" \\times 1.25\"$ | $57\\text{mm} \\times 32\\text{mm}$ | $456\\text{px} \\times 253\\text{px}$ | Articles de vente, textile |\n| **Étiquette Rayon / Bac** | $4.00\" \\times 2.00\"$ | $101\\text{mm} \\times 51\\text{mm}$ | $812\\text{px} \\times 406\\text{px}$ | Emplacements palettes et allées |\n| **Étiquette Expédition** | $4.00\" \\times 6.00\"$ | $101\\text{mm} \\times 152\\text{mm}$ | $812\\text{px} \\times 1218\\text{px}$ | Bordereaux transporteurs (UPS, DHL) |\n\n---\n\n### 7. Configuration des Lecteurs : Émulation Clavier HID et Suffixes\n\n1. **Activer le Suffixe Entrée (`CR / Enter` ou `LF`)** : Scannez le code *Add Enter Suffix* de votre douchette pour valider l'ajout au panier sans toucher au clavier.\n2. **Désactiver le Délai Inter-Caractères (0ms)** pour transmettre la chaîne en un seul bloc ultra-rapide.\n3. **Mode Présentation / Détection Automatique** pour scanner les articles en main libre.\n\n---\n\n### 8. Génération et Impression de Codes-Barres dans Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) simplifie la gestion des codes-barres :\n\n1. **Génération Instantanée Code 128 et QR** pour chaque article créé dans le catalogue.\n2. **Impression d'Étiquettes en 1 Clic** : Choisissez entre rouleaux thermiques ($2.25\" \\times 1.25\"$) ou planches A4 ($30\\text{ étiquettes par page}$).\n3. **Scan en Caisse en Moins de 50ms** : Lecture instantanée dans IndexedDB local sans latence réseau.\n4. **Exports Multilingues Conformes** : Téléchargez vos catalogues de codes-barres en CSV ou PDF dans 11 langues.\n"
+  },
+  "de": {
+    "title": "Barcode- & QR-Code-Warenwirtschaft: Schritt-für-Schritt Etikettendruck & Scanner-Setup (GS1 Sunrise 2027 Bereit)",
+    "excerpt": "Technischer und operativer Praxisleitfaden zur Einführung von 1D Code 128, 2D QR-Codes, GS1 Digital Link Standards, Thermodruckern (Zebra, Brother, Rollo, Dymo) und USB/Bluetooth-Scannern für Scan-Reaktionszeiten unter 50ms und fehlerfreie Bestände.",
+    "category": "Hardware & Anleitungen",
+    "keywords": [
+      "Barcode Warenwirtschaft System Setup",
+      "GS1 Sunrise 2027 2D Barcode",
+      "QR Code Etikettendruck POS Kasse",
+      "Code 128 Barcode Generator",
+      "Thermodrucker Etiketten Zebra einrichten",
+      "USB Bluetooth Barcode Scanner Konfiguration",
+      "GS1 Digital Link Standard Handel",
+      "SKU Barcode Nomenklatur",
+      "Thermodirekt vs Thermotransfer",
+      "Barcode Scanfehler reduzieren"
+    ],
+    "tableOfContents": [
+      {
+        "id": "optical-data-capture-physics",
+        "title": "1. Physik der optischen Datenerfassung & Fehlerratenanalyse"
+      },
+      {
+        "id": "barcode-symbology-matrix",
+        "title": "2. 1D vs. 2D Barcode-Symbologien (Code 128, EAN, QR & DataMatrix)"
+      },
+      {
+        "id": "gs1-sunrise-2027-standard",
+        "title": "3. GS1 Sunrise 2027: Umstellung auf 2D-Barcodes & Digital Links"
+      },
+      {
+        "id": "sku-barcode-formatting-rules",
+        "title": "4. Master-SKU-Architektur & Barcode-Formatierungsregeln"
+      },
+      {
+        "id": "direct-thermal-vs-thermal-transfer",
+        "title": "5. Thermodruck-Technologie: Thermodirekt vs. Thermotransfer"
+      },
+      {
+        "id": "label-media-dpi-resolutions",
+        "title": "6. Etikettenformate, DPI-Auflösung & Druckdichte"
+      },
+      {
+        "id": "scanner-hardware-configuration",
+        "title": "7. Scanner-Konfiguration: HID-Tastaturemulation & Suffixe"
+      },
+      {
+        "id": "inventory-360-barcode-setup",
+        "title": "8. Barcode-Generierung & Druck in Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Physik der optischen Datenerfassung & Fehlerratenanalyse\n\nManuelle Tastatureingaben an Kassen und im Wareneingang sind die häufigste Ursache für Bestandsdiskrepanzen im Handel.\n\nIndustrielle Vergleichsstudien belegen den enormen Präzisionsunterschied:\n\n```\n[ Manuelle Tastatureingabe ] ➔ 1 Fehler alle 300 Tastenanschläge (Fehlerrate: 0,33%)\n                                         │  (Tippfehler erzeugt Geister-SKU oder Fehlbestand)\n                                         ▼\n[ 1D Code 128 Laserscan ]    ➔ 1 Fehler alle 3.000.000 Scans (Fehlerrate: 0,000033%)\n                                         │  (99,99% höhere Genauigkeit)\n                                         ▼\n[ 2D QR / DataMatrix Scan ]  ➔ 1 Fehler alle 10.500.000 Scans (Fehlerrate: 0,0000095%)\n                                            (Reed-Solomon-Fehlerkorrekturebene)\n```\n\n#### Betriebswirtschaftliche Auswirkung:\nIn einem Geschäft mit 800 Transaktionen pro Tag (4 Artikel pro Bon):\n* **Manuelle Eingabe**: Verursacht **10 bis 12 Bestandsfehler täglich** (über 3.600 falsche Bestände im Jahr).\n* **Optischer Barcode-Scan**: Verursacht **weniger als 1 Fehler alle 2,5 Jahre** und schützt die Buchhaltung vollständig.\n\n---\n\n### 2. 1D vs. 2D Barcode-Symbologien (Code 128, EAN, QR & DataMatrix)\n\n| Symbologie | Typ | Max. Datenkapazität | Fehlerkorrektur | Bester Einsatzbereich |\n| :--- | :--- | :--- | :--- | :--- |\n| **Code 128** | 1D Linear | Bis zu 128 ASCII-Zeichen | Prüfsummenvalidierung | Lagerfächer, interne Artikeletiketten, Filial-SKU |\n| **EAN-13 / UPC-A** | 1D Linear | Fest: 12 oder 13 Ziffern | Einzelne Prüfziffer | Herstellerverpackungen, weltweiter Kassenverkauf |\n| **QR Code (Model 2)** | 2D Matrix | 7.089 Ziffern / 4.296 Alphanum. | Reed-Solomon (7% bis 30% Rekonstruktion) | Kundeninteraktion, Web-URLs, Garantieseiten |\n| **GS1 DataMatrix** | 2D Matrix | 3.116 Ziffern / 2.335 Alphanum. | Hochdichte ECC 200 | Pharma, Medizintechnik, Kosmetik-Kleingebinde |\n\n---\n\n### 3. GS1 Sunrise 2027: Umstellung auf 2D-Barcodes & Digital Links\n\nDie globale Standardisierungsorganisation **GS1** hat festgelegt, dass Kassen weltweit ab **2027 (GS1 Sunrise)** **2D-Barcodes mit GS1 Digital Link** verarbeiten müssen.\n\n#### Die GS1 Digital Link Struktur:\nEin einziger 2D-QR-Code vereint Kassen-Scan und Kunden-Webseite:\n\n```\nhttps://id.marke.de/01/00850012345678/10/LOT-9921?17=261130&21=SN-883492\n │                  │  │              │  │        │  │      │  └─ Seriennummer (SN)\n │                  │  │              │  │        │  └──────┴──── Mindesthaltbarkeit (JJMMTT)\n │                  │  │              │  └────────┴────────────── Chargennummer (Lot)\n │                  │  └──────────────┴────────────────────────── Global Trade Item Number (GTIN)\n └──────────────────┴──────────────────────────────────────────── Marken-Domain\n```\n\n---\n\n### 4. Master-SKU-Architektur & Barcode-Formatierungsregeln\n\n1. **Keine mehrdeutigen Zeichen**: Vermeiden Sie `O` neben `0` sowie `I` neben kleinem `l` oder `1`.\n2. **Strikte Zeichenauswahl**: Nur Großbuchstaben `A-Z`, Ziffern `0-9` und Bindestrich (`-`).\n3. **Optimale Länge**: **8 bis 12 Zeichen** für beste Lesbarkeit auf schmalen Etiketten.\n4. **Hierarchische Struktur**:\n   $$\\text{SKU-Format} = \\text{[Abteilung]}-\\text{[Kategorie]}-\\text{[Attribut]}-\\text{[Nummer]}$$\n\n#### Praxis-Beispiele:\n* Bio-Kaffee 350ml: `BEV-COF-12Z-01`\n* Herren-Leinenhemd Navy M: `APP-SHT-NVM-04`\n* Ergonomische Funkmaus Grau: `HDW-INP-GRY-08`\n\n---\n\n### 5. Thermodruck-Technologie: Thermodirekt vs. Thermotransfer\n\n```\n                      ┌─────────────────────────────────────────┐\n                      │        THERMODRUCK-TECHNOLOGIEN         │\n                      └────────────────────┬────────────────────┘\n                                           │\n                    ┌──────────────────────┴──────────────────────┐\n                    ▼                                             ▼\n        [ THERMODIREKT (TD) ]                         [ THERMOTRANSFER (TT) ]\n  ├── Hitze verfärbt thermosensitives Papier    ├── Thermodruckkopf schmilzt Farbband (Ribbon)\n  ├── Kein Farbband, keine Tinte erforderlich   ├── Erfordert Wachs- oder Harz-Farbband\n  ├── Haltbarkeit: 6 bis 12 Monate              ├── Haltbarkeit: 5 bis über 20 Jahre\n  └── Verblasst bei Licht, Wärme und Reibung    └── Beständig gegen Chemikalien, UV & Frost\n```\n\n---\n\n### 6. Etikettenformate, DPI-Auflösung & Druckdichte\n\n$$\\text{Pixelbreite} = \\text{Breite in Zoll} \\times \\text{Drucker-DPI}$$\n\n#### Gängige Formate bei 203 DPI:\n* **Kleinetikett / Schmuck**: $1.50\" \\times 0.50\"$ ($304\\text{px} \\times 101\\text{px}$)\n* **Standard-Artikeletikett**: $2.25\" \\times 1.25\"$ ($456\\text{px} \\times 253\\text{px}$)\n* **Lagerplatz-Etikett**: $4.00\" \\times 2.00\"$ ($812\\text{px} \\times 406\\text{px}$)\n* **Versandetikett**: $4.00\" \\times 6.00\"$ ($812\\text{px} \\times 1218\\text{px}$)\n\n---\n\n### 7. Scanner-Konfiguration: HID-Tastaturemulation & Suffixe\n\n1. **Enter-Suffix aktivieren (`CR / Enter`)**: Programmieren Sie das Suffix über das Handbuch, um Scans sofort ohne Tastaturdruck in den Warenkorb zu übernehmen.\n2. **Zeichenverzögerung auf `0ms` setzen** für blitzschnelle Datenübertragung.\n3. **Präsentationsmodus aktivieren** für freihändiges Scannen an der Kasse.\n\n---\n\n### 8. Barcode-Generierung & Druck in Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) macht Barcode-Verwaltung einfach:\n\n1. **Automatische Vektorgenerierung** von Code 128 und QR-Codes für alle Artikel.\n2. **1-Klick-Druck**: Ausgabe auf Thermorollen ($2.25\" \\times 1.25\"$) oder A4-Bögen.\n3. **Scan unter 50ms**: Kassenbuchungen in unter 15ms dank lokalem IndexedDB.\n4. **Mehrsprachige Exporte**: Barcode-Kataloge als CSV und PDF in 11 Sprachen.\n"
+  },
+  "hi": {
+    "title": "बारकोड और क्यूआर कोड इन्वेंटरी सिस्टम: स्टेप-बाय-स्टेप लेबल प्रिंटिंग और स्कैनिंग सेटअप (GS1 Sunrise 2027 रेडी)",
+    "excerpt": "1D कोड 128, 2D क्यूआर कोड, GS1 डिजिटल लिंक मानक, थर्मल लेबल प्रिंटर (Zebra, Brother, Rollo, Dymo) और 50ms से कम में सटीक स्टॉक स्कैनिंग के लिए संपूर्ण गाइड।",
+    "category": "हार्डवेयर और गाइड",
+    "keywords": [
+      "बारकोड इन्वेंटरी सिस्टम सेटअप",
+      "GS1 Sunrise 2027 2D बारकोड",
+      "क्यूआर कोड लेबल प्रिंटिंग पीओएस",
+      "कोड 128 बारकोड जनरेटर",
+      "थर्मल लेबल प्रिंटर Zebra सेटअप",
+      "यूएसबी ब्लूटूथ बारकोड स्कैनर कॉन्फ़िगरेशन",
+      "GS1 डिजिटल लिंक रिटेल मानक",
+      "SKU बारकोड नामकरण नियम",
+      "डायरेक्ट थर्मल बनाम थर्मल ट्रांसफर",
+      "बारकोड स्कैनिंग त्रुटि निवारण"
+    ],
+    "tableOfContents": [
+      {
+        "id": "optical-data-capture-physics",
+        "title": "1. ऑप्टिकल डेटा कैप्चर का विज्ञान और त्रुटि दर विश्लेषण"
+      },
+      {
+        "id": "barcode-symbology-matrix",
+        "title": "2. 1D बनाम 2D बारकोड प्रकार (Code 128, EAN, QR और DataMatrix)"
+      },
+      {
+        "id": "gs1-sunrise-2027-standard",
+        "title": "3. GS1 Sunrise 2027: 2D बारकोड और डिजिटल लिंक की ओर बदलाव"
+      },
+      {
+        "id": "sku-barcode-formatting-rules",
+        "title": "4. मास्टर SKU संरचना और बारकोड फ़ॉर्मेटिंग नियम"
+      },
+      {
+        "id": "direct-thermal-vs-thermal-transfer",
+        "title": "5. थर्मल प्रिंटिंग तकनीक: डायरेक्ट थर्मल बनाम थर्मल ट्रांसफर"
+      },
+      {
+        "id": "label-media-dpi-resolutions",
+        "title": "6. लेबल साइज, DPI रेजोल्यूशन और प्रिंट डेंसिटी"
+      },
+      {
+        "id": "scanner-hardware-configuration",
+        "title": "7. हार्डवेयर स्कैनर कॉन्फ़िगरेशन: HID कीबोर्ड और सफिक्स"
+      },
+      {
+        "id": "inventory-360-barcode-setup",
+        "title": "8. Inventory 360 में बारकोड जनरेशन और प्रिंटिंग"
+      }
+    ],
+    "content": "\n### 1. ऑप्टिकल डेटा कैप्चर का विज्ञान और त्रुटि दर विश्लेषण\n\nरिटेल बिलिंग काउंटर और वेयरहाउस में कीबोर्ड से मैनुअल टाइपिंग स्टॉक रिकॉर्ड खराब होने का सबसे बड़ा कारण है।\n\nवैज्ञानिक अध्ययन मानव टाइपिंग और ऑप्टिकल बारकोड स्कैनिंग में जमीन-आसमान का अंतर दिखाते हैं:\n\n```\n[ हाथ से कीबोर्ड टाइपिंग ] ➔ हर 300 कीस्ट्रोक्स पर 1 गलती (0.33% त्रुटि दर)\n                                     │  (गलती से गलत SKU दर्ज होता है)\n                                     ▼\n[ 1D Code 128 लेजर स्कैन ]  ➔ 30,00,000 स्कैन में सिर्फ 1 गलती (0.000033% त्रुटि दर)\n                                     │  (99.99% सटीकता सुधार)\n                                     ▼\n[ 2D QR / DataMatrix स्कैन ] ➔ 1,05,00,000 स्कैन में सिर्फ 1 गलती (0.0000095% दर)\n                                        (रीड-सोलोमन एरर करेक्शन लेयर)\n```\n\nप्रतिदिन 800 ग्राहकों वाली दुकान में मैनुअल एंट्री से रोजाना 10-12 गलतियां होती हैं, जबकि बारकोड स्कैनर से 2.5 साल में 1 से भी कम गलती होती है।\n\n---\n\n### 2. 1D बनाम 2D बारकोड प्रकार (Code 128, EAN, QR और DataMatrix)\n\n| प्रकार | सिम्बोलॉजी | अधिकतम डेटा क्षमता | एरर करेक्शन | सबसे अच्छा उपयोग |\n| :--- | :--- | :--- | :--- | :--- |\n| **Code 128** | 1D लीनियर | 128 ASCII कैरेक्टर तक | चेकसम वेरिफिकेशन | आंतरिक स्टोर इन्वेंटरी, रैक लेबल, SKU |\n| **EAN-13 / UPC-A** | 1D लीनियर | 12 या 13 अंक | सिंगल चेक डिजिट | निर्माता पैकेजिंग, वैश्विक खुदरा पीओएस |\n| **QR Code (मॉडल 2)** | 2D मैट्रिक्स | 7,089 अंक / 4,296 अक्षर | रीड-सोलोमन (7% से 30% रिकवरी) | ग्राहक जुड़ाव, वेबसाइट यूआरएल, वारंटी |\n| **GS1 DataMatrix** | 2D मैट्रिक्स | 3,116 अंक / 2,335 अक्षर | उच्च घनत्व ECC 200 | दवाएं, सर्जिकल उपकरण, छोटे कॉस्मेटिक |\n\n---\n\n### 3. GS1 Sunrise 2027: 2D बारकोड और डिजिटल लिंक की ओर बदलाव\n\nवैश्विक मानक संस्था **GS1** के निर्देशानुसार वर्ष **2027 (GS1 Sunrise पहल)** से सभी रिटेल स्टोर्स में **GS1 Digital Link आधारित 2D बारकोड** स्वीकार किए जाएंगे।\n\n```\nhttps://id.brand.com/01/00850012345678/10/LOT-9921?17=261130&21=SN-883492\n │                   │  │              │  │        │  │      │  └─ सीरियल नंबर (SN)\n │                   │  │              │  │        │  └──────┴──── समाप्ति तिथि (YYMMDD)\n │                   │  │              │  └────────┴────────────── लॉट / बैच नंबर\n │                   │  └──────────────┴────────────────────────── GTIN उत्पाद कोड\n └───────────────────┴──────────────────────────────────────────── ब्रांड वेब डोमेन\n```\n\n---\n\n### 4. मास्टर SKU संरचना और बारकोड फ़ॉर्मेटिंग नियम\n\n1. **अस्पष्ट अक्षरों से बचें**: `O` और `0` या `I` और `1` को एक साथ न रखें।\n2. **सरल अक्षर**: केवल बड़े अक्षर `A-Z`, संख्याएं `0-9` और हाइफ़न (`-`) का प्रयोग करें।\n3. **सही लंबाई**: 8 से 12 कैरेक्टर।\n4. **फॉर्मूला**: `[विभाग]-[श्रेणी]-[विशेषता]-[क्रम संख्या]` (उदा. `BEV-COF-12Z-01`)।\n\n---\n\n### 5. थर्मल प्रिंटिंग तकनीक: डायरेक्ट थर्मल बनाम थर्मल ट्रांसफर\n\n```\n                      ┌─────────────────────────────────────────┐\n                      │          थर्मल प्रिंटिंग तकनीक          │\n                      └────────────────────┬────────────────────┘\n                                           │\n                    ┌──────────────────────┴──────────────────────┐\n                    ▼                                             ▼\n        [ डायरेक्ट थर्मल (DT) ]                      [ थर्मल ट्रांसफर (TT) ]\n  ├── गर्मी से पेपर पर प्रिंटिंग होती है         ├── रिबन को पिघलाकर प्रिंटिंग होती है\n  ├── किसी रिबन या स्याही की जरूरत नहीं         ├── वैक्स/रेसिन रिबन की आवश्यकता\n  ├── लाइफ: 6 से 12 महीने                        ├── लाइफ: 5 से 20+ वर्ष\n  └── धूप और गर्मी में मिट जाता है               └── पानी, केमिकल और धूप प्रतिरोधी\n```\n\n---\n\n### 6. लेबल साइज, DPI रेजोल्यूशन और प्रिंट डेंसिटी\n\n* **ज्वेलरी / छोटा टैग**: $1.50\" \\times 0.50\"$ ($304\\text{px} \\times 101\\text{px}$)\n* **मानक उत्पाद बारकोड**: $2.25\" \\times 1.25\"$ ($456\\text{px} \\times 253\\text{px}$)\n* **वेयरहाउस शेल्फ लेबल**: $4.00\" \\times 2.00\"$ ($812\\text{px} \\times 406\\text{px}$)\n* **शिपिंग पार्सल लेबल**: $4.00\" \\times 6.00\"$ ($812\\text{px} \\times 1218\\text{px}$)\n\n---\n\n### 7. हार्डवेयर स्कैनर कॉन्फ़िगरेशन: HID कीबोर्ड और सफिक्स\n\n1. **Enter सफिक्स ऑन करें**: स्कैनर मैनुअल से *Add Enter Suffix* बारकोड स्कैन करें ताकि स्कैन करते ही आइटम बिल में जुड़ जाए।\n2. **कैरेक्टर डिले 0ms रखें**।\n3. **ऑटो-सेंसिंग / प्रेजेंटेशन मोड चालू करें**।\n\n---\n\n### 8. Inventory 360 में बारकोड जनरेशन और प्रिंटिंग\n\n[Inventory 360](https://www.inventory360.shop) बारकोड प्रबंधन को आसान बनाता है:\n1. कैटलॉग में उत्पाद जोड़ते ही Code 128 और QR कोड अपने-आप बन जाते हैं।\n2. 1-क्लिक में थर्मल रोल या A4 शीट पर बारकोड लेबल प्रिंट करें।\n3. पीओएस बिलिंग में 15ms से भी कम समय में ऑफलाइन स्कैनिंग।\n4. 11 भाषाओं में बारकोड कैटलॉग डाउनलोड।\n"
+  },
+  "ja": {
+    "title": "バーコード＆QRコード在庫管理システム：ラベル印刷・スキャナー完全導入ガイド（GS1 Sunrise 2027対応）",
+    "excerpt": "1D Code 128、2D QRコード、GS1 Digital Link標準、サーマルプリンター（Zebra, Brother, Rollo, Dymo）、USB/Bluetoothスキャナーによる50ms以下の爆速読み取りと在庫ズレ撲滅の運用設計図。",
+    "category": "ハードウェア＆ガイド",
+    "keywords": [
+      "バーコード 在庫管理 システム 導入",
+      "GS1 Sunrise 2027 2次元バーコード",
+      "QRコード ラベル印刷 レジ",
+      "Code 128 バーコード 作成",
+      "サーマルプリンター Zebra 設定",
+      "USB Bluetooth バーコードリーダー 設定",
+      "GS1 デジタルリンク 小売規格",
+      "SKU バーコード 採番ルール",
+      "感熱式 熱転写式 違い",
+      "バーコード 読み取りエラー 防止"
+    ],
+    "tableOfContents": [
+      {
+        "id": "optical-data-capture-physics",
+        "title": "1. 光学データ読み取りの科学とエラー率比較"
+      },
+      {
+        "id": "barcode-symbology-matrix",
+        "title": "2. 1D vs. 2Dバーコード規格比較（Code 128, JAN, QR, DataMatrix）"
+      },
+      {
+        "id": "gs1-sunrise-2027-standard",
+        "title": "3. GS1 Sunrise 2027：2次元コード・デジタルリンク移行計画"
+      },
+      {
+        "id": "sku-barcode-formatting-rules",
+        "title": "4. マスターSKU設計とバーコード文字列の命名規則"
+      },
+      {
+        "id": "direct-thermal-vs-thermal-transfer",
+        "title": "5. サーマル印刷方式：感熱式（ダイレクト）vs. 熱転写式"
+      },
+      {
+        "id": "label-media-dpi-resolutions",
+        "title": "6. ラベルサイズ・解像度（DPI）・印刷密度の最適化"
+      },
+      {
+        "id": "scanner-hardware-configuration",
+        "title": "7. スキャナー機器設定：HIDキーボードエミュレーションと接尾辞"
+      },
+      {
+        "id": "inventory-360-barcode-setup",
+        "title": "8. Inventory 360でのバーコード発行と印刷運用"
+      }
+    ],
+    "content": "\n### 1. 光学データ読み取りの科学とエラー率比較\n\n店舗レジや倉庫でのキーボード手入力は、在庫データの不整合（棚卸差異）を生む最大の要因です。\n\n工学的な検証データは、手入力とバーコードスキャンの圧倒的な精度の差を示しています：\n\n```\n[ キーボード手入力 ]       ➔ 300キーストロークに1回のエラー（エラー率：0.33%）\n                                     │  (打ち間違いによる幽霊在庫・数量不一致)\n                                     ▼\n[ 1D Code 128 レーザー ]   ➔ 3,000,000スキャンに1回のエラー（エラー率：0.000033%）\n                                     │  (精度99.99%向上)\n                                     ▼\n[ 2D QR / DataMatrix ]     ➔ 10,500,000スキャンに1回のエラー（エラー率：0.0000095%）\n                                        (リード・ソロモン誤り訂正技術)\n```\n\n1日800回の会計を行う店舗では、手入力だと毎日10〜12件の帳簿ズレが発生しますが、バーコードスキャンなら2.5年に1回未満に激減します。\n\n---\n\n### 2. 1D vs. 2Dバーコード規格比較（Code 128, JAN, QR, DataMatrix）\n\n| 規格 | タイプ | 最大容量 | 誤り訂正 | 最適な利用シーン |\n| :--- | :--- | :--- | :--- | :--- |\n| **Code 128** | 1Dリニア | 最大128文字 (ASCII) | チェックサム検証 | 社内在庫管理、棚番ラベル、独自商品SKU |\n| **JAN / EAN-13** | 1Dリニア | 固定13桁または8桁 | チェックデジット | 市販品パッケージ、世界共通POSレジ会計 |\n| **QRコード (Model 2)**| 2Dマトリクス | 数字7,089字 / 英数4,296字 | リード・ソロモン (7%〜30%復元) | 顧客エンゲージメント、Web URL誘導、保証書 |\n| **GS1 DataMatrix** | 2Dマトリクス | 数字3,116字 / 英数2,335字 | 高密度 ECC 200 | 医薬品、医療機器、超小型化粧品容器 |\n\n---\n\n### 3. GS1 Sunrise 2027：2次元コード・デジタルリンク移行計画\n\n国際標準化機関**GS1**のロードマップにより、**2027年（GS1 Sunrise）**までに世界中のPOSレジが**GS1 Digital Link対応2次元コード**へ移行します。\n\n```\nhttps://id.brand.com/01/00850012345678/10/LOT-9921?17=261130&21=SN-883492\n │                   │  │              │  │        │  │      │  └─ 個体シリアル番号 (SN)\n │                   │  │              │  │        │  └──────┴──── 賞味期限 (YYMMDD)\n │                   │  │              │  └────────┴────────────── 製造ロット番号\n │                   │  └──────────────┴────────────────────────── GTIN商品コード\n └───────────────────┴──────────────────────────────────────────── ブランド公式ドメイン\n```\n\n---\n\n### 4. マスターSKU設計とバーコード文字列の命名規則\n\n1. **混同しやすい文字の排除**：`O`と`0`、`I`と`1`などを併用しない。\n2. **使用可能文字の制限**：半角英大文字 `A-Z`、数字 `0-9`、ハイフン (`-`) のみ。\n3. **最適な文字数**：8〜12文字。\n4. **階層的命名フォーマット**：`[部門]-[カテゴリ]-[属性]-[連番]`（例：`BEV-COF-12Z-01`）。\n\n---\n\n### 5. サーマル印刷方式：感熱式（ダイレクト）vs. 熱転写式\n\n```\n                      ┌─────────────────────────────────────────┐\n                      │          サーマルラベル印刷技術         │\n                      └────────────────────┬────────────────────┘\n                                           │\n                    ┌──────────────────────┴──────────────────────┐\n                    ▼                                             ▼\n        [ 感熱式（ダイレクトサーマル） ]              [ 熱転写式（サーマルトランスファー） ]\n  ├── 熱で感熱紙を発色させる                    ├── サーマルヘッドでインクリボンを溶かす\n  ├── インク・トナー・リボン不要                ├── ワックス/レジンリボンが必要\n  ├── 耐用期間：6〜12ヶ月                       ├── 耐用期間：5年〜20年以上\n  └── 熱・日光・摩擦で退色する                  └── 耐薬品・耐水・耐光・冷凍対応\n```\n\n---\n\n### 6. ラベルサイズ・解像度（DPI）・印刷密度の最適化\n\n* **ジュエリー・小物用**：$1.50\" \\times 0.50\"$ ($304\\text{px} \\times 101\\text{px}$)\n* **標準商品バーコード**：$2.25\" \\times 1.25\"$ ($456\\text{px} \\times 253\\text{px}$)\n* **倉庫ロケーション棚番**：$4.00\" \\times 2.00\"$ ($812\\text{px} \\times 406\\text{px}$)\n* **配送送り状**：$4.00\" \\times 6.00\"$ ($812\\text{px} \\times 1218\\text{px}$)\n\n---\n\n### 7. スキャナー機器設定：HIDキーボードエミュレーションと接尾辞\n\n1. **Enter接尾辞（CR / LF）の有効化**：スキャンと同時に自動でカートに追加。\n2. **文字間ディレイを `0ms` に設定**：一瞬で文字列を送信。\n3. **プレゼンテーションモード（自動検知）の活用**：両手を使ったスムーズなレジ作業。\n\n---\n\n### 8. Inventory 360でのバーコード発行と印刷運用\n\n[Inventory 360](https://www.inventory360.shop) なら手軽に導入可能：\n1. 商品登録時にCode 128とQRコードを自動生成。\n2. サーマルロールまたはA4シートへワンクリック印刷。\n3. ローカルIndexedDBによる15ms以下の超高速レジスキャン。\n4. 11言語対応のバーコードカタログ出力。\n"
+  },
+  "zh": {
+    "title": "条形码与二维码库存系统全景指南：标签打印与扫码枪配置实战（全面就绪 GS1 Sunrise 2027）",
+    "excerpt": "涵盖 1D Code 128、2D 二维码、GS1 Digital Link 国际标准、热敏标签打印机（Zebra, Brother, Rollo, Dymo）及扫码枪硬件配置，实现 50ms 级极速识别与零差错库存核算。",
+    "category": "硬件与实操指南",
+    "keywords": [
+      "条形码库存管理系统配置",
+      "GS1 Sunrise 2027 二维码标准",
+      "收银台二维码标签打印",
+      "Code 128 条形码生成器",
+      "斑马热敏打印机标签设置 Zebra",
+      "USB 蓝牙扫码枪硬件配置",
+      "GS1 Digital Link 零售标准",
+      "SKU 条码编码命名规范",
+      "热敏打印与热转印区别",
+      "消除条形码扫码录入错误"
+    ],
+    "tableOfContents": [
+      {
+        "id": "optical-data-capture-physics",
+        "title": "1. 光学数据采集物理学原理与录入错误率分析"
+      },
+      {
+        "id": "barcode-symbology-matrix",
+        "title": "2. 一维码 vs 二维码码制对比（Code 128、EAN、QR 与 DataMatrix）"
+      },
+      {
+        "id": "gs1-sunrise-2027-standard",
+        "title": "3. GS1 Sunrise 2027：向二维码与数字链接（Digital Link）演进"
+      },
+      {
+        "id": "sku-barcode-formatting-rules",
+        "title": "4. 主数据 SKU 架构与条码字符串格式化黄金法则"
+      },
+      {
+        "id": "direct-thermal-vs-thermal-transfer",
+        "title": "5. 热敏打印技术深度剖析：热敏（DT） vs 热转印（TT）"
+      },
+      {
+        "id": "label-media-dpi-resolutions",
+        "title": "6. 标签介质规格、DPI 分辨率与打印密度测算"
+      },
+      {
+        "id": "scanner-hardware-configuration",
+        "title": "7. 扫码枪硬件配置：HID 键盘仿真与回车后缀"
+      },
+      {
+        "id": "inventory-360-barcode-setup",
+        "title": "8. 在 Inventory 360 中落地条码生成与标签打印"
+      }
+    ],
+    "content": "\n### 1. 光学数据采集物理学原理与录入错误率分析\n\n在收银前台和仓库收货码头，员工通过键盘手动敲击录入是导致账实不符与库存台账污染的第一大源头。\n\n工业工程实证研究揭示了人工手动输入与光学条码扫描之间触目惊心的准确率差距：\n\n```\n[ 人工键盘手动录入 ] ➔ 每 300 次击键即产生 1 次错误（错误率高达 0.33%）\n                                     │  (敲错字母导致生成幽灵 SKU 或库存虚增虚减)\n                                     ▼\n[ 1D Code 128 激光扫描 ] ➔ 每 3,000,000 次扫描仅产生 1 次错误（错误率：0.000033%）\n                                     │  (准确度提升 99.99%)\n                                     ▼\n[ 2D 二维矩阵扫码 ]     ➔ 每 10,500,000 次扫描仅产生 1 次错误（错误率：0.0000095%）\n                                        (底层搭载 Reed-Solomon 里德-所罗门纠错算法)\n```\n\n#### 运营层面的真实代价：\n一家日均处理 800 笔交易（每单平均 4 件商品）的零售门店：\n* **人工手动录入**：每天产生 **10 至 12 笔库存记录差错**（一年累计污染超 3600 条商品台账）。\n* **光学条码扫描**：平均 **2.5 年才可能发生 1 次偶发错误**，100% 捍卫库存总账的真实性。\n\n---\n\n### 2. 一维码 vs 二维码码制对比（Code 128、EAN、QR 与 DataMatrix）\n\n| 码制名称 | 维度类型 | 最大数据容量 | 纠错容错机制 | 零售最佳应用场景 |\n| :--- | :--- | :--- | :--- | :--- |\n| **Code 128** | 一维线性 | 最高 128 个 ASCII 字符 | 校验和（Checksum）自动校验 | 内部仓库货位、商品价签、企业自编 SKU |\n| **EAN-13 / UPC-A** | 一维线性 | 固定 12 或 13 位纯数字 | 单一校验位（Check Digit） | 品牌原厂包装、全球通用商超 POS 结算 |\n| **QR Code (Model 2)** | 二维矩阵 | 7089 纯数字 / 4296 字符 | Reed-Solomon (7%至30%破损恢复) | 消费者扫码、防伪追溯、保修手册链接 |\n| **GS1 DataMatrix** | 二维矩阵 | 3116 纯数字 / 2335 字符 | 超高密度 ECC 200 | 医药针剂、手术器械、微型美妆包材 |\n\n---\n\n### 3. GS1 Sunrise 2027：向二维码与数字链接（Digital Link）演进\n\n国际物品编码组织 **GS1** 已明确提出 **2027 战略（GS1 Sunrise 倡议）**：全球零售 POS 收银终端全面过渡至兼容 **基于 GS1 Digital Link 的二维码**。\n\n#### GS1 Digital Link 编码结构：\n一个二维码融合了传统条形码结算与消费者营销页面：\n\n```\nhttps://id.brand.com/01/00850012345678/10/LOT-9921?17=261130&21=SN-883492\n │                   │  │              │  │        │  │      │  └─ 单品唯一序列号 (SN)\n │                   │  │              │  │        │  └──────┴──── 保质期截止 (YYMMDD)\n │                   │  │              │  └────────┴────────────── 生产批次号 (Lot)\n │                   │  └──────────────┴────────────────────────── 全球商品代码 (GTIN)\n └───────────────────┴──────────────────────────────────────────── 品牌官方域名解析\n```\n\n---\n\n### 4. 主数据 SKU 架构与条码字符串格式化黄金法则\n\n1. **消除易混淆字符**：严禁同时使用字母 `O` 与数字 `0`，或大写 `I` 与小写 `l`、数字 `1`。\n2. **纯粹字母数字**：仅限大写 `A-Z`、数字 `0-9` 和短横线 (`-`)。\n3. **黄金字符长度**：控制在 **8 至 12 个字符**。\n4. **层级化语义前缀公式**：`[部门]-[分类]-[属性]-[流水号]`（例如：`BEV-COF-12Z-01`）。\n\n---\n\n### 5. 热敏打印技术深度剖析：热敏（DT） vs 热转印（TT）\n\n```\n                      ┌─────────────────────────────────────────┐\n                      │          标签热敏打印核心技术           │\n                      └────────────────────┬────────────────────┘\n                                           │\n                    ┌──────────────────────┴──────────────────────┐\n                    ▼                                             ▼\n          [ 热敏打印 (Direct Thermal) ]                 [ 热转印 (Thermal Transfer) ]\n  ├── 打印头加热使热敏化学涂层显色              ├── 打印头加热熔化碳带（Ribbon）附着\n  ├── 无需碳带、墨水或色带                      ├── 必须使用蜡基、混合基或树脂碳带\n  ├── 标签寿命：6 至 12 个月                    ├── 标签寿命：5 年至 20 年以上\n  └── 受热、日晒及摩擦易发黑变淡                └── 耐刮擦、耐腐蚀、抗 UV、耐冷冻\n```\n\n---\n\n### 6. 标签介质规格、DPI 分辨率与打印密度测算\n\n$$\\text{像素宽度} = \\text{物理宽度 (英寸)} \\times \\text{打印机 DPI}$$\n\n#### 常见 203 DPI 标签规格像素换算：\n* **微型价签（珠宝/眼镜）**：$1.50\" \\times 0.50\"$ ($304\\text{px} \\times 101\\text{px}$)\n* **标准商品标签**：$2.25\" \\times 1.25\"$ ($456\\text{px} \\times 253\\text{px}$)\n* **仓库货位库位标签**：$4.00\" \\times 2.00\"$ ($812\\text{px} \\times 406\\text{px}$)\n* **物流面单**：$4.00\" \\times 6.00\"$ ($812\\text{px} \\times 1218\\text{px}$)\n\n---\n\n### 7. 扫码枪硬件配置：HID 键盘仿真与回车后缀\n\n1. **开启回车后缀（`CR / Enter`）**：扫描说明书上的 *Add Enter Suffix* 条码，扫码后自动提交表单，无需手动敲击回车。\n2. **将字符间延迟设为 `0ms`**。\n3. **开启感应连扫 / 演示模式（Presentation Mode）**。\n\n---\n\n### 8. 在 Inventory 360 中落地条码生成与标签打印\n\n[Inventory 360](https://www.inventory360.shop) 提供开箱即用的条码解决方案：\n1. **自动生成矢量条码**：录入商品时即刻生成高清 Code 128 与二维码。\n2. **一键排版打印**：支持标准热敏卷纸 ($2.25\" \\times 1.25\"$) 及 A4 多拼格式。\n3. **50ms 极速扫码结算**：本地 IndexedDB 毫秒级响应，离线环境下依然畅通无阻。\n4. **多语言条码报表导出**：支持以 11 种语言导出 CSV 及 PDF 条码价签。\n"
+  },
+  "ar": {
+    "title": "أنظمة الباركود ورمز الاستجابة السريعة (QR): دليل طباعة الملصقات وإعداد أجهزة المسح (جاهز لـ GS1 Sunrise 2027)",
+    "excerpt": "دليل هندسي وتشغيلي شامل لتطبيق باركود 1D Code 128 ورموز 2D QR ومعايير GS1 Digital Link مع طابعات الملصقات الحرارية وأجهزة المسح لقراءة فائقة السرعة في أقل من 50 مللي ثانية.",
+    "category": "الأجهزة والأدلة",
+    "keywords": [
+      "إعداد نظام باركود المخزون",
+      "باركود ثنائي الأبعاد GS1 Sunrise 2027",
+      "طباعة ملصقات QR لنقاط البيع",
+      "مولد باركود Code 128",
+      "إعداد طابعة الملصقات الحرارية Zebra",
+      "تكوين قارئ باركود USB بلوتوث",
+      "معيار التجزئة GS1 Digital Link",
+      "قواعد تسمية باركود SKU",
+      "الطباعة الحرارية المباشرة والتحويل الحراري",
+      "منع أخطاء قراءة الباركود"
+    ],
+    "tableOfContents": [
+      {
+        "id": "optical-data-capture-physics",
+        "title": "1. علم التقاط البيانات البصرية وتحليل معدلات الخطأ"
+      },
+      {
+        "id": "barcode-symbology-matrix",
+        "title": "2. مقارنة أنواع الباركود 1D و 2D (Code 128, EAN, QR, DataMatrix)"
+      },
+      {
+        "id": "gs1-sunrise-2027-standard",
+        "title": "3. معيار GS1 Sunrise 2027: التحول إلى الرموز ثنائية الأبعاد"
+      },
+      {
+        "id": "sku-barcode-formatting-rules",
+        "title": "4. هيكلة رموز SKU وقواعد تنسيق الباركود"
+      },
+      {
+        "id": "direct-thermal-vs-thermal-transfer",
+        "title": "5. تكنولوجيا الطباعة الحرارية: الحراري المباشر مقابل التحويل الحراري"
+      },
+      {
+        "id": "label-media-dpi-resolutions",
+        "title": "6. مقاسات الملصقات ودقة الطباعة (DPI)"
+      },
+      {
+        "id": "scanner-hardware-configuration",
+        "title": "7. إعداد أجهزة المسح: محاكاة لوحة المفاتيح واللواحق"
+      },
+      {
+        "id": "inventory-360-barcode-setup",
+        "title": "8. توليد وطباعة الباركود في نظام Inventory 360"
+      }
+    ],
+    "content": "\n### 1. علم التقاط البيانات البصرية وتحليل معدلات الخطأ\n\nيعد الإدخال اليدوي للأرقام عبر لوحة المفاتيح في نقاط البيع والمستودعات السبب الأول في تلف سجلات المخزون وظهور البضائع الوهمية.\n\nتظهر الدراسات فارقاً هائلاً في الدقة بين الإدخال اليدوي والمسح الضوئي:\n\n```\n[ الإدخال اليدوي باللوحة ] ➔ خطأ واحد لكل 300 ضغطة مفتاح (معدل خطأ 0.33%)\n                                    │  (الخطأ المطبعي ينشئ صنفاً وهمياً أو رصيداً خاطئاً)\n                                    ▼\n[ المسح الضوئي 1D Code 128 ] ➔ خطأ واحد لكل 3,000,000 عملية مسح (0.000033%)\n                                    │  (تحسين الدقة بنسبة 99.99%)\n                                    ▼\n[ المسح الضوئي 2D QR / DM ]  ➔ خطأ واحد لكل 10,500,000 عملية مسح (0.0000095%)\n                                       (طبقة تصحيح الأخطاء Reed-Solomon)\n```\n\n---\n\n### 2. مقارنة أنواع الباركود 1D و 2D (Code 128, EAN, QR, DataMatrix)\n\n| النوع | الأبعاد | أقصى سعة بيانات | تصحيح الخطأ | أفضل استخدام |\n| :--- | :--- | :--- | :--- | :--- |\n| **Code 128** | 1D خطي | حتى 128 محرف ASCII | فحص المجموع Checksum | المخزون الداخلي، رفوف المستودعات، أكواد SKU |\n| **EAN-13 / UPC-A** | 1D خطي | 12 أو 13 رقماً | رقم تحقق مفرد | عبوات المصانع، نقاط البيع العالمية |\n| **QR Code (Model 2)** | 2D مصفوفي | 7,089 رقم / 4,296 حرف | Reed-Solomon (استعادة حتى 30%) | تفاعل العملاء، الروابط، الضمان |\n| **GS1 DataMatrix** | 2D مصفوفي | 3,116 رقم / 2,335 حرف | كثافة عالية ECC 200 | الأدوية، الأدوات الطبية، مستحضرات التجميل |\n\n---\n\n### 3. معيار GS1 Sunrise 2027: التحول إلى الرموز ثنائية الأبعاد\n\nألزمت منظمة **GS1** العالمية أن تقبل نقاط البيع بحلول عام **2027 (مبادرة GS1 Sunrise)** رموز **2D المدعومة بـ GS1 Digital Link**.\n\n```\nhttps://id.brand.com/01/00850012345678/10/LOT-9921?17=261130&21=SN-883492\n │                   │  │              │  │        │  │      │  └─ الرقم التسلسلي (SN)\n │                   │  │              │  │        │  └──────┴──── تاريخ الانتهاء (YYMMDD)\n │                   │  │              │  └────────┴────────────── رقم التشغيلة / الدفعة\n │                   │  └──────────────┴────────────────────────── كود الصنف العالمي (GTIN)\n └───────────────────┴──────────────────────────────────────────── نطاق العلامة التجارية\n```\n\n---\n\n### 4. هيكلة رموز SKU وقواعد تنسيق الباركود\n\n1. تجنب الحروف المتشابهة مثل `O` و `0` أو `I` و `1`.\n2. استخدام الحروف الكبيرة `A-Z` والأرقام `0-9` والشرطة (`-`).\n3. الطول المثالي بين 8 إلى 12 محرفاً.\n4. الهيكل: `[القسم]-[الفئة]-[الخاصية]-[الرقم]` (مثل: `BEV-COF-12Z-01`).\n\n---\n\n### 5. تكنولوجيا الطباعة الحرارية: الحراري المباشر مقابل التحويل الحراري\n\n* **الحراري المباشر (Direct Thermal)**: بدون شريط حبر، عمر الملصق 6-12 شهراً، مثالي لملصقات الشحن ونقاط البيع السريعة.\n* **التحويل الحراري (Thermal Transfer)**: يستخدم شريط ريبون، عمره من 5 إلى 20 عاماً، مقاوم للحرارة والرطوبة والتجميد.\n\n---\n\n### 6. مقاسات الملصقات ودقة الطباعة (DPI)\n\n* **ملصق مجوهرات صغير**: $1.50\" \\times 0.50\"$ ($304\\text{px} \\times 101\\text{px}$)\n* **ملصق منتج قياسي**: $2.25\" \\times 1.25\"$ ($456\\text{px} \\times 253\\text{px}$)\n* **ملصق رفوف المستودع**: $4.00\" \\times 2.00\"$ ($812\\text{px} \\times 406\\text{px}$)\n* **بوليصة شحن**: $4.00\" \\times 6.00\"$ ($812\\text{px} \\times 1218\\text{px}$)\n\n---\n\n### 7. إعداد أجهزة المسح: محاكاة لوحة المفاتيح واللواحق\n\n1. تفعيل لاحقة الإدخال (`Enter / CR`) لإضافة المنتج للسلة تلقائياً دون لمس لوحة المفاتيح.\n2. ضبط تأخير الأحرف على `0ms`.\n3. تفعيل وضع المسح التلقائي المستمر.\n\n---\n\n### 8. توليد وطباعة الباركود في نظام Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) يوفر لك:\n1. إنشاء باركود Code 128 و QR فورياً لكل صنف.\n2. طباعة بنقرة واحدة على ورق الرول أو الورق مقاس A4.\n3. مسح سريع في أقل من 50 مللي ثانية بدون إنترنت.\n4. تصدير كتالوج الباركود بـ 11 لغة بصيغ CSV و PDF.\n"
+  },
+  "pt": {
+    "title": "Sistemas de Código de Barras e QR Code: Guia Passo a Passo de Impressão e Leitura (Pronto para GS1 Sunrise 2027)",
+    "excerpt": "Manual prático e técnico para implementar códigos 1D Code 128, 2D QR codes, padrões GS1 Digital Link, impressoras térmicas (Zebra, Brother, Rollo, Dymo) e leitores USB/Bluetooth para leitura instantânea em menos de 50ms.",
+    "category": "Hardware e Guias",
+    "keywords": [
+      "configuração de código de barras estoque",
+      "GS1 Sunrise 2027 código 2D",
+      "impressão de etiquetas QR code PDV",
+      "gerador de código de barras Code 128",
+      "configurar impressora térmica Zebra etiquetas",
+      "leitor de código de barras USB Bluetooth",
+      "padrão de varejo GS1 Digital Link",
+      "regras de nomenclatura SKU código de barras",
+      "térmico direto vs transferência térmica",
+      "eliminar erros de leitura de código de barras"
+    ],
+    "tableOfContents": [
+      {
+        "id": "optical-data-capture-physics",
+        "title": "1. Física da Captura Óptica de Dados e Análise de Erros"
+      },
+      {
+        "id": "barcode-symbology-matrix",
+        "title": "2. Simbologias 1D vs. 2D (Code 128, EAN, QR e DataMatrix)"
+      },
+      {
+        "id": "gs1-sunrise-2027-standard",
+        "title": "3. GS1 Sunrise 2027: Transição para Códigos 2D e Digital Links"
+      },
+      {
+        "id": "sku-barcode-formatting-rules",
+        "title": "4. Arquitetura Mestra de SKU e Formatação de Códigos"
+      },
+      {
+        "id": "direct-thermal-vs-thermal-transfer",
+        "title": "5. Impressão Térmica: Térmica Direta vs. Transferência Térmica"
+      },
+      {
+        "id": "label-media-dpi-resolutions",
+        "title": "6. Dimensões de Etiquetas, Resolução DPI e Densidade"
+      },
+      {
+        "id": "scanner-hardware-configuration",
+        "title": "7. Configuração de Leitores: Emulação Teclado HID e Sufixos"
+      },
+      {
+        "id": "inventory-360-barcode-setup",
+        "title": "8. Geração e Impressão de Códigos no Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Física da Captura Óptica de Dados e Análise de Erros\n\nA digitação manual em caixas de PDV e recebimento de mercadorias é a principal causa de erros contábeis e divergências de estoque no varejo.\n\nEstudos de engenharia mostram a enorme vantagem da leitura óptica sobre a digitação humana:\n\n```\n[ Digitação Manual no Teclado ] ➔ 1 Erro a cada 300 Teclas (Taxa de Erro: 0,33%)\n                                         │  (Erro de digitação gera SKU fantasma ou estoque incorreto)\n                                         ▼\n[ Leitura Laser 1D Code 128 ]   ➔ 1 Erro a cada 3.000.000 Leituras (Taxa: 0,000033%)\n                                         │  (Aumento de 99,99% na precisão)\n                                         ▼\n[ Leitura 2D QR / DataMatrix ]  ➔ 1 Erro a cada 10.500.000 Leituras (Taxa: 0,0000095%)\n                                            (Correção de Erros Reed-Solomon)\n```\n\n---\n\n### 2. Simbologias 1D vs. 2D (Code 128, EAN, QR e DataMatrix)\n\n| Simbologia | Tipo | Capacidade Máxima | Correção de Erros | Melhor Aplicação no Varejo |\n| :--- | :--- | :--- | :--- | :--- |\n| **Code 128** | 1D Linear | Até 128 caracteres ASCII | Verificação por Checksum | Controle interno de estoque, etiquetas de gôndola, SKUs |\n| **EAN-13 / UPC-A** | 1D Linear | Fixo: 12 ou 13 dígitos | Dígito verificador único | Embalagem de fábrica, caixas de varejo globais |\n| **QR Code (Modelo 2)** | 2D Matriz | 7.089 numéricos / 4.296 alfanuméricos | Reed-Solomon (7% a 30% recuperação) | Engajamento de clientes, URLs, portais de garantia |\n| **GS1 DataMatrix** | 2D Matriz | 3.116 numéricos / 2.335 alfanuméricos | Alta densidade ECC 200 | Medicamentos, itens cirúrgicos, cosméticos pequenos |\n\n---\n\n### 3. GS1 Sunrise 2027: Transição para Códigos 2D e Digital Links\n\nA organização global **GS1** determinou que até **2027 (iniciativa GS1 Sunrise)**, os terminais de PDV no mundo todo estarão aptos a ler **códigos 2D com GS1 Digital Link**.\n\n```\nhttps://id.marca.com/01/00850012345678/10/LOT-9921?17=261130&21=SN-883492\n │                   │  │              │  │        │  │      │  └─ Número de Série (SN)\n │                   │  │              │  │        │  └──────┴──── Data de Validade (AAMMDD)\n │                   │  │              │  └────────┴────────────── Número de Lote / Batch\n │                   │  └──────────────┴────────────────────────── Código GTIN do Produto\n └───────────────────┴──────────────────────────────────────────── Domínio da Marca\n```\n\n---\n\n### 4. Arquitetura Mestra de SKU e Formatação de Códigos\n\n1. Não misture `O` com `0`, nem `I` com `1`.\n2. Apenas letras maiúsculas `A-Z`, números `0-9` e hífen (`-`).\n3. Comprimento ideal: 8 a 12 caracteres.\n4. Estrutura: `[Departamento]-[Categoria]-[Atributo]-[Sequência]` (ex: `BEV-COF-12Z-01`).\n\n---\n\n### 5. Impressão Térmica: Térmica Direta vs. Transferência Térmica\n\n* **Térmica Direta (TD)**: Não usa ribbon, vida útil de 6 a 12 meses, ideal para recibos e etiquetas de envio rápido.\n* **Transferência Térmica (TT)**: Usa ribbon de cera/resina, vida útil de 5 a 20+ anos, resistente a frio, umidade e atrito.\n\n---\n\n### 6. Dimensões de Etiquetas, Resolução DPI e Densidade\n\n* **Etiqueta Pequena (Joias/Cabos)**: $1.50\" \\times 0.50\"$ ($304\\text{px} \\times 101\\text{px}$)\n* **Etiqueta Padrão de Produto**: $2.25\" \\times 1.25\"$ ($456\\text{px} \\times 253\\text{px}$)\n* **Etiqueta de Prateleira/Gôndola**: $4.00\" \\times 2.00\"$ ($812\\text{px} \\times 406\\text{px}$)\n* **Etiqueta de Envio/Transporte**: $4.00\" \\times 6.00\"$ ($812\\text{px} \\times 1218\\text{px}$)\n\n---\n\n### 7. Configuração de Leitores: Emulação Teclado HID e Sufixos\n\n1. **Habilitar Sufixo Enter (`CR / Enter` ou `LF`)** para adicionar itens automaticamente à venda sem tocar no teclado.\n2. **Definir delay entre caracteres em `0ms`**.\n3. **Modo Contínuo / Apresentação** para operação mãos-livres.\n\n---\n\n### 8. Geração e Impressão de Códigos no Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) oferece:\n1. Geração automática de Code 128 e QR code para cada item cadastrado.\n2. Impressão em 1 clique em rolos térmicos ($2.25\" \\times 1.25\"$) ou folhas A4.\n3. Leitura em PDV em menos de 15ms via IndexedDB local.\n4. Exportação de catálogos de códigos de barras em 11 idiomas em CSV e PDF.\n"
+  },
+  "it": {
+    "title": "Sistemi di Inventario con Codici a Barre e QR Code: Stampa Etichette e Configurazione Scanner (Pronto per GS1 Sunrise 2027)",
+    "excerpt": "Guida operativa e ingegneristica per implementare codici 1D Code 128, 2D QR code, standard GS1 Digital Link, stampanti termiche (Zebra, Brother, Rollo, Dymo) e lettori USB/Bluetooth per scansioni in meno di 50ms e zero errori di magazzino.",
+    "category": "Hardware e Guide",
+    "keywords": [
+      "configurazione sistema codice a barre inventario",
+      "codici a barre 2D GS1 Sunrise 2027",
+      "stampa etichette QR code cassa POS",
+      "generatore codice a barre Code 128",
+      "stampante termica etichette Zebra configurazione",
+      "lettore barcode USB Bluetooth configurazione",
+      "standard retail GS1 Digital Link",
+      "nomenclatura SKU codice a barre",
+      "termico diretto vs trasferimento termico",
+      "riduzione errori lettura codice a barre"
+    ],
+    "tableOfContents": [
+      {
+        "id": "optical-data-capture-physics",
+        "title": "1. Fisica della Cattura Ottica dei Dati e Analisi degli Errori"
+      },
+      {
+        "id": "barcode-symbology-matrix",
+        "title": "2. Simbologie 1D vs. 2D (Code 128, EAN, QR e DataMatrix)"
+      },
+      {
+        "id": "gs1-sunrise-2027-standard",
+        "title": "3. GS1 Sunrise 2027: Transizione a Codici 2D e Digital Links"
+      },
+      {
+        "id": "sku-barcode-formatting-rules",
+        "title": "4. Architettura Master SKU e Regole di Formattazione"
+      },
+      {
+        "id": "direct-thermal-vs-thermal-transfer",
+        "title": "5. Tecnologie di Stampa Termica: Termico Diretto vs. Trasferimento Termico"
+      },
+      {
+        "id": "label-media-dpi-resolutions",
+        "title": "6. Dimensioni Etichette, Risoluzione DPI e Densità"
+      },
+      {
+        "id": "scanner-hardware-configuration",
+        "title": "7. Configurazione Lettori: Emulazione Tastiera HID e Suffissi"
+      },
+      {
+        "id": "inventory-360-barcode-setup",
+        "title": "8. Creazione e Stampa Codici a Barre in Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Fisica della Cattura Ottica dei Dati e Analisi degli Errori\n\nL'inserimento manuale da tastiera alle casse o durante il carico merci è la principale causa di discrepanze nelle giacenze di magazzino.\n\nStudi di ingegneria industriale evidenziano l'enorme divario di precisione tra digitazione manuale e scansione ottica:\n\n```\n[ Digitazione Manuale a Tastiera ] ➔ 1 Errore ogni 300 Battute (Tasso di Errore: 0,33%)\n                                           │  (L'errore genera un articolo fantasma o conteggio errato)\n                                           ▼\n[ Scansione Laser 1D Code 128 ]    ➔ 1 Errore ogni 3.000.000 di Scansioni (Tasso: 0,000033%)\n                                           │  (Precisione migliorata del 99,99%)\n                                           ▼\n[ Scansione Matrice 2D QR / DM ]   ➔ 1 Errore ogni 10.500.000 di Scansioni (Tasso: 0,0000095%)\n                                              (Correzione degli Errori Reed-Solomon)\n```\n\n---\n\n### 2. Simbologie 1D vs. 2D (Code 128, EAN, QR e DataMatrix)\n\n| Simbologia | Tipo | Capacità Dati | Correzione Errori | Miglior Utilizzo |\n| :--- | :--- | :--- | :--- | :--- |\n| **Code 128** | 1D Lineare | Fino a 128 caratteri ASCII | Verifica Checksum | Inventario interno, etichette scaffale, SKU |\n| **EAN-13 / UPC-A** | 1D Lineare | Fisso: 12 o 13 cifre | Cifra di controllo singola | Confezioni produttore, vendita al dettaglio globale |\n| **QR Code (Modello 2)** | 2D Matrice | 7.089 numerici / 4.296 alfanumerici | Reed-Solomon (7% a 30% recupero) | Coinvolgimento clienti, URL, garanzie |\n| **GS1 DataMatrix** | 2D Matrice | 3.116 numerici / 2.335 alfanumerici | Alta densità ECC 200 | Farmaceutica, strumenti chirurgici, cosmesi |\n\n---\n\n### 3. GS1 Sunrise 2027: Transizione a Codici 2D e Digital Links\n\nL'organizzazione internazionale **GS1** ha stabilito che entro il **2027 (iniziativa GS1 Sunrise)**, le casse retail di tutto il mondo saranno abilitate alla lettura di **codici 2D basati su GS1 Digital Link**.\n\n```\nhttps://id.brand.com/01/00850012345678/10/LOT-9921?17=261130&21=SN-883492\n │                   │  │              │  │        │  │      │  └─ Numero di Serie (SN)\n │                   │  │              │  │        │  └──────┴──── Data di Scadenza (AAMMGG)\n │                   │  │              │  └────────┴────────────── Numero di Lotto (Lot)\n │                   │  └──────────────┴────────────────────────── Codice Prodotto GTIN\n └───────────────────┴──────────────────────────────────────────── Dominio Ufficiale\n```\n\n---\n\n### 4. Architettura Master SKU e Regole di Formattazione\n\n1. Evitare lettere ambigue come `O` con `0` o `I` con `1`.\n2. Usare solo lettere maiuscole `A-Z`, cifre `0-9` e trattini (`-`).\n3. Lunghezza ottimale: tra 8 e 12 caratteri.\n4. Struttura: `[Reparto]-[Categoria]-[Attributo]-[Numero]` (es: `BEV-COF-12Z-01`).\n\n---\n\n### 5. Tecnologie di Stampa Termica: Termico Diretto vs. Trasferimento Termico\n\n* **Termico Diretto (TD)**: Senza nastro ribbon, durata 6-12 mesi, ideale per scontrini ed etichette di spedizione veloce.\n* **Trasferimento Termico (TT)**: Richiede nastro ribbon, durata da 5 a oltre 20 anni, resistente a umidità, graffi e freddo.\n\n---\n\n### 6. Dimensioni Etichette, Risoluzione DPI e Densità\n\n* **Etichetta Gioielleria/Minuteria**: $1.50\" \\times 0.50\"$ ($304\\text{px} \\times 101\\text{px}$)\n* **Etichetta Prodotto Standard**: $2.25\" \\times 1.25\"$ ($456\\text{px} \\times 253\\text{px}$)\n* **Etichetta Scaffale Magazzino**: $4.00\" \\times 2.00\"$ ($812\\text{px} \\times 406\\text{px}$)\n* **Etichetta di Spedizione**: $4.00\" \\times 6.00\"$ ($812\\text{px} \\times 1218\\text{px}$)\n\n---\n\n### 7. Configurazione Lettori: Emulazione Tastiera HID e Suffissi\n\n1. **Abilitare il Suffisso Invio (`CR / Enter` o `LF`)** per inserire l'articolo nello scontrino senza premere Invio sulla tastiera.\n2. **Impostare il ritardo inter-carattere a `0ms`**.\n3. **Modalità Presentazione (Scansione Continua)** per lavorare a mani libere.\n\n---\n\n### 8. Creazione e Stampa Codici a Barre in Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) offre:\n1. Creazione automatica di codici Code 128 e QR per ogni articolo a catalogo.\n2. Stampa in 1 clic su rotolo termico ($2.25\" \\times 1.25\"$) o fogli A4.\n3. Lettura alla cassa in meno di 15ms grazie a IndexedDB locale.\n4. Esportazione catalogo codici a barre in 11 lingue in CSV e PDF.\n"
+  },
+  "ru": {
+    "title": "Системы Штрихкодов и QR-Кодов для Склада: Печать Этикеток и Настройка Сканеров (Готовность к GS1 Sunrise 2027)",
+    "excerpt": "Полное техническое и операционное руководство: внедрение 1D Code 128, 2D QR-кодов, стандартов GS1 Digital Link, термопринтеров (Zebra, Brother, Rollo, Dymo) и сканеров USB/Bluetooth для мгновенного считывания до 50мс и исключения пересорта.",
+    "category": "Оборудование и Руководства",
+    "keywords": [
+      "настройка системы штрихкодов склада",
+      "2D штрихкоды GS1 Sunrise 2027",
+      "печать этикеток QR код касса",
+      "генератор штрихкодов Code 128",
+      "термопринтер этикеток Zebra настройка",
+      "сканер штрихкодов USB Bluetooth настройка",
+      "стандарт ритейла GS1 Digital Link",
+      "правила формирования SKU штрихкод",
+      "прямая термопечать и термотрансферная",
+      "устранение ошибок сканирования штрихкода"
+    ],
+    "tableOfContents": [
+      {
+        "id": "optical-data-capture-physics",
+        "title": "1. Физика Оптического Сбора Данных и Анализ Ошибок"
+      },
+      {
+        "id": "barcode-symbology-matrix",
+        "title": "2. Сравнение 1D и 2D Штрихкодов (Code 128, EAN, QR и DataMatrix)"
+      },
+      {
+        "id": "gs1-sunrise-2027-standard",
+        "title": "3. GS1 Sunrise 2027: Переход на 2D-Штрихкоды и Digital Link"
+      },
+      {
+        "id": "sku-barcode-formatting-rules",
+        "title": "4. Архитектура Мастер-SKU и Правила Форматирования"
+      },
+      {
+        "id": "direct-thermal-vs-thermal-transfer",
+        "title": "5. Технологии Термопечати: Прямая Термопечать vs Термотрансфер"
+      },
+      {
+        "id": "label-media-dpi-resolutions",
+        "title": "6. Размеры Этикеток, Разрешение DPI и Плотность Печати"
+      },
+      {
+        "id": "scanner-hardware-configuration",
+        "title": "7. Настройка Сканеров: Эмуляция Клавиатуры HID и Суффиксы"
+      },
+      {
+        "id": "inventory-360-barcode-setup",
+        "title": "8. Генерация и Печать Штрихкодов в Inventory 360"
+      }
+    ],
+    "content": "\n### 1. Физика Оптического Сбора Данных и Анализ Ошибок\n\nРучной ввод артикулов с клавиатуры на кассах и складах приемки — главный источник пересорта и расхождений в учете.\n\nИсследования показывают колоссальную разницу в надежности между ручным вводом и оптическим сканированием:\n\n```\n[ Ручной Ввод с Клавиатуры ] ➔ 1 Ошибка на каждые 300 Нажатий (Уровень Ошибок: 0.33%)\n                                        │  (Опечатка создает фантомный SKU или неверный остаток)\n                                        ▼\n[ Лазерный 1D Code 128 ]    ➔ 1 Ошибка на 3 000 000 Сканирований (Уровень: 0.000033%)\n                                        │  (Точность выше на 99.99%)\n                                        ▼\n[ Матричный 2D QR / DM ]    ➔ 1 Ошибка на 10 500 000 Сканирований (Уровень: 0.0000095%)\n                                           (Алгоритм Коррекции Ошибок Reed-Solomon)\n```\n\n---\n\n### 2. Сравнение 1D и 2D Штрихкодов (Code 128, EAN, QR и DataMatrix)\n\n| Формат | Тип | Макс. Емкость | Коррекция Ошибок | Лучшее Применение |\n| :--- | :--- | :--- | :--- | :--- |\n| **Code 128** | 1D Линейный | До 128 символов ASCII | Проверка контрольной суммы | Внутренний складской учет, ярлыки полок, SKU |\n| **EAN-13 / UPC-A** | 1D Линейный | Фиксировано: 12 или 13 цифр | Одна контрольная цифра | Заводская упаковка, глобальные розничные продажи |\n| **QR Code (Model 2)** | 2D Матричный | 7089 цифр / 4296 букв | Reed-Solomon (восстановление 7%-30%) | Взаимодействие с клиентом, URL, гарантийные талоны |\n| **GS1 DataMatrix** | 2D Матричный | 3116 цифр / 2335 букв | Высокая плотность ECC 200 | Фармацевтика, Честный Знак, микроупаковка |\n\n---\n\n### 3. GS1 Sunrise 2027: Переход на 2D-Штрихкоды и Digital Link\n\nМеждународная организация **GS1** установила стандарт: к **2027 году (инициатива GS1 Sunrise)** кассовые узлы розничной торговли перейдут на **2D-штрихкоды с технологией GS1 Digital Link**.\n\n```\nhttps://id.brand.com/01/00850012345678/10/LOT-9921?17=261130&21=SN-883492\n │                   │  │              │  │        │  │      │  └─ Серийный Номер (SN)\n │                   │  │              │  │        │  └──────┴──── Срок Годности (ГГММДД)\n │                   │  │              │  └────────┴────────────── Номер Партии / Серии\n │                   │  └──────────────┴────────────────────────── Код Товара GTIN\n └───────────────────┴──────────────────────────────────────────── Домен Бренда\n```\n\n---\n\n### 4. Архитектура Мастер-SKU и Правила Форматирования\n\n1. Исключите похожие символы: `O` и `0`, а также `I` и `1`.\n2. Используйте только заглавные `A-Z`, цифры `0-9` и дефис (`-`).\n3. Оптимальная длина: от 8 до 12 символов.\n4. Структура: `[Отдел]-[Категория]-[Атрибут]-[Номер]` (например: `BEV-COF-12Z-01`).\n\n---\n\n### 5. Технологии Термопечати: Прямая Термопечать vs Термотрансфер\n\n* **Прямая Термопечать (DT)**: Без красящей ленты, срок жизни 6-12 месяцев, идеально для чеков и быстрой логистики.\n* **Термотрансферная Печать (TT)**: Использует риббон (воск/смола), срок службы от 5 до 20+ лет, устойчива к влаге, солнцу и заморозке.\n\n---\n\n### 6. Размеры Этикеток, Разрешение DPI и Плотность Печати\n\n* **Ювелирные / Мелкие изделия**: $1.50\" \\times 0.50\"$ ($304\\text{px} \\times 101\\text{px}$)\n* **Стандартная этикетка товара**: $2.25\" \\times 1.25\"$ ($456\\text{px} \\times 253\\text{px}$)\n* **Этикетка складской ячейки**: $4.00\" \\times 2.00\"$ ($812\\text{px} \\times 406\\text{px}$)\n* **Транспортная накладная**: $4.00\" \\times 6.00\"$ ($812\\text{px} \\times 1218\\text{px}$)\n\n---\n\n### 7. Настройка Сканеров: Эмуляция Клавиатуры HID и Суффиксы\n\n1. **Включить суффикс Enter (`CR / Enter` или `LF`)** для мгновенного добавления в чек без нажатия Enter на клавиатуре.\n2. **Установить межсимвольную задержку в `0ms`**.\n3. **Включить режим презентации (постоянное сканирование)** для работы без рук.\n\n---\n\n### 8. Генерация и Печать Штрихкодов в Inventory 360\n\n[Inventory 360](https://www.inventory360.shop) обеспечивает:\n1. Автоматическое создание векторных Code 128 и QR-кодов для всех товаров.\n2. Печать в 1 клик на термолентах ($2.25\" \\times 1.25\"$) или листах A4.\n3. Сканирование на кассе за 15мс прямо из локальной IndexedDB.\n4. Экспорт каталогов штрихкодов на 11 языках в CSV и PDF.\n"
+  }
+},
   'multi-location-inventory-transfers-warehouse-routing': {
     es: {
       title: 'Rutas de Inventario Multi-Sucursal: Transferencias entre Tiendas, Almacenes Centrales y Reabastecimiento',
