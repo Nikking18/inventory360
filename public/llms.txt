@@ -2,22 +2,29 @@
 
 > High-performance, local-first retail enterprise POS terminal, multi-outlet stock tracking, autonomous purchase orders, and financial analytics powered by browser IndexedDB.
 
-## Overview
-- **Product Name**: Inventory 360 Enterprise
-- **Website**: https://www.inventory360.shop
-- **Repository**: https://github.com/Nikking18/inventory360
-- **Architecture**: Local-First W3C IndexedDB, Next.js 15, React 19, TypeScript
-- **License**: MIT (100% Free & Open Source)
+Inventory 360 is an open-source, local-first retail enterprise workspace providing point-of-sale terminals, inventory tracking, multi-outlet stock balancing, barcode scanning, ESC/POS thermal printing, and analytics with 100% offline data sovereignty.
 
-## Key Capabilities
-- **Point of Sale (POS)**: Barcode scanning, thermal receipt printing (ESC/POS 80mm/58mm), discounts, split payments, cash register drawers.
-- **Inventory Control**: Multi-outlet stock distribution, FIFO lot tracking, expiry date monitors, real-time SKU movements ledger.
-- **Reporting & Analytics**: Retail dashboard, sales reports, inventory turnover velocity, profit margins, tax reports.
-- **Omnichannel Fulfillment**: Pending dispatch, order pick lists, shipping manifests, tracking numbers.
-- **Data Sovereignty**: Zero cloud lock-in, zero telemetry, automated 1-click encrypted JSON and CSV data backups.
+## Core Documentation & Application Routes
 
-## Core URLs
-- Homepage & POS Terminal: https://www.inventory360.shop/
-- Knowledge & Engineering Blog: https://www.inventory360.shop/blog
-- Privacy & Local Data Policy: https://www.inventory360.shop/privacy
-- Sitemap: https://www.inventory360.shop/sitemap.xml
+- [Inventory 360 Application](https://www.inventory360.shop/): Main local-first retail operations workspace and POS terminal.
+- [Engineering & Strategy Blog](https://www.inventory360.shop/blog): In-depth retail architecture guides, turnover formulas, and hardware tutorials.
+- [Privacy Policy & Data Security](https://www.inventory360.shop/privacy): Zero-telemetry, client-side IndexedDB encryption and local backup specifications.
+- [Onboarding & Setup Confirmation](https://www.inventory360.shop/thank-you): Confirmation and quick-start guide for newly configured workspaces.
+- [XML Sitemap](https://www.inventory360.shop/sitemap.xml): Complete machine-readable XML sitemap of all public routes.
+- [GitHub Repository](https://github.com/Nikking18/inventory360): Open-source source code, architecture documentation, and issue tracker.
+
+## Technical Guides & Articles
+
+- [Local-First POS System Architecture](https://www.inventory360.shop/blog/local-first-inventory-management-offline-pos): Building resilient, offline-capable retail ERPs with browser IndexedDB and Web Workers.
+- [Inventory Turnover Ratio & Velocity Guide](https://www.inventory360.shop/blog/inventory-turnover-ratio-stock-velocity-guide): Formulating stock velocity, Days Sales of Inventory (DSI), and inventory turnover.
+- [Omnichannel Retail Inventory Synchronization](https://www.inventory360.shop/blog/omnichannel-retail-inventory-sync-shopify-amazon): Real-time multi-platform inventory syncing for Shopify, Amazon, and physical stores.
+- [Barcode Label Printing Hardware Workflows](https://www.inventory360.shop/blog/barcode-label-printing-hardware-workflows): Direct thermal vs thermal transfer printing, Code-128 barcode symbology, and 2-inch retail labels.
+- [FIFO Lot Tracking & Expiry Management](https://www.inventory360.shop/blog/lot-tracking-expiry-date-management): Batch tracking compliance, perishable inventory workflows, and first-in-first-out stock rotation.
+- [Purchase Order Automation & Reorder Points](https://www.inventory360.shop/blog/purchase-order-automation-reorder-points): Dynamic safety stock calculation, supplier lead time tracking, and autonomous PO generation.
+- [Retail Margin Analysis & Profit Formulas](https://www.inventory360.shop/blog/retail-margin-analysis-gross-profit-formulas): Markup vs margin formulas, keystone pricing, and contribution margin optimization.
+- [Multi-Outlet Stock Transfer Logistics](https://www.inventory360.shop/blog/multi-outlet-stock-transfers-logistics): Inter-store transit manifests, transfer audits, and regional warehouse allocation.
+- [Physical Inventory Count Procedures](https://www.inventory360.shop/blog/physical-inventory-count-audit-procedures): Blind cycle counting, shrinkage calculation, and wall-to-wall stock audits.
+- [Customer Lifetime Value in Retail POS](https://www.inventory360.shop/blog/customer-lifetime-value-crm-retail-pos): RFM segmentation, cohort analysis, and customer retention strategies.
+- [Retail Loss Prevention & Shrinkage Telemetry](https://www.inventory360.shop/blog/retail-loss-prevention-inventory-shrinkage): Cashier auditing, transaction voids, and loss prevention controls.
+- [Dead Stock Liquidation & Cash Flow](https://www.inventory360.shop/blog/dead-stock-liquidation-cash-flow): Markdown schedules, product bundling, and working capital recovery.
+- [Thermal Receipt Printer ESC/POS Integration](https://www.inventory360.shop/blog/thermal-receipt-printer-esc-pos-integration): Web Serial API, WebUSB, and low-level ESC/POS hex commands for 80mm/58mm printers.
